@@ -215,6 +215,9 @@ INPUT ./sections/s_results.tex
 INPUT ./sections/s_results.tex
 INPUT ./sections/s_results.tex
 INPUT sections/s_results.tex
+INPUT ./generated/tab_full_metrics.tex
+INPUT ./generated/tab_full_metrics.tex
+INPUT generated/tab_full_metrics.tex
 INPUT ../manuscript/generated/tab_main_D0.tex
 INPUT ../manuscript/generated/tab_main_D0.tex
 INPUT ../manuscript/generated/tab_main_D0.tex
@@ -267,12 +270,12 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecti1000.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecti0700.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecti0500.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm
-INPUT /usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 INPUT ./sections/s_repro.tex
 INPUT ./sections/s_repro.tex
 INPUT ./sections/s_repro.tex
 INPUT ./sections/s_repro.tex
 INPUT sections/s_repro.tex
+INPUT /usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc
 INPUT supplement.aux
 INPUT ./supplement.out
 INPUT ./supplement.out

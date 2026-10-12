@@ -26,7 +26,7 @@ Everything produced for the revision lives here.
 
 ```bash
 pip install -r revision/requirements.txt         # CPU is sufficient
-bash revision/run_all.sh --fresh --workers 4      # ~10 CPU-hours on 4 cores
+bash revision/run_all.sh --fresh --workers 4      # ~3 h wall time on 4 CPU cores
 ```
 
 `run_all.sh` runs these steps in order:

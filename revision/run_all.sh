@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Regenerate every artefact of the revision from the raw UFFCSData XML files.
 # Usage: bash revision/run_all.sh [--workers N] [--fresh]
-#   --fresh  delete results/runs (all trained-model scores) before running.
-# Total CPU time ~10 h on 4 cores (dominated by the RL hyper-parameter search).
+#   --fresh  delete every generated artefact (results, splits, generated LaTeX, PDFs, rendered reports) first.
+# Wall time ~3 h on 4 cores (dominated by the RL hyper-parameter search and ablation).
 set -euo pipefail
 cd "$(dirname "$0")"
 WORKERS=4; FRESH=0

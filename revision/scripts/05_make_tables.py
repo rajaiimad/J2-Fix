@@ -548,6 +548,28 @@ def ratio_argmax_table():
         "\n".join(lines) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
+def full_metric_table():
+    """Supplement: every requested metric, rule D1 (mean +- SD over seeds) and the
+    exact confusion-matrix counts of the seed ensemble."""
+    summ = pd.read_csv(TAB / "metrics_summary.csv")
+    s = summ[summ.rule == "D1_min_cost"].set_index("model")
+    cols = [("accuracy", "Acc."), ("precision", "Prec."), ("recall", "Rec."), ("specificity", "Spec."), ("f1", "F1"),
+            ("balanced_accuracy", "Bal.acc."), ("mcc", "MCC"), ("g_mean", "G-mean"), ("fpr", "FPR"), ("fnr", "FNR"),
+            ("expected_cost", "Cost$_{5:1}$")]
+    lines = []
+    for mdl in MODELS:
+        if mdl not in s.index:
+            continue
+        r = s.loc[mdl]
+        cells = [f"{fmt(m, r[f'{m}_mean'])}$\\pm${fmt(m, r[f'{m}_std'], sd=True)}" for m, _ in cols]
+        cm = [fmt(m, r[f"ens_{m}"]) for m in ("TP", "TN", "FP", "FN")]
+        lines.append(f"{mdl} & " + " & ".join(cells) + " & " + " & ".join(cm) + " \\\\")
+    head = " & ".join(h for _, h in cols)
+    (SGEN / "tab_full_metrics.tex").write_text(
+        "\\begin{tabular}{l" + "c" * (len(cols) + 4) + "}\n\\toprule\nModel & " + head + " & TP & TN & FP & FN \\\\\n\\midrule\n" +
+        "\n".join(lines) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
 if __name__ == "__main__":
     data_macros()
     leakage_macros_and_table()
@@ -566,6 +588,7 @@ if __name__ == "__main__":
         attack_auc_table()
         optimism_table()
         ratio_argmax_table()
+        full_metric_table()
     import shutil
     for d in (REVISION_ROOT / "manuscript" / "figs", REVISION_ROOT / "supplementary" / "figs"):
         d.mkdir(parents=True, exist_ok=True)
