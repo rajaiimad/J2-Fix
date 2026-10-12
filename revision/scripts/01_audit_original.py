@@ -112,6 +112,15 @@ def _metrics_row(name, model, Xtr, ytr, Xte, yte):
     return r
 
 
+def _write_proxy(d, cols, tr, va, te):
+    from sklearn.preprocessing import RobustScaler
+    d.mkdir(parents=True, exist_ok=True)
+    sc = RobustScaler().fit(tr[cols].to_numpy(float))
+    for name, part in (("train", tr), ("val", va), ("test", te)):
+        pd.DataFrame(sc.transform(part[cols].to_numpy(float)), columns=cols).to_csv(d / f"X_{name}.csv", index=False)
+        part[["grade"]].rename(columns={"grade": "DiscomfortLevel"}).to_csv(d / f"y_{name}.csv", index=False)
+
+
 def leakage_demo():
     """Reconstruct the original protocol from dataset.csv and compare it with a
     grouped split using the SAME model and features (the 21 dataset.csv
@@ -145,12 +154,9 @@ def leakage_demo():
     dup["test_sessions_also_in_train"] = int(len(set(te.session_id) & set(tr.session_id)))
     hgb = lambda: HistGradientBoostingClassifier(random_state=0)
     rows.append(_metrics_row("A: oversample-then-row-split (original)", hgb(), tr[cols], tr.y, te[cols], te.y))
-    # proxy files for the unmodified original script
-    proxy = OUT / "proxy_original_splits"
-    proxy.mkdir(exist_ok=True)
-    for name, part in (("train", tr), ("val", va), ("test", te)):
-        part[cols].to_csv(proxy / f"X_{name}.csv", index=False)
-        part[["grade"]].rename(columns={"grade": "DiscomfortLevel"}).to_csv(proxy / f"y_{name}.csv", index=False)
+    # proxy files for the unmodified original script (robust scaling fitted on
+    # the training split, as described in the manuscript)
+    _write_proxy(OUT / "proxy_original_splits" / "leaky_oversampled", cols, tr, va, te)
 
     # (B) no oversampling, random row-level stratified split (temporal leakage only)
     tr, tmp = train_test_split(df, test_size=0.30, stratify=df.grade, random_state=42)
@@ -171,6 +177,9 @@ def leakage_demo():
     r.update(ranking_metrics(s, y))
     r["protocol"] = "C: grouped 5-fold (linkage groups), same columns"
     rows.append(r)
+    # grouped proxy split for the original script: test = fold 0, val = fold 1, train = folds 2-4
+    g = lambda ks: df[df.group_id.isin(folds.loc[folds.fold.isin(ks), "group_id"])]
+    _write_proxy(OUT / "proxy_original_splits" / "grouped", cols, g([2, 3, 4]), g([1]), g([0]))
     out = pd.DataFrame(rows)
     out.to_csv(OUT / "leakage_demo.csv", index=False)
     (OUT / "leakage_demo_duplicates.json").write_text(json.dumps(dup, indent=2))

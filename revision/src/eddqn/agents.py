@@ -47,6 +47,11 @@ SYMMETRIC = {"tp": 1.0, "tn": 1.0, "fn": -1.0, "fp": -1.0}
 
 
 def reward_table(name: str) -> dict:
+    """'asymmetric' (paper, FN:FP regret 5:1), 'symmetric' (+-1), or
+    'ratio:R' (TP +0.5, FN -0.5, TN +0.5/R, FP -0.5/R -> regret ratio R:1)."""
+    if name.startswith("ratio:"):
+        r = float(name.split(":")[1])
+        return {"tp": 0.5, "fn": -0.5, "tn": 0.5 / r, "fp": -0.5 / r}
     return {"asymmetric": ASYMMETRIC, "symmetric": SYMMETRIC}[name]
 
 

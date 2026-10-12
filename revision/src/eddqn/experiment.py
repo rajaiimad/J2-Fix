@@ -103,6 +103,9 @@ def run_job(job: dict, cache: dict) -> dict:
         if hasattr(m, "q_values"):
             out["val_q"] = m.q_values(Xva).astype(np.float32)
             out["test_q"] = m.q_values(Xte).astype(np.float32)
+        att = cache.get(("attacks", job["outer"], job["inner"]))
+        if att is not None and job.get("score_attacks", True):
+            out["attack_scores"] = {name: m.score(X[:, cols]).astype(np.float32) for name, X in att.items()}
     out["seconds"] = time.time() - t0
     return out
 
