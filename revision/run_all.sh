@@ -8,7 +8,12 @@ cd "$(dirname "$0")"
 WORKERS=4; FRESH=0
 while [[ $# -gt 0 ]]; do case $1 in --workers) WORKERS=$2; shift 2;; --fresh) FRESH=1; shift;; *) echo "unknown $1"; exit 1;; esac; done
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONHASHSEED=0
-[[ $FRESH == 1 ]] && rm -rf results/runs results/selected_configs.json results/hpo_results.csv
+if [[ $FRESH == 1 ]]; then   # remove every generated artefact
+  rm -rf results/* data/processed/* manuscript/generated manuscript/figs supplementary/generated supplementary/figs \
+         manuscript/main.pdf supplementary/supplement.pdf reports/05_results.md reports/07_quality_control.md \
+         reviewer_response/response_to_reviewers.md
+  mkdir -p results data/processed
+fi
 python3 scripts/00_sanity_tests.py                      # unit checks of the corrected agent
 python3 scripts/01_audit_original.py                    # provenance, leakage reproduction
 bash    scripts/01b_run_original_proxy.sh               # unmodified submitted script on proxy splits
@@ -26,3 +31,4 @@ python3 scripts/05_make_tables.py                        # LaTeX numbers/tables 
 ( cd manuscript && latexmk -pdf -interaction=nonstopmode -quiet main.tex )
 ( cd supplementary && latexmk -pdf -interaction=nonstopmode -quiet supplement.tex )
 python3 scripts/08_consistency_check.py                  # every number in the PDFs traced to results
+python3 scripts/09_render_docs.py                        # reviewer response, results and QC reports from templates
