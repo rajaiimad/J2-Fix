@@ -1,0 +1,37 @@
+\section{Audit of the submitted version}
+\label{sec:s-audit}
+
+\subsection{What could and could not be reproduced}
+The repository contained the raw dataset, the E-DDQN script and the manuscript PDF, but not the 41-feature train/validation/test files, preprocessing code, baseline, ablation, multi-seed or statistics code, trained models or logs. Exact reproduction was therefore impossible. The partition sizes of the submitted paper (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples per grade) are reproduced exactly by oversampling every discomfort grade of the curated release to the size of grade 0 (5,243) and then splitting at row level.
+
+\subsection{Leakage reproduction}
+{\footnotesize\input{../manuscript/generated/tab_leakage.tex}}
+
+Under the reconstructed submitted protocol, \LeakDupPos{} of the \LeakTestPos{} positive test rows (\LeakDupPct\,\%) have an exact duplicate in the training split and all sessions occur in both splits.
+
+\subsection{Code defects (submitted script)}
+\begin{enumerate}
+\item Next state = next row of a shuffled chunk; no terminal flags; $\gamma=0.99$ bootstrapped across unrelated samples.
+\item Teacher forcing stored the true label as the action together with the reward of the random action that was actually taken.
+\item The Polyak update ignored batch-normalisation buffers; the target network normalised with mean 0 and variance 1 throughout training.
+\item The Double-DQN arg-max ran the online network in training mode.
+\item The test set was scored and printed every 10 episodes.
+\item Warm-up filled 14,680 transitions (manuscript: 25,000); learning every 25 chunks (manuscript: 50).
+\item Comments described 2.5:1 and 1.67:1 rewards and an accuracy-based selection rule that actually maximised F1.
+\item SHAP attributed $Q(s,\textit{Attack})$ (which contains $V(s)$) on 50 test rows with the additivity check disabled.
+\end{enumerate}
+
+\subsection{Internal inconsistencies of the submitted manuscript}
+\begin{itemize}
+\item McNemar test: with 172 baseline and 98 E-DDQN errors, $b-c$ must equal 74, whereas the reported $b=96$, $c=34$ give 62; $\chi^2=28.6$ was computed correctly from these impossible counts.
+\item ``Test set evaluated exactly once'' versus per-checkpoint test results (Table~6, Figs.~7, 10, 13).
+\item ``The reward is the only change relative to the baseline'' versus 14 differences listed in Table~5; baseline trained for 150 episodes with last-episode selection versus 500 episodes with validation selection.
+\item Baseline described both as a 2-output network and as a native 4-class model.
+\item MCC and F2 described as threshold-independent.
+\item ``Removing teacher forcing leaves performance essentially unchanged'' while the ablation table showed improvements on every metric.
+\item A 1-s sliding window at 1\,Hz contains one sample; an FOV-modulation feature is identically zero in these data.
+\end{itemize}
+Arithmetic within Tables~7--9 of the submitted version was internally consistent (\texttt{results/audit/manuscript\_number\_check.csv}).
+
+\subsection{References}
+Nine references could not be found and fifteen had incorrect bibliographic details or misattributed claims; the numbers attributed to Kundu et al.\ (93.5\,\%, $\sim$35\,ms) are not supported by any accessible source. The full verification table is in \texttt{reports/06\_reference\_verification.md}.

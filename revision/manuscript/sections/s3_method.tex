@@ -1,0 +1,126 @@
+\section{Proposed Methodology}
+\label{sec:method}
+
+Fig.~\ref{fig:pipeline} summarises the revised end-to-end procedure. Compared with the submitted version, the data are rebuilt from the original session exports, every split is made at the level of independent session-linkage groups \emph{before} any feature is computed, all learned preprocessing is fitted on training groups only, the learning problem is formalised explicitly (Section~\ref{sec:formulation}), the E-DDQN implementation is corrected (Section~\ref{sec:eddqn}), and every model, including E-DDQN, is tuned, checkpointed and thresholded by one frozen, validation-only protocol (Section~\ref{sec:protocol}).
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=4mm and 5mm,
+  box/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, minimum height=9mm, text width=27mm, fill=#1},
+  box/.default=white,
+  arr/.style={-{Stealth[length=2mm]}, thick}]
+\node[box=blue!6] (raw) {UFFCSData XML exports\\(\nSessionsEval{} curated sessions,\\ \nSamplesEval{} samples, 1\,Hz)};
+\node[box=blue!6, right=of raw] (grp) {Session-linkage groups\\(\nGroupsEval{} groups; no\\participant ids exist)};
+\node[box=blue!6, right=of grp] (split) {Nested grouped split\\outer \nOuter{} folds (test)\\inner \nInner{} folds (validation)};
+\node[box=blue!6, right=of split] (feat) {Causal features per session\\(trailing windows, cumulative)\\fit on training groups only};
+\node[box=blue!6, right=of feat] (scale) {Robust scaling\\fit on training groups only};
+\node[box=orange!10, below=7mm of raw] (hpo) {Random search\\(equal budget per model)\\inner-OOF 5:1 cost};
+\node[box=orange!10, right=of hpo] (train) {E-DDQN / baselines\\cross-fitted on inner folds\\checkpoint on validation};
+\node[box=orange!10, right=of train] (thr) {Operating threshold from\\pooled inner-OOF scores\\(min 5:1 cost; recall rules)};
+\node[box=green!10, right=of thr] (test) {Outer-test fold scored once\\clean + 29 bounded\\telemetry perturbations};
+\node[box=green!10, right=of test] (stats) {Metrics, ROC/PR, group\\bootstrap CIs, paired tests,\\ablation, SHAP on $\Delta Q$};
+\draw[arr] (raw) -- (grp);
+\draw[arr] (grp) -- (split);
+\draw[arr] (split) -- (feat);
+\draw[arr] (feat) -- (scale);
+\draw[arr] (scale.south) |- ++(0,-3mm) -| (hpo.north);
+\draw[arr] (hpo) -- (train);
+\draw[arr] (train) -- (thr);
+\draw[arr] (thr) -- (test);
+\draw[arr] (test) -- (stats);
+\end{tikzpicture}
+\caption{Revised, leakage-free pipeline. Blue: data construction (no step looks across a partition boundary); orange: model development using inner (validation) folds only; green: single evaluation of each outer-test fold with the frozen protocol.}
+\label{fig:pipeline}
+\end{figure*}
+
+\subsection{Data Source, Provenance and Target}
+\label{sec:data}
+The experiments use UFFCSData~\cite{porcino2019uffcsdata,porcino2022identifying,porcino2021methodology}, a public dataset in which volunteers played a race game and a flight game in a head-mounted display while the game logged, about once per second, the player's speed and acceleration, the camera orientation (quaternion components), the frame rate, the region of interest, session-configuration flags and the participant's self-reported discomfort level on a 0--3 scale; a Cybersickness Profile Questionnaire (CSPQ: gender, age band, VR experience, glasses, vision problems, eye dominance, flicker sensitivity) is stored with every session. The submitted version of this paper called these data ``GLCD'' and used a derived file whose preprocessing history could not be verified; we rebuilt everything from the original XML exports. The dataset authors' curated release (\nSessionsEval{} seated sessions recorded in December~2019; \nSamplesEval{} samples) is identical, sample by sample, to \nSessionsEval{} of the raw exports and is our evaluation set. The \nSessionsDev{} standing-posture sessions recorded in October~2019 are used \emph{only} to debug code and calibrate training budgets; two further raw sessions that the dataset authors excluded are not used.
+
+The binary target is unchanged from the submitted version: $y_t=1$ (\emph{cybersickness event}) if the reported discomfort level at second $t$ is at least~1, and $y_t=0$ otherwise. The prevalence is \prevEval{} (Flight \prevFlight{}, Race \prevRace{}). We stress that $y$ marks self-reported discomfort, \emph{not} the presence of an attack: no session in the dataset was attacked. In the submitted version, every minority grade had been oversampled to the size of grade~0 (5,243 samples) \emph{before} a random row-level split; this created duplicated samples across training and test partitions and an artificial 3:1 class ratio (Section~\ref{sec:leak}).
+
+\subsection{Unit of Independence and Splits}
+\label{sec:groups}
+The release contains no participant identifier, and sessions are not independent: some participants restarted after an aborted session (e.g., a 104-s session followed 108\,s later by a full session with an identical nine-field CSPQ profile). We therefore form conservative \emph{session-linkage groups}: sessions are linked if their CSPQ profiles are identical, or if a session follows an aborted one ($<200$ samples) within 180\,s with at most two differing questionnaire fields; connected components are groups. This yields \nGroupsEval{} groups. The rule may merge different people who share a profile---which only makes evaluation more conservative---but it cannot reveal one person who answered the questionnaire differently in non-consecutive sessions; we report this residual risk as a limitation.
+
+All splits are made at the group level. A nested design is used: \nOuter{} outer folds (stratified by game and label) provide test data, and within each outer development set \nInner{} inner grouped folds provide validation data for hyper-parameter search, checkpoint selection and threshold selection. Every sample of the evaluation set is therefore predicted exactly once, by models that never saw its session, its linkage group or its exact questionnaire profile. Executable checks confirm zero session, group and profile overlap and zero duplicated feature rows between any development set and its test fold.
+
+\subsection{Causal Feature Engineering and Preprocessing}
+\label{sec:features}
+Features of second $t$ use only seconds $0,\dots,t$ of the same session (verified by recomputing features on sessions truncated at random $t$). They comprise the game indicator, elapsed time, instantaneous speed, acceleration and $|$acceleration$|$, the camera quaternion components, the per-second orientation change $\lVert q_t-q_{t-1}\rVert$, the frame rate (the logger writes 0 on the very first sample of some sessions; this artefact is imputed with the training median), the region of interest, trailing-window (5\,s and 15\,s) means, standard deviations, deltas, maxima, minima, acceleration-spike rates and frame-drop fractions, and cumulative exposure descriptors (cumulative orientation change, spike and frame-drop counts, running mean speed); 39 telemetry features in total, plus 14 CSPQ indicators. The spike threshold (90th percentile of $|$acceleration$|$) and the imputation value are learned on training rows only; the frame-drop threshold (80\,fps, i.e. $>11\%$ below the 90-Hz target) is fixed. Features are scaled with a median/IQR scaler fitted on training rows. Constant or redundant columns were removed: the field of view, the static-frame and auto-camera flags are constant within each game (pure game indicators), four configuration flags and posture are constant overall, and the absolute player position was excluded because it encodes elapsed course distance and is absent in the October wave. Which of four feature sets a model uses---\emph{telemetry}, \emph{telemetry+profile}, a small a-priori \emph{exposure} set (game, elapsed time, cumulative orientation change, cumulative spikes, running and 15-s mean speed, 15-s mean rotation rate and $|$acceleration$|$), or \emph{exposure+profile}---is a hyper-parameter chosen on validation folds. No oversampling or synthetic data are used anywhere; class imbalance is handled only inside training.
+
+\subsection{Decision Formulation: MDP or Contextual Bandit?}
+\label{sec:formulation}
+Following the submitted version, detection is cast as a sequential decision process over each recorded session (an \emph{episode}). The state $s_t\in\mathbb{R}^d$ is the causal feature vector at second $t$; the action $a_t\in\{0,1\}$ is \emph{stay silent} or \emph{raise an alarm}; the reward is $r_t=R(a_t,y_t)$ with
+\begin{equation}
+R(1,1)=+0.5,\ R(0,0)=+0.1,\ R(0,1)=-0.5,\ R(1,0)=-0.1;
+\label{eq:reward}
+\end{equation}
+the next state $s_{t+1}$ is the next second \emph{of the same session}, and the last sample of a session is terminal. No transition ever links two sessions.
+
+Because the telemetry was logged while participants played, without any alarm in the loop, the action cannot influence later observations: $P(s_{t+1}\mid s_t,a_t)=P(s_{t+1}\mid s_t)$. For any discount $\gamma<1$ the optimal action-value function then decomposes as
+\begin{equation}
+Q^*(s,a)=\mathbb{E}[R(a,y)\mid s]+\gamma\,\mathbb{E}[V^*(s_{t+1})\mid s_t=s],
+\label{eq:decomp}
+\end{equation}
+whose second term does not depend on $a$. Hence (i) the optimal policy is myopic for every $\gamma$, i.e. the logged-data problem is a \emph{contextual bandit}~\cite{lattimore2020bandit} rather than a control problem in which actions steer future states; and (ii) with $p(s)=P(y=1\mid s)$,
+\begin{equation}
+Q^*(s,1)-Q^*(s,0)=p(s)\,\Delta_{\mathrm{FN}}-(1-p(s))\,\Delta_{\mathrm{FP}},
+\label{eq:margin}
+\end{equation}
+with regrets $\Delta_{\mathrm{FN}}=R(1,1)-R(0,1)=1.0$ and $\Delta_{\mathrm{FP}}=R(0,0)-R(1,0)=0.2$. The greedy policy alarms iff $p(s)\ge \Delta_{\mathrm{FP}}/(\Delta_{\mathrm{FN}}+\Delta_{\mathrm{FP}})=1/6$, which is exactly the Bayes-optimal decision of a cost-sensitive classifier with misclassification costs $C_{\mathrm{FN}}:C_{\mathrm{FP}}=5:1$~\cite{elkan2001cost}. The asymmetric reward is therefore not a different objective from cost-sensitive learning: it encodes the same 5:1 operating point. Bootstrapping with $\gamma>0$ adds an action-independent term whose estimation noise enters both Q-values; it cannot improve the optimal policy and helps or hurts only through estimation effects. We therefore treat $\gamma\in\{0,0.5,0.9,0.99\}$ as a hyper-parameter selected on validation data and also evaluate the $\gamma=0$ special case as a separately tuned model (E-CB). A genuine MDP would require the alarm to change future rendering or symptoms (e.g., a mitigation in the loop); no such intervention exists in the data, so we make no claim that E-DDQN learns adaptive sequential control. Equation~\eqref{eq:margin} also gives every Q-learner a calibrated-probability scale, $\hat p(s)=(\Delta Q+\Delta_{\mathrm{FP}})/(\Delta_{\mathrm{FN}}+\Delta_{\mathrm{FP}})$, used to place all models on a common score scale.
+
+\subsection{E-DDQN (Corrected)}
+\label{sec:eddqn}
+E-DDQN keeps the components of the submitted design, with the defects found during the audit removed.
+\emph{Network.} A multilayer trunk (width and depth tuned) with batch or layer normalisation~\cite{ioffe2015bn}, ReLU and dropout~\cite{srivastava2014dropout} feeds a dueling head~\cite{wang2016dueling}, $Q(s,a)=V(s)+A(s,a)-\frac{1}{2}\sum_{a'}A(s,a')$, with raw (unsquashed) Q-values.
+\emph{Target.} The Double-DQN target~\cite{vanhasselt2016double} with terminal flags,
+\begin{equation}
+y_t=r_t+\gamma(1-d_t)\,Q_{\theta^-}\big(s_{t+1},\arg\max_{a'}Q_\theta(s_{t+1},a')\big),
+\end{equation}
+where the online arg-max is computed in evaluation mode, and the Huber loss~\cite{girshick2015fast} is minimised with Adam~\cite{kingma2015adam}, weight decay, gradient clipping at 1.0 and a cosine learning-rate schedule~\cite{loshchilov2017sgdr}.
+\emph{Target network.} Polyak averaging $\theta^-\leftarrow(1-\tau)\theta^-+\tau\theta$~\cite{lillicrap2016continuous} after every update; the batch-normalisation running statistics are copied as well (the submitted code averaged parameters only, so the target network normalised with mean~0 and variance~1 forever).
+\emph{Replay.} A circular buffer~\cite{lin1992selfimproving} from which minibatches are drawn with a fixed class composition $\rho$ (Normal) and $1-\rho$ (event).
+\emph{Exploration and warm-up.} $\varepsilon$-greedy exploration decaying per epoch from 1.0 to 0.01; optional warm-up with uniformly random actions.
+\emph{No teacher forcing.} The submitted code computed the reward of a random action but stored the \emph{true label} as the action (e.g., a random ``silent'' decision on an event was stored as \emph{alarm} with reward $-0.5$), training the correct action toward the false-negative penalty. This procedure is removed. Because labels are available offline, the reward of \emph{both} actions is known; E-DDQN may instead store the counterfactual action together with \emph{its own} reward (\emph{full-information replay}), a valid transition that turns Q-learning into cost-sensitive regression of $\mathbb{E}[R\mid s,a]$. Whether to use it is tuned.
+\emph{Checkpointing.} Every second epoch the agent is scored on the inner validation groups; the epoch with the lowest achievable 5:1 cost (ties: higher PR-AUC) is kept.
+Algorithm~\ref{alg:eddqn} summarises training. Executable unit tests verify the 5:1 regret ratio, within-session transitions with one terminal per session, reward/action consistency of every stored transition, target-network buffer synchronisation and bounded Q-values.
+
+\begin{algorithm}[t]
+\caption{Corrected E-DDQN training for one inner split}
+\label{alg:eddqn}
+\begin{algorithmic}[1]
+\small
+\State Initialise $\theta$, $\theta^-\!\leftarrow\theta$, buffer $\mathcal{D}$; optional warm-up with random actions on within-session transitions
+\For{epoch $=1,\dots,E$}
+  \State Concatenate training sessions in random order, each in temporal order; mark the last second of each session terminal
+  \For{each chunk of 256 consecutive transitions}
+    \State $a_t\gets$ $\varepsilon$-greedy on $Q_\theta(s_t,\cdot)$;\ $r_t\gets R(a_t,y_t)$
+    \State store $(s_t,a_t,r_t,s_{t+1},d_t,y_t)$; if full-information replay, also store $(s_t,1-a_t,R(1-a_t,y_t),s_{t+1},d_t,y_t)$
+    \State every 2 chunks: $k$ updates on class-balanced minibatches (Double-DQN target, Huber loss); Polyak update of $\theta^-$ and copy of BN statistics
+  \EndFor
+  \State 5 consolidation updates;\ decay $\varepsilon$;\ cosine LR step
+  \State every 2 epochs: score inner-validation groups; keep $\theta$ if the achievable 5:1 cost improves
+\EndFor
+\State \Return checkpoint; score $\hat p(s)=(\Delta Q+\Delta_{\mathrm{FP}})/(\Delta_{\mathrm{FN}}+\Delta_{\mathrm{FP}})$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Matched Baselines}
+\label{sec:baselines}
+All models receive the same splits, the same four candidate feature sets, the same binary target, the same random-search budget (16 configurations; 12 for logistic regression), the same checkpoint rule (neural models), the same cross-fitted training recipe and the same threshold rules. \textbf{Standard DQN}~\cite{mnih2015human}: symmetric $\pm1$ reward, single max-operator target, periodic hard target copies (every 10, 100 or 500 updates), uniform replay, plain (non-dueling) head, same episodes and transitions; $\gamma$ is tuned as for E-DDQN. \textbf{E-CB}: E-DDQN with $\gamma=0$ (contextual bandit; the target network and double estimator are then inactive by construction). \textbf{CS-MLP}: a cost-sensitive multilayer perceptron with the same trunk family and a positive-class-weighted cross-entropy ($w=5$, i.e. the same 5:1 cost), uniform or class-balanced minibatches, checkpointed like the agents. \textbf{Logistic regression}, \textbf{histogram gradient boosting} and \textbf{random forest}~\cite{pedregosa2011sklearn} with class weight 5. For a weighted model the output $p_w$ is mapped back to $\hat p=p_w/(5-4p_w)$, so that every model's score estimates $P(y=1\mid s)$ and the Bayes cut-off is $1/6$ for all of them. Two trivial references are reported: \emph{always alarm} and \emph{never alarm}.
+
+\subsection{Threat Model and Telemetry-Perturbation Stress Tests}
+\label{sec:threat}
+The motivating threat is unchanged: an adversary who controls the rendering or locomotion pipeline (e.g., a malicious modification or compromised runtime) degrades frame pacing~\cite{odeleye2021framerate}, distorts camera or locomotion motion, or manipulates the field of view to induce or exploit cybersickness~\cite{tseng2022dark,kundu2025securing}. The dataset contains \emph{no attacked sessions} and no measurement of what any manipulation would do to a participant. We therefore evaluate only what the data support: \emph{synthetic, bounded perturbations of the logged telemetry channels} of the outer-test sessions, after which the causal features are recomputed with the frozen, training-fitted featurizer---exactly as a deployed monitor would see manipulated telemetry. Labels are never changed; an indicator $z$ marks perturbed seconds. Scenarios (frozen before evaluation): \emph{frame-rate capping} to 72/60/45\,fps (Type~I); \emph{camera-orientation jitter} $\pm0.02/0.05/0.10$ per quaternion component (Type~II); \emph{speed up-scaling} by 10/25/50\,\% with acceleration recomputed (Type~II); \emph{acceleration-spike injection} of 10/20/40 units every 20\,s (Type~II); each over the whole session or a random 60-s window, all clipped to the ranges observed in the data. \emph{Field-of-view manipulation (Type~III) is not evaluated} because the field of view never varies in the data (it is constant within each game), so any perturbation would be pure extrapolation. Two adversarial goals are analysed with a per-session worst case over the whole-session candidates plus three ``hiding'' manipulations (speed down-scaling, orientation smoothing, frame-rate restoration): \emph{evasion} (minimise alarms on event seconds; the adversary is given the labels) and \emph{false-alarm induction} (maximise alarms on non-event seconds). These are feature-space stress tests of the detector; they are not demonstrations of physical rendering attacks.
+
+\subsection{Evaluation Protocol and Statistics}
+\label{sec:protocol}
+The protocol was written and committed before any model was trained on the evaluation sessions. For every model family and outer fold, random search draws the family's configurations; each is trained on each inner split and the configuration with the lowest 5:1 expected cost on the pooled inner out-of-fold (OOF) predictions (at the cost-minimising threshold; ties broken by PR-AUC) is selected. The selected configuration is then trained for five seeds; for each seed the \nInner{} inner models are kept (each checkpointed on its own validation groups), the outer-test score is the mean of their scores, and the operating threshold is chosen on the pooled inner-OOF scores of the development groups only. The primary operating rule (D1) minimises the 5:1 expected cost $c=(5\,\mathrm{FN}+\mathrm{FP})/N$ on those OOF scores; secondary rules are the untuned Bayes cut-off $\hat p\ge1/6$ (D0; for the asymmetric agents this is the greedy arg-max policy) and a validation recall constraint of 0.95. Matched operating points use validation-chosen thresholds for recall targets 0.80--0.99 and specificity targets 0.5 and 0.8. The outer-test folds are never used for any choice.
+
+We report accuracy, precision, recall, specificity, F1, balanced accuracy, MCC~\cite{chicco2020mcc}, G-mean, false-positive and false-negative rates, missed events, the 5:1 expected cost, ROC-AUC and PR-AUC~\cite{saito2015pr}, exact confusion matrices, mean~$\pm$~SD over the five seeds, and 95\,\% confidence intervals from a bootstrap that resamples linkage groups (2,000 replicates). Paired comparisons use the same test samples: McNemar's test~\cite{mcnemar1947,dietterich1998tests} (exact binomial and continuity-corrected $\chi^2$; the contingency table is checked against the error counts, $b-c=\mathrm{err}_B-\mathrm{err}_A$) and a paired group bootstrap of the cost difference. Because consecutive seconds of a session are strongly dependent, the sample-level McNemar test overstates the evidence; the group bootstrap is the primary inference. Event-level metrics (sessions whose event is detected, detection delay after onset, alarm fraction before onset and in event-free sessions) complement the per-second metrics.
+
+\subsection{Explainability}
+\label{sec:shap}
+SHAP values~\cite{lundberg2017shap} are computed with DeepExplainer~\cite{shrikumar2017deeplift} for the decision margin $\Delta Q(s)=Q(s,1)-Q(s,0)$ of E-DDQN (one model per outer fold, background drawn from that fold's training groups, attributions on its test groups). The submitted version attributed $Q(s,\textit{Attack})$, which contains the state value $V(s)$ shared by both actions and therefore does not explain the decision.

@@ -1,0 +1,29 @@
+% Supplementary material for the revised manuscript. All tables are generated
+% by revision/scripts/05_make_tables.py from the saved results.
+\documentclass[10pt,a4paper]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,multirow,makecell}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thesection}{S\arabic{section}}
+\input{generated/numbers.tex}
+\title{Supplementary Material\\[2mm]\large Enhanced Double Deep Q-Network (E-DDQN) with Asymmetric Reward Design Versus Standard Deep Q-Network for Safety-Prioritized Cybersickness Detection in Virtual Reality Under an Adversarial Threat Model: A Comparative Analysis}
+\author{R. Darabee, M. Muniandy, O. Shindi, C. W. Khuen, E. H. Sumiea}
+\date{Revision}
+\begin{document}
+\maketitle
+\tableofcontents
+
+\input{sections/s_data}
+\input{sections/s_protocol}
+\input{sections/s_results}
+\input{sections/s_attacks}
+\input{sections/s_audit}
+\input{sections/s_repro}
+
+\end{document}

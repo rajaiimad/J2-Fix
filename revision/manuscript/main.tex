@@ -1,0 +1,62 @@
+% Revised manuscript (rebuilt from the submitted PDF; the original LaTeX source
+% and the IEEE Access class file were not available in the repository).
+% Every result number is a macro defined in generated/numbers.tex, which is
+% written by revision/scripts/05_make_tables.py from the saved predictions.
+\documentclass[journal]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{threeparttable}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+\usepackage{url}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+\input{generated/numbers.tex}
+\newcommand{\pct}[1]{#1\,\%}
+
+\begin{document}
+
+\title{Enhanced Double Deep Q-Network (E-DDQN) with Asymmetric Reward Design Versus Standard Deep Q-Network for Safety-Prioritized Cybersickness Detection in Virtual Reality Under an Adversarial Threat Model: A Comparative Analysis}
+
+\author{Rajai~Darabee,
+        Manoranjitham~Muniandy,
+        Omar~Shindi,
+        Cheng~Wai~Khuen,
+        and~Ebrahim~Hamid~Sumiea
+\thanks{R. Darabee, M. Muniandy, C. W. Khuen and E. H. Sumiea are with the Faculty of Science, Management \& Computing, Universiti Teknologi PETRONAS, 32610 Seri Iskandar, Perak, Malaysia. O. Shindi is with the School of Information Technology, Crown Institute of Higher Education, Sydney, Australia. Corresponding author: R. I. A. Darabee (e-mail: rajai\_24006920@utp.edu.my).}}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/s1_introduction}
+\input{sections/s2_related}
+\input{sections/s3_method}
+\input{sections/s4_setup}
+\input{sections/s5_results}
+\input{sections/s6_discussion}
+\input{sections/s7_conclusion}
+
+\section*{Data Availability and Reproducibility}
+The data are the publicly available UFFCSData release~\cite{porcino2019uffcsdata} (AGPL-3.0). All code, the frozen protocol (\texttt{revision/configs/protocol.json}, committed before any model was trained on the evaluation sessions), the split tables, the per-sample predictions of every model and every script that produces the numbers, tables and figures of this paper are in the project repository (\texttt{revision/}); \texttt{revision/run\_all.sh} regenerates everything from the raw XML files. Seeds are fixed for data splitting (20261012), hyper-parameter search (777) and final training (1000--1004); CPU execution with one thread per process was used, and minor floating-point differences across hardware are possible.
+
+\section*{Acknowledgment}
+The authors thank Universiti Teknologi PETRONAS for institutional and computational support, and the authors of the UFFCSData dataset for making their data public.
+
+\section*{Conflict of Interest}
+The authors declare no conflict of interest.
+
+\section*{Funding}
+This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

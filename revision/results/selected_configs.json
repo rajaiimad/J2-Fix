@@ -1,0 +1,49 @@
+{
+  "LogReg": {
+    "0": {
+      "config_id": 3,
+      "config": {
+        "feature_set": "exposure",
+        "C": 0.0001
+      },
+      "pooled_oof_min_cost": 0.4860239589275528,
+      "pooled_oof_pr_auc": 0.6351820095396876
+    },
+    "1": {
+      "config_id": 8,
+      "config": {
+        "feature_set": "telemetry+profile",
+        "C": 1.0
+      },
+      "pooled_oof_min_cost": 0.5215736040609137,
+      "pooled_oof_pr_auc": 0.5440288259557686
+    },
+    "2": {
+      "config_id": 10,
+      "config": {
+        "feature_set": "exposure",
+        "C": 10.0
+      },
+      "pooled_oof_min_cost": 0.539553182520725,
+      "pooled_oof_pr_auc": 0.4862482434521218
+    },
+    "3": {
+      "config_id": 3,
+      "config": {
+        "feature_set": "exposure",
+        "C": 0.0001
+      },
+      "pooled_oof_min_cost": 0.5109967845659164,
+      "pooled_oof_pr_auc": 0.568499953716521
+    },
+    "4": {
+      "config_id": 0,
+      "config": {
+        "feature_set": "exposure+profile",
+        "C": 0.01
+      },
+      "pooled_oof_min_cost": 0.5307355967078189,
+      "pooled_oof_pr_auc": 0.6100210153640861
+    }
+  }
+}

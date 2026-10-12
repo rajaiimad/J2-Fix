@@ -18,4 +18,6 @@ for v in leaky_oversampled grouped; do
   mkdir -p "$HERE/results/original_repro/$v"
   cp "$RUN/run.log" "$HERE/results/original_repro/$v/run.log"
   cp "$RUN"/Results_FastDQL/*.xlsx "$RUN"/Results_FastDQL/*.csv "$HERE/results/original_repro/$v/" 2>/dev/null || true
+  python3 -c "import pandas as pd,sys; pd.read_excel(sys.argv[1]).to_csv(sys.argv[2], index=False)" \
+    "$RUN/Results_FastDQL/Split_Comparison_FastDQL.xlsx" "$HERE/results/original_repro/$v/split_comparison.csv" || true
 done

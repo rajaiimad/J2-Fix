@@ -1,0 +1,36 @@
+\section{Related Work}
+\label{sec:related}
+
+Research relevant to adversarial cybersickness detection spans four streams: AI-based cybersickness detection, adversarial VR threat modelling, explainable AI (XAI) for safety-critical detection, and value-based reinforcement learning for detection. We summarise each and the gap that motivates E-DDQN. Accuracy figures quoted below are those reported by the cited authors on their own datasets and evaluation protocols; they are not comparable with each other or with ours, and most do not state whether training and test data share participants.
+
+\subsection{AI-Based Cybersickness Detection}
+Questionnaires such as the Simulator Sickness Questionnaire~\cite{kennedy1993ssq} measure discomfort after exposure and cannot capture onset during immersion~\cite{caserman2021cybersickness}, which motivates sensor-driven detection. Dennison et al.~\cite{dennison2016physio} related physiological signals (e.g., breathing and stomach activity) to cybersickness reports. Islam et al. detected and forecast severity from heart rate, breathing rate, heart-rate variability and skin conductance with deep neural classifiers~\cite{islam2020automatic}, and later fused eye- and head-tracking data from integrated HMD sensors (87.77\,\% accuracy)~\cite{islam2021fusion}. Liu et al. assessed cybersickness from EEG with a CNN-ECA-LSTM network~\cite{liu2024cnneca}; Yalcin et al. combined bidirectional LSTMs with conditional-GAN augmentation of consumer-grade physiological data (91.1\,\% F1)~\cite{yalcin2024automatic}; Jeong and Han used transformers on multimodal time series~\cite{jeong2024precyse}. Using gameplay data, Porcino et al. collected UFFCSData and used symbolic machine learning to identify likely causes such as rotation and acceleration~\cite{porcino2022identifying}. A systematic review notes that most detectors classify the current state rather than anticipating onset~\cite{yang2022mlreview}. None of these works evaluates detection under deliberate manipulation, and few report participant-independent evaluation.
+
+\subsection{Adversarial VR Threats}
+VR mediates perception and balance and therefore exposes an attack surface distinct from conventional software~\cite{odeleye2023virtually,giaretta2025security}. Tseng et al. showed how perceptual manipulations (e.g., redirected walking and haptic retargeting) can be repurposed to cause physical harm~\cite{tseng2022dark}, and Cheng et al. studied users' reactions to perceptual-manipulation attacks in mixed reality~\cite{cheng2023perceptual}. Closer to our threat model, Odeleye et al. described frame-rate manipulation attacks that can induce VR sickness and detected them early with an Isolation Forest~\cite{odeleye2021framerate}, and Kundu et al. introduced \emph{cybersickness attacks}---adversarial inputs that fool deep cybersickness detectors so that mitigation is not triggered---together with an XAI-guided defence~\cite{kundu2025securing}. Network-level anomaly detection for VR learning environments addresses denial-of-service and unauthorised access rather than perception-layer manipulation~\cite{valluripally2023detection}.
+
+\subsection{Explainable AI for Safety-Critical Detection}
+SHAP~\cite{lundberg2017shap} and LIME~\cite{ribeiro2016lime} provide per-decision attributions. In cybersickness detection, TruVR used explainable boosting machines (99.75\,\% and 94.10\,\% accuracy on physiological and gameplay data)~\cite{kundu2022truvr}, LiteVR used SHAP-guided feature reduction for lightweight models~\cite{kundu2023litevr}, and VR-LENS used XAI-guided feature reduction to shorten training and inference on a mobile processor~\cite{kundu2023vrlens}. Kundu et al. further used SHAP ``signatures'' to separate normal from adversarial detector inputs~\cite{kundu2025securing}. Post hoc attribution computed off the inference path adds no latency to the detection decision itself.
+
+\subsection{Value-Based Reinforcement Learning for Detection}
+Deep Q-networks~\cite{mnih2015human} suffer from overestimation, which Double DQN reduces by decoupling action selection and evaluation~\cite{vanhasselt2016double}; dueling heads separate state value from action advantage~\cite{wang2016dueling}. Classification has been cast as a sequential decision process solved with DQN, with larger rewards for minority-class samples, by Lin et al.~\cite{lin2020imbalanced}; asymmetric rewards for detection are therefore not new in themselves. Their relation to classical cost-sensitive learning~\cite{elkan2001cost} is, however, rarely made explicit, and safe-RL research shows that the choice of penalties shapes how risk-averse a learned policy is~\cite{garcia2015safe}. To our knowledge, asymmetric-reward value learning has not been evaluated for cybersickness detection under a participant-independent protocol.
+
+\subsection{Identified Research Gap}
+Table~\ref{tab:gaps} summarises the gaps. Three are addressed directly in this work: a safety-prioritised (5:1) decision objective whose relation to cost-sensitive thresholding is made explicit; a leakage-free, participant-conservative evaluation that compares the RL detector with matched supervised alternatives; and a reproducible stress test of the detector under bounded manipulation of the telemetry channels that an adversary could influence. Physically validated rendering attacks remain outside what any public dataset currently supports.
+
+\begin{table*}[t]
+\centering
+\caption{Identified research gaps and how this revision addresses them.}
+\label{tab:gaps}
+\footnotesize
+\begin{tabular}{p{0.2\textwidth}p{0.27\textwidth}p{0.45\textwidth}}
+\toprule
+Gap & Evidence & This work \\
+\midrule
+Detectors are rarely evaluated under deliberate manipulation & Only \cite{kundu2025securing,odeleye2021framerate} consider attacks & Bounded, reproducible telemetry-perturbation stress tests (frame pacing, camera motion, locomotion) with evasion and false-alarm worst cases; physical attacks remain future work \\
+Symmetric objectives ignore unequal error costs & \cite{mnih2015human,vanhasselt2016double} & 5:1 asymmetric reward; proof that it equals the 5:1 cost-sensitive Bayes threshold (Eq.~\ref{eq:margin}); evaluated against cost-sensitive supervised models at matched operating points \\
+Participant leakage and optimistic splits & \cite{kapoor2023leakage,kaufman2012leakage,roberts2017cv} & Session-linkage groups, nested grouped evaluation, train-only preprocessing, frozen protocol \\
+Explanations that do not target the decision & SHAP on class scores & SHAP on the decision margin $\Delta Q$ \\
+\bottomrule
+\end{tabular}
+\end{table*}
