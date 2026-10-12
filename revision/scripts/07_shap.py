@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from eddqn import CONFIGS, RESULTS  # noqa: E402
 from eddqn.data import build_datasets, fold_frames, prepare_fold, split_tables  # noqa: E402
 from eddqn.experiment import make_model  # noqa: E402
-from eddqn.features import feature_columns  # noqa: E402
+from eddqn.features import display_name, feature_columns  # noqa: E402
 
 torch.set_num_threads(2)
 PROTOCOL = json.loads((CONFIGS / "protocol.json").read_text())
@@ -58,6 +58,8 @@ if __name__ == "__main__":
         Xte = fd.X_ev["test"][:, cols]
         idx = rng.choice(len(Xte), min(400, len(Xte)), replace=False)
         xs = torch.from_numpy(Xte[idx])
+        np.random.seed(1000 + k)   # GradientExplainer samples with np.random / torch
+        torch.manual_seed(1000 + k)
         try:
             sv = shap.DeepExplainer(net, bg).shap_values(xs, check_additivity=True)
             method = "DeepExplainer (additivity checked)"
@@ -81,7 +83,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     top = agg.head(15)[::-1]
     fig, ax = plt.subplots(figsize=(5, 4))
-    ax.barh(top.feature, top.mean_abs_shap, color="#3b6ea5")
+    ax.barh([display_name(f) for f in top.feature], top.mean_abs_shap, color="#3b6ea5")
     ax.set_xlabel(r"mean |SHAP| of $\Delta Q$ (averaged over outer folds)")
     ax.set_title("E-DDQN decision-margin attributions")
     fig.tight_layout()

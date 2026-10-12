@@ -157,3 +157,19 @@ class CausalFeaturizer:
                 f[f"prof_vision_{cond}"] = float(cond in vp)
         return f
 
+
+
+_PROFILE_NAMES = {
+    "UserGenere_feminino": "gender: female", "UserAge_37 A 50": "age 37-50", "UserAge_+50": "age 50+",
+    "UserExperience_ALGUMA": "VR experience: some", "UserExperience_MUITA": "VR experience: a lot",
+    "UserGlassesUse_SIM": "wears glasses", "UserEyeDominance_ESQUERDO": "left-eye dominant",
+    "UserFlicker_ALGUM": "flicker sensitivity: some", "vision_MIOPIA": "vision: myopia",
+    "vision_ASTIGMATISMO": "vision: astigmatism", "vision_HIPERMETROPIA": "vision: hyperopia",
+}
+
+
+def display_name(feature: str) -> str:
+    """Human-readable English label (questionnaire answers are stored in Portuguese)."""
+    if feature.startswith("prof_"):
+        return "CSPQ " + _PROFILE_NAMES.get(feature[5:], feature[5:])
+    return feature

@@ -1,0 +1,46 @@
+\section{Additional results}
+\label{sec:s-results}
+
+\subsection{Secondary operating rules}
+Rule D0 (untuned Bayes cut-off $\hat p\ge 1/6$; for the asymmetric agents this is the greedy policy):
+
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_main_D0.tex}}
+
+\medskip
+Validation recall constraint ($\ge$0.95 on pooled inner-OOF predictions):
+
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_main_R95.tex}}
+
+\subsection{Group-bootstrap confidence intervals}
+Seed-ensemble predictions, rule D1; 95\,\% percentile intervals from 2,000 bootstrap replicates of the \nGroupsEval{} linkage groups.
+
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_ci.tex}}
+
+\subsection{Per-fold results}
+Expected 5:1 cost / ROC-AUC of the seed ensemble in each outer fold (rule D1). Fold-to-fold variation is large because each fold contains only 3--5 linkage groups.
+
+\noindent\resizebox{\textwidth}{!}{\input{generated/tab_per_fold.tex}}
+
+\subsection{Event-level behaviour}
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_event.tex}}
+
+\subsection{Paired tests under the secondary rules}
+Rule D0:
+
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_paired_D0.tex}}
+
+\medskip
+Validation recall $\ge$ 0.95:
+
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_paired_R95.tex}}
+
+\subsection{Value-estimation diagnostics}
+Mean Q-value of the greedy action on the inner-validation groups compared with the discounted return actually obtained by the greedy policy on those sessions (rewards of every action are known offline).
+
+\noindent\resizebox{\textwidth}{!}{\input{generated/tab_overestimation.tex}}
+
+\subsection{Confusion matrices}
+\begin{center}
+\includegraphics[width=\textwidth]{figs/confusion_D1_min_cost.pdf}
+\end{center}
+Seed-ensemble predictions, rule D1, all \nSamplesEval{} outer-test samples (rows: true label; columns: decision).

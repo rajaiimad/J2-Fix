@@ -1,0 +1,11 @@
+{
+ "checks": 282,
+ "failures": [],
+ "macros_defined": 1820,
+ "macros_used_in_text": 119,
+ "stale_number_occurrences": {
+  "main.pdf": 7,
+  "supplement.pdf": 11
+ },
+ "note": "stale-number occurrences are listed with context in stale_number_contexts.json and must all be inside the explicitly labelled audit of the submitted version"
+}

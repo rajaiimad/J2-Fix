@@ -18,6 +18,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from eddqn import CONFIGS, RESULTS, REVISION_ROOT  # noqa: E402
+from eddqn.features import display_name  # noqa: E402
 
 TAB = RESULTS / "tables"
 GEN = REVISION_ROOT / "manuscript" / "generated"
@@ -116,6 +117,10 @@ def leakage_macros_and_table():
 
 
 # --------------------------------------------------------------- main results
+def s_d1_fpr(summ):
+    return summ[(summ.rule == "D1_min_cost") & summ.model.isin(MODELS)]["fpr_mean"]
+
+
 def main_macros_and_tables():
     summ = pd.read_csv(TAB / "metrics_summary.csv")
     triv = pd.read_csv(TAB / "trivial_baselines.csv")
@@ -163,6 +168,9 @@ def main_macros_and_tables():
     table("D1_min_cost", "tab_main_D1.tex")
     table("D0_bayes_1_6", "tab_main_D0.tex")
     table("recall>=0.95", "tab_main_R95.tex")
+    fprs = 100 * s_d1_fpr(summ)
+    put("DOneFPRMin", f"{fprs.min():.0f}")
+    put("DOneFPRMax", f"{fprs.max():.0f}")
     # best baseline by cost (D1)
     s = summ[summ.rule == "D1_min_cost"].set_index("model")
     ranking = s["expected_cost_mean"].sort_values()
@@ -283,7 +291,7 @@ def selected_config_table():
             desc = ", ".join(f"{x}={c[x]}" for x in keys).replace("_", "\\_")
             lines.append(f"{mdl} & {k} & {v['pooled_oof_min_cost']:.3f} & \\footnotesize {desc} \\\\")
     (SGEN / "tab_selected_configs.tex").write_text(
-        "\\begin{longtable}{llcp{0.62\\textwidth}}\n\\toprule\nModel & Outer & OOF cost & Selected configuration \\\\\n\\midrule\n\\endhead\n" +
+        "\\begin{longtable}{llcp{0.55\\textwidth}}\n\\toprule\nModel & Outer & OOF cost & Selected configuration \\\\\n\\midrule\n\\endhead\n" +
         "\n".join(lines) + "\n\\bottomrule\n\\end{longtable}\n")
     e = sel.get("E-DDQN", {})
     gam = [e[k]["config"].get("gamma") for k in sorted(e)]
@@ -311,9 +319,9 @@ def search_space_table():
         for k, v in keys.items():
             lines.append(f"{fam} & {k.replace('_', chr(92) + '_')} & {', '.join(map(str, v))} \\\\")
     fx = PROTOCOL["fixed_training"]["agents"]
-    lines.append("All agents (fixed) & " + ", ".join(f"{k.replace('_', chr(92) + '_')}={v}" for k, v in fx.items()) + " & \\\\")
+    lines.append("All agents & fixed & " + ", ".join(f"{k.replace('_', chr(92) + '_')}={v}" for k, v in fx.items()) + " \\\\")
     (SGEN / "tab_search_space.tex").write_text(
-        "\\begin{longtable}{llp{0.5\\textwidth}}\n\\toprule\nFamily & Hyper-parameter & Candidate values \\\\\n\\midrule\n\\endhead\n" +
+        "\\begin{longtable}{p{0.16\\textwidth}p{0.2\\textwidth}p{0.55\\textwidth}}\n\\toprule\nFamily & Hyper-parameter & Candidate values \\\\\n\\midrule\n\\endhead\n" +
         "\n".join(lines) + "\n\\bottomrule\n\\end{longtable}\n")
     put("HPOBudget", str(PROTOCOL["hpo_budget"]["E-DDQN"]))
 
@@ -331,12 +339,25 @@ def ablation_tables():
         lines = [f"Full E-DDQN (selected) & {fmt('recall', f.recall_mean)} & {fmt('specificity', f.specificity_mean)} & "
                  f"{fmt('expected_cost', f.expected_cost_mean)}$\\pm${fmt('expected_cost', f.expected_cost_std)} & "
                  f"{fmt('roc_auc', f.roc_auc_mean)} & {fmt('pr_auc', f.pr_auc_mean)} \\\\", "\\midrule"]
+        disp = {"asymmetric": "symmetric $\\pm$1 reward instead of asymmetric", "dueling": "no dueling head",
+                "double": "no double estimator (max-operator target)", "soft target": "hard target copy every 10 updates",
+                "class-balanced": "uniform instead of class-balanced replay", "warm-up": "no warm-up",
+                "full-information": "full-information replay toggled", "gamma = 0": "$\\gamma=0$ (contextual bandit)"}
         for _, r in t[(t.rule == rule) & t.model.str.startswith("ABL")].iterrows():
-            name = r.model[4:].replace("_", " ").replace("+-", "$\\pm$").replace("-", "$-$", 1)
+            lab = r.model[4:].replace("_", " ")
+            name = next((v for k, v in disp.items() if k in lab), lab)
             lines.append(f"{name} & {fmt('recall', r.recall_mean)} & {fmt('specificity', r.specificity_mean)} & "
                          f"{fmt('expected_cost', r.expected_cost_mean)}$\\pm${fmt('expected_cost', r.expected_cost_std)} & "
                          f"{fmt('roc_auc', r.roc_auc_mean)} & {fmt('pr_auc', r.pr_auc_mean)} \\\\")
         tag = "D1" if rule.startswith("D1") else "D0"
+        short = {"asymmetric": "Asym", "dueling": "Duel", "double": "Double", "soft target": "Soft",
+                 "class-balanced": "Bal", "warm-up": "Warm", "full-information": "Full", "gamma = 0": "GammaZero"}
+        for _, r in t[(t.rule == rule) & t.model.str.startswith("ABL")].iterrows():
+            lab = r.model[4:].replace("_", " ")
+            key = next((v for k, v in short.items() if k in lab), None)
+            if key:
+                for m in ("expected_cost", "roc_auc", "recall", "specificity", "pr_auc"):
+                    put(mname("Abl", key, RULES[rule], METRICS[m]), fmt(m, r[f"{m}_mean"]))
         (GEN / f"tab_ablation_{tag}.tex").write_text(
             "\\begin{tabular}{lccccc}\n\\toprule\nVariant & Recall & Spec. & Cost$_{5:1}$ & ROC-AUC & PR-AUC \\\\\n\\midrule\n" +
             "\n".join(lines) + "\n\\bottomrule\n\\end{tabular}\n")
@@ -385,6 +406,9 @@ def attack_tables():
             r = g[(g.kind == kind) & (np.isclose(g.value, val))].iloc[0]
             put(mname(k, "Att", kind, "Recall"), f"{100 * r.recall_attacked:.1f}")
             put(mname(k, "Att", kind, "FPR"), f"{100 * r.fpr_attacked:.1f}")
+    drops = 100 * (w.recall_clean - w.recall_worst_case_evasion)
+    put("AttEvasionDropMin", f"{drops.min():.0f}")
+    put("AttEvasionDropMax", f"{drops.max():.0f}")
     (GEN / "tab_attack.tex").write_text(
         "\\begin{tabular}{lcccccccc}\n\\toprule\n & Clean & fps$\\le$45 & jitter 0.10 & speed $\\times$1.5 & spikes 40 & \\multicolumn{2}{c}{Adaptive worst case} \\\\\n"
         "Model & Rec./FPR & Rec./FPR & Rec./FPR & Rec./FPR & Rec./FPR & Rec. (evasion) & FPR (false alarm) \\\\\n\\midrule\n" +
@@ -428,8 +452,9 @@ def diag_macros():
     if p.exists():
         s = pd.read_csv(p)
         top = s.head(5)
-        put("ShapTopFive", ", ".join(f"\\texttt{{{f.replace('_', chr(92) + '_')}}}" for f in top.feature))
-        put("ShapTopOne", f"\\texttt{{{top.feature.iloc[0].replace('_', chr(92) + '_')}}}")
+        tex = lambda f: display_name(f).replace("_", chr(92) + "_")
+        put("ShapTopFive", ", ".join(f"\\emph{{{tex(f)}}}" for f in top.feature))
+        put("ShapTopOne", f"\\emph{{{tex(top.feature.iloc[0])}}}")
 
 
 def per_fold_table():
@@ -444,6 +469,83 @@ def per_fold_table():
         "\\begin{tabular}{l" + "c" * PROTOCOL["k_outer"] + "}\n\\toprule\nModel & " +
         " & ".join(f"Fold {k}" for k in range(PROTOCOL["k_outer"])) + " \\\\\n\\midrule\n" + "\n".join(lines) +
         "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def attack_auc_table():
+    p = TAB / "attack_threshold_free.csv"
+    if not p.exists():
+        return
+    a = pd.read_csv(p)
+    show = [("clean", None, "Clean"), ("fps_cap", 45.0, "fps$\\le$45"), ("rot_jitter", 0.1, "jitter 0.10"),
+            ("speed_scale_up", 0.5, "speed $\\times$1.5"), ("accel_spikes", 40.0, "spikes 40"),
+            ("speed_scale_down", -0.5, "speed $\\times$0.5"), ("rot_smooth", 0.25, "smooth 0.25")]
+    lines = []
+    for mdl in MODELS:
+        g = a[a.model == mdl]
+        if g.empty:
+            continue
+        cells = []
+        for kind, val, _ in show:
+            r = g[g.kind == kind] if val is None else g[(g.kind == kind) & np.isclose(g.value, val)]
+            cells.append(f"{r.roc_auc.iloc[0]:.3f}")
+            put(mname(MKEY[mdl], "AttAuc", kind), f"{r.roc_auc.iloc[0]:.3f}")
+        d = g[g.kind != "clean"].roc_auc - g[g.kind == "clean"].roc_auc.iloc[0]
+        put(mname(MKEY[mdl], "AttAucMaxDrop"), f"{-d.min():.3f}")
+        put(mname(MKEY[mdl], "AttAucMaxRise"), f"{d.max():.3f}")
+        lines.append(f"{mdl} & " + " & ".join(cells) + f" & {d.min():+.3f} / {d.max():+.3f} \\\\")
+    allchg = []
+    for mdl in MODELS:
+        g = a[a.model == mdl]
+        if not g.empty:
+            allchg += list(g[g.kind != "clean"].roc_auc - g[g.kind == "clean"].roc_auc.iloc[0])
+    put("AttAucMaxAbsChange", f"{max(abs(x) for x in allchg):.3f}")
+    put("AttAucFracSmall", f"{100 * np.mean([abs(x) < 0.03 for x in allchg]):.0f}")
+    head = " & ".join(h for _, _, h in show)
+    (GEN / "tab_attack_auc.tex").write_text(
+        "\\begin{tabular}{l" + "c" * (len(show) + 1) + "}\n\\toprule\nModel & " + head + " & min / max $\\Delta$ \\\\\n\\midrule\n" +
+        "\n".join(lines) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def optimism_table():
+    p = TAB / "optimism_gap.csv"
+    if not p.exists():
+        return
+    o = pd.read_csv(p).groupby("model")[["inner_oof_cost_at_selection", "outer_test_cost", "optimism_gap"]].mean()
+    lines = []
+    for mdl in MODELS:
+        if mdl not in o.index:
+            continue
+        r = o.loc[mdl]
+        lines.append(f"{mdl} & {r.inner_oof_cost_at_selection:.3f} & {r.outer_test_cost:.3f} & {r.optimism_gap:+.3f} \\\\")
+        put(mname(MKEY[mdl], "OptGap"), f"{r.optimism_gap:+.3f}")
+        put(mname(MKEY[mdl], "OptInner"), f"{r.inner_oof_cost_at_selection:.3f}")
+    (GEN / "tab_optimism.tex").write_text(
+        "\\begin{tabular}{lccc}\n\\toprule\nModel & Inner-OOF cost at selection & Outer-test cost & Gap \\\\\n\\midrule\n" +
+        "\n".join(lines) + "\n\\bottomrule\n\\end{tabular}\n")
+
+
+def ratio_argmax_table():
+    p = TAB / "ratio_argmax_policy.csv"
+    if not p.exists():
+        return
+    d = pd.read_csv(p)
+    summ = pd.read_csv(TAB / "ablation_ratio_summary.csv")
+    lines = []
+    for _, r in d.iterrows():
+        R = int(r.ratio)
+        tuned = summ[(summ.model == f"RATIO {R}") & (summ.rule == "D1_min_cost")].iloc[0]
+        k = mname("RatioArg", str(R))
+        put(k + "Recall", f"{100 * r.recall_mean:.1f}")
+        put(k + "Spec", f"{100 * r.specificity_mean:.1f}")
+        put(k + "Cost", f"{r.expected_cost_mean:.3f}")
+        put(mname("RatioTuned", str(R), "Cost"), f"{tuned.expected_cost_mean:.3f}")
+        put(mname("RatioTuned", str(R), "RocAuc"), f"{tuned.roc_auc_mean:.3f}")
+        lines.append(f"{R}:1 & $1/{R + 1}$ & {100 * r.recall_mean:.1f}$\\pm${100 * r.recall_std:.1f} & {100 * r.specificity_mean:.1f}$\\pm${100 * r.specificity_std:.1f} & "
+                     f"{r.expected_cost_mean:.3f} & {100 * tuned.recall_mean:.1f} & {100 * tuned.specificity_mean:.1f} & {tuned.expected_cost_mean:.3f}$\\pm${tuned.expected_cost_std:.3f} & {tuned.roc_auc_mean:.3f} \\\\")
+    (GEN / "tab_ratio_policy.tex").write_text(
+        "\\begin{tabular}{lcccccccc}\n\\toprule\n & & \\multicolumn{3}{c}{Greedy policy ($\\arg\\max_a Q$)} & \\multicolumn{3}{c}{Validation-tuned threshold (D1)} & \\\\\n"
+        "FN:FP regret & implied cut-off & Recall & Spec. & Cost$_{5:1}$ & Recall & Spec. & Cost$_{5:1}$ & ROC-AUC \\\\\n\\midrule\n" +
+        "\n".join(lines) + "\n\\bottomrule\n\\end{tabular}\n")
 
 
 if __name__ == "__main__":
@@ -461,6 +563,22 @@ if __name__ == "__main__":
         attack_tables()
         diag_macros()
         per_fold_table()
+        attack_auc_table()
+        optimism_table()
+        ratio_argmax_table()
+    import shutil
+    for d in (REVISION_ROOT / "manuscript" / "figs", REVISION_ROOT / "supplementary" / "figs"):
+        d.mkdir(parents=True, exist_ok=True)
+        for f in ("roc_pr_main.pdf", "shap_margin.pdf", "confusion_D1_min_cost.pdf"):
+            if (RESULTS / "figures" / f).exists():
+                shutil.copy(RESULTS / "figures" / f, d / f)
+    # typographic minus for negative numbers (macros and generated tables)
+    neg = re.compile(r"(?<![\w$\-{])-(?=\d)")
+    for k in list(macros):
+        macros[k] = neg.sub("$-$", macros[k])
+    for d in (GEN, SGEN):
+        for f in d.glob("tab_*.tex"):
+            f.write_text(neg.sub("$-$", f.read_text()))
     out = ["% AUTO-GENERATED by scripts/05_make_tables.py -- do not edit"]
     out += [f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in sorted(macros.items())]
     (GEN / "numbers.tex").write_text("\n".join(out) + "\n")

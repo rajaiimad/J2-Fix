@@ -73,12 +73,13 @@ with episodes and temporal transitions defined consistently with the data.
 | 7 | Warm-up filled `min(25 000, 14 680)` transitions; update interval 25 vs. 50 in the paper. | Script ≠ manuscript. | Warm-up and update schedule are explicit, logged hyper-parameters. |
 | 8 | Header comments describing 2.5:1 and 1.67:1 rewards; "accuracy" selection that actually maximised F1. | Misleading documentation. | Rewritten; selection rule stated once in `configs/protocol.json`. |
 
-## 4. Empirical checks (filled in from `results/`; see Section 6 of the QC report)
+## 4. Empirical checks
 
-* numerical stability / Q-value bounds, overestimation (mean Q of the
-  greedy action vs. its realised discounted return on validation groups),
-* collapse / class bias (alarm rate, all-positive policies),
-* sensitivity to initialisation (5 seeds per outer fold),
-* the effect of γ (E-DDQN vs. E-CB) and of every component (ablation).
+Results are in `reports/05_results.md` §3 and the manuscript, Sec. V-F.
 
-See `reports/05_results.md` for the numbers.
+* **Numerical stability:** Q-value estimates stay finite. `training_diagnostics.csv` records the maximum |Q| per run: medians are 8.7 (E-DDQN), 2.0 (DQN) and 0.6 (E-CB). The largest values slightly exceed the return bound r_max/(1−γ) in a few runs (E-DDQN 61.8 vs. 50 at γ = 0.99, DQN 10.1 vs. 10, E-CB 0.95 vs. 0.5). That is extrapolation on atypical states, not divergence.
+* **Over/under-estimation:** `overestimation.csv` compares the mean greedy-action Q-value with the realised discounted return of the greedy policy on the validation groups.
+* **Collapse / class bias:** validation alarm rates are in `training_diagnostics.csv`. No all-negative collapse occurred. Under the 5:1 cost, the cost-optimal policies are close to always-alarm for every model, RL or not.
+* **Sensitivity to initialisation:** 5 seeds per outer fold. SDs are reported for every metric (e.g. E-DDQN cost SD in `metrics_summary.csv`).
+* **Effect of γ:** validation selected γ = 0.9–0.99 for E-DDQN. Those models show the largest optimism gap and the weakest ranking, whereas the separately tuned γ = 0 variant (E-CB) ranks clearly better. This matches the derivation in §2: bootstrapping cannot improve the optimal policy here.
+* **Component effects:** leave-one-component-out ablation and reward-ratio sensitivity are in `results/tables/ablation_ratio_summary.csv`.

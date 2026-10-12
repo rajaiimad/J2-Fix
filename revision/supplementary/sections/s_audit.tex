@@ -5,7 +5,7 @@
 The repository contained the raw dataset, the E-DDQN script and the manuscript PDF, but not the 41-feature train/validation/test files, preprocessing code, baseline, ablation, multi-seed or statistics code, trained models or logs. Exact reproduction was therefore impossible. The partition sizes of the submitted paper (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples per grade) are reproduced exactly by oversampling every discomfort grade of the curated release to the size of grade 0 (5,243) and then splitting at row level.
 
 \subsection{Leakage reproduction}
-{\footnotesize\input{../manuscript/generated/tab_leakage.tex}}
+\noindent\resizebox{\textwidth}{!}{\input{../manuscript/generated/tab_leakage.tex}}
 
 Under the reconstructed submitted protocol, \LeakDupPos{} of the \LeakTestPos{} positive test rows (\LeakDupPct\,\%) have an exact duplicate in the training split and all sessions occur in both splits.
 
@@ -31,7 +31,7 @@ Under the reconstructed submitted protocol, \LeakDupPos{} of the \LeakTestPos{} 
 \item ``Removing teacher forcing leaves performance essentially unchanged'' while the ablation table showed improvements on every metric.
 \item A 1-s sliding window at 1\,Hz contains one sample; an FOV-modulation feature is identically zero in these data.
 \end{itemize}
-Arithmetic within Tables~7--9 of the submitted version was internally consistent (\texttt{results/audit/manuscript\_number\_check.csv}).
+Arithmetic within Tables~7--9 of the submitted version was internally consistent (\texttt{results/\allowbreak audit/\allowbreak manuscript\_number\_check.csv}).
 
 \subsection{References}
-Nine references could not be found and fifteen had incorrect bibliographic details or misattributed claims; the numbers attributed to Kundu et al.\ (93.5\,\%, $\sim$35\,ms) are not supported by any accessible source. The full verification table is in \texttt{reports/06\_reference\_verification.md}.
+Nine references could not be found and fifteen had incorrect bibliographic details or misattributed claims; the numbers attributed to Kundu et al.\ (93.5\,\%, $\sim$35\,ms) are not supported by any accessible source. The full verification table is in \texttt{reports/\allowbreak 06\_reference\_verification.md}.

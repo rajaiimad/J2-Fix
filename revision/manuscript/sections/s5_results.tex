@@ -1,0 +1,124 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{The Submitted Results Are Explained by Data Leakage}
+\label{sec:leak}
+Table~\ref{tab:leak} reproduces the submitted protocol. Oversampling every discomfort grade to 5,243 samples before a 70/15/15 row split reproduces the submitted partition sizes exactly, and an untuned gradient-boosting classifier then reaches \LeakOldAcc\,\% accuracy, \LeakOldRecall\,\% recall and MCC \LeakOldMCC{}---numbers as high as those reported for E-DDQN in the submitted version, obtained without any reinforcement learning. Under that protocol \LeakDupPos{} of the \LeakTestPos{} positive test rows (\LeakDupPct\,\%) have an exact duplicate in the training split, and every session contributes to both splits. The unmodified submitted E-DDQN script behaves the same way: \OrigOldRecall\,\% recall and MCC \OrigOldMCC{} on the reconstructed partition, but MCC \OrigGrpMCC{} once the split respects session-linkage groups. With the same columns and a grouped split, gradient boosting falls to ROC-AUC \LeakGrpRocAuc{} (MCC \LeakGrpMCC{}). The published numbers therefore measure the ability to recognise duplicated and temporally adjacent samples of sessions seen during training, not the ability to detect cybersickness in new sessions. All results below use the leakage-free protocol of Section~\ref{sec:protocol}.
+
+\begin{table*}[t]
+\centering
+\caption{Effect of the evaluation protocol on the same data (21 raw columns of the curated release). Test-split metrics; ``proxy'' marks the reconstruction of the submitted pipeline (its 41-feature files were not available).}
+\label{tab:leak}
+\resizebox{\textwidth}{!}{\input{generated/tab_leakage.tex}}
+\end{table*}
+
+\subsection{Leakage-Free Comparison under the 5:1 Cost}
+\label{sec:main}
+Table~\ref{tab:main} reports the primary analysis: every model tuned, checkpointed and thresholded on validation groups only and scored once on the outer-test groups (all \nSamplesEval{} samples, \nSessionsEval{} sessions). Two facts dominate. First, the detection problem is hard once sessions and participants are not shared: the best ranking performance is ROC-AUC \HGBCostRocAucMean{} (HGB) and \RFCostRocAucMean{} (random forest), and the highest mean PR-AUC is \DQNCostPrAucMean{} (DQN) against a prevalence of 0.44. Second, under a 5:1 cost the cost-minimising operating point of every model lies close to ``always alarm'' (cost \AlwaysCost): validation-selected thresholds yield recall of 93--99\,\% but specificity of only 3--18\,\%. Only the random forest improves materially on the trivial policy (cost \RFCostCostMean$\pm$\RFCostCostSD{} vs.\ \AlwaysCost), and even its group-bootstrap 95\,\% CI (seed ensemble, \RFCICostLo--\RFCICostHi) includes the always-alarm cost; logistic regression (\LRCostCostMean) and gradient boosting (\HGBCostCostMean) improve on it only marginally.
+
+The corrected E-DDQN ranks last of the \nModels{} models on the primary rule: recall \EDDQNCostRecallMean$\pm$\EDDQNCostRecallSD\,\%, specificity \EDDQNCostSpecMean$\pm$\EDDQNCostSpecSD\,\%, cost \EDDQNCostCostMean$\pm$\EDDQNCostCostSD{} (worse than always alarming), ROC-AUC \EDDQNCostRocAucMean$\pm$\EDDQNCostRocAucSD{} and MCC \EDDQNCostMCCMean. The standard DQN baseline reaches cost \DQNCostCostMean{} and ROC-AUC \DQNCostRocAucMean, and the contextual-bandit variant E-CB cost \ECBCostCostMean{} and ROC-AUC \ECBCostRocAucMean. Neither RL model beats the cost of always alarming. E-DDQN therefore does \emph{not} improve on the standard DQN in this controlled comparison; the improvement reported in the submitted version does not survive leakage-free evaluation.
+
+\begin{table*}[t]
+\centering
+\caption{Primary analysis (rule D1: threshold minimising the 5:1 cost on pooled inner-validation predictions). Mean~$\pm$~SD over five seeds of the pooled outer-test metrics (\nSamplesEval{} samples; recall, specificity, precision, F1 and balanced accuracy in \%); FN and FP are exact counts of the seed ensemble. Bold: lowest cost. HGB and logistic regression are deterministic given the data, hence SD = 0.}
+\label{tab:main}
+\resizebox{\textwidth}{!}{\input{generated/tab_main_D1.tex}}
+\end{table*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/roc_pr_main.pdf}
+\caption{ROC and precision--recall curves of the seed-ensemble scores, pooled over the five outer-test folds.}
+\label{fig:rocpr}
+\end{figure}
+
+\subsection{Operating Points, Matched Recall and the Asymmetric Reward}
+\label{sec:op}
+Table~\ref{tab:ops} contrasts three operating rules. With the untuned Bayes cut-off $\hat p\ge 1/6$ (rule D0)---for the asymmetric agents this is simply the greedy policy $\arg\max_a Q(s,a)$---E-DDQN obtains recall \EDDQNBayesRecallMean\,\% at specificity \EDDQNBayesSpecMean\,\% (cost \EDDQNBayesCostMean), whereas the random forest obtains recall \RFBayesRecallMean\,\% at specificity \RFBayesSpecMean\,\% (cost \RFBayesCostMean). When every model is held to a validation recall of at least 0.95, the random forest again has the lowest cost (\RFRecCostMean; E-DDQN \EDDQNRecCostMean). At validation-matched recall targets (Table~\ref{tab:matched}), the thresholds transfer worst for E-DDQN: at both recall targets it attains lower test recall than every supervised model, and at the 0.95 target it also has a higher false-positive rate than all of them. Reading the ROC curves at fixed recall (descriptive only), the false-positive rate at 95\,\% recall is \EDDQNRocFPRatNineFive\,\% for E-DDQN and \RFRocFPRatNineFive\,\% for the random forest. Because the reward encodes the same 5:1 operating point as a cost-weighted classifier (Eq.~\eqref{eq:margin}), the asymmetric reward provides no advantage that cost-weighted training plus a validation-selected threshold does not already provide.
+
+\begin{table}[t]
+\centering
+\caption{Expected 5:1 cost (mean over seeds) under three operating rules chosen without test data.}
+\label{tab:ops}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Model & D1: min cost & D0: $\hat p\ge 1/6$ & val.\ recall $\ge$ 0.95 \\
+\midrule
+E-DDQN & \EDDQNCostCostMean & \EDDQNBayesCostMean & \EDDQNRecCostMean \\
+E-CB & \ECBCostCostMean & \ECBBayesCostMean & \ECBRecCostMean \\
+DQN & \DQNCostCostMean & \DQNBayesCostMean & \DQNRecCostMean \\
+CS-MLP & \CSMLPCostCostMean & \CSMLPBayesCostMean & \CSMLPRecCostMean \\
+LogReg & \LRCostCostMean & \LRBayesCostMean & \LRRecCostMean \\
+HGB & \HGBCostCostMean & \HGBBayesCostMean & \HGBRecCostMean \\
+RF & \RFCostCostMean & \RFBayesCostMean & \RFRecCostMean \\
+\midrule
+Always alarm & \AlwaysCost & \AlwaysCost & \AlwaysCost \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]
+\centering
+\caption{Matched operating points: thresholds chosen on validation predictions to reach the stated recall or specificity; test recall (\%), false-positive rate (\%) and false-positive count of the seed ensemble.}
+\label{tab:matched}
+\resizebox{\textwidth}{!}{\input{generated/tab_matched.tex}}
+\end{table*}
+
+\subsection{Statistical Comparison}
+\label{sec:stats}
+Table~\ref{tab:paired} compares E-DDQN with every other model on identical test samples (seed ensembles, rule D1). For every pair the McNemar contingency table satisfies $b-c=\mathrm{err}_B-\mathrm{err}_A$ (checked programmatically and recomputed with an independent library). Sample-level McNemar tests give $p<0.001$ for every pair, but they treat \nSamplesEval{} strongly autocorrelated seconds as independent and overstate the evidence. The group bootstrap, which resamples the \nGroupsEval{} independent units, shows that E-DDQN's cost is higher than that of the random forest by \PairDOneRFCostDiff{} (95\,\% CI \PairDOneRFCostLo{} to \PairDOneRFCostHi; $p=$\,\PairDOneRFPboot), higher than gradient boosting by \PairDOneHGBCostDiff{} ($p=$\,\PairDOneHGBPboot), logistic regression by \PairDOneLRCostDiff{} ($p=$\,\PairDOneLRPboot), CS-MLP by \PairDOneCSMLPCostDiff{} ($p=$\,\PairDOneCSMLPPboot) and E-CB by \PairDOneECBCostDiff{} ($p=$\,\PairDOneECBPboot); the difference from the standard DQN (\PairDOneDQNCostDiff; $p=$\,\PairDOneDQNPboot) is not significant at the 5\,\% level. Group-bootstrap confidence intervals of every model are given in Supplementary Sec.~S3.2; with only \nGroupsEval{} independent groups they are wide.
+
+\begin{table*}[t]
+\centering
+\caption{Paired comparisons with E-DDQN (A) on the same \nSamplesEval{} test samples (seed ensembles, rule D1). $b$: A correct, B wrong; $c$: A wrong, B correct. $\Delta$Cost and its CI and $p_{\text{group}}$ come from 2,000 group-bootstrap replicates; $p_{\text{exact}}$ is the sample-level exact McNemar test.}
+\label{tab:paired}
+\resizebox{\textwidth}{!}{\input{generated/tab_paired_D1.tex}}
+\end{table*}
+
+\subsection{Event-Level Behaviour}
+At the cost-optimal operating points every model flags almost every session: E-DDQN raises an alarm on \EDDQNEvFreeAlarm\,\% of the seconds of the \nEventFreeSessions{} sessions in which no discomfort was ever reported and on \EDDQNEvPreAlarm\,\% of the seconds before onset in the \nEventSessions{} sessions with an event (random forest: \RFEvFreeAlarm\,\% and \RFEvPreAlarm\,\%). Events are therefore ``detected'' with zero median delay by construction, not through discrimination (Supplementary Sec.~S3.4).
+
+\subsection{Why E-DDQN Under-Performs: Bootstrapping and Selection Optimism}
+\label{sec:why}
+Validation selected $\gamma=$ \EDDQNGammas{} for the five outer folds of E-DDQN, i.e.\ strong bootstrapping, and the exposure+profile feature set in \EDDQNnProfile{} of 5 folds. Section~\ref{sec:formulation} shows that bootstrapping cannot improve the optimal policy here and adds action-independent estimation noise to $\Delta Q$. Two diagnostics agree. (i) The separately tuned $\gamma=0$ variant (E-CB) ranks much better (ROC-AUC \ECBCostRocAucMean{} vs.\ \EDDQNCostRocAucMean). (ii) Table~\ref{tab:optimism} compares, per family, the inner-validation cost of the configuration at the moment it was selected with its outer-test cost. The gap is \EDDQNOptGap{} for E-DDQN but between \RFOptGap{} and \ECBOptGap{} for all other models: noisy, high-variance training curves combined with validation checkpointing and selection let E-DDQN configurations look best on validation folds by chance~\cite{varma2006bias}. Q-value estimates stay finite---the largest magnitudes over all runs (E-DDQN \EDDQNQAbsMax, DQN \DQNQAbsMax, E-CB \ECBQAbsMax) slightly exceed the corresponding return bounds $r_{\max}/(1-\gamma)$ in a few runs, i.e.\ extrapolation on atypical states---so the failure is not numerical divergence; the mean greedy-action Q-value differs from its realised discounted validation return by \EDDQNOverest{} for E-DDQN, \DQNOverest{} for DQN and \ECBOverest{} for E-CB (Supplementary Sec.~S3.6).
+
+\begin{table}[t]
+\centering
+\caption{Selection optimism: pooled inner-validation 5:1 cost of the selected configuration (HPO seed) versus its outer-test cost (mean over folds and seeds).}
+\label{tab:optimism}
+\resizebox{\columnwidth}{!}{\input{generated/tab_optimism.tex}}
+\end{table}
+
+\subsection{Component Ablation and Reward-Ratio Sensitivity}
+\label{sec:ablation}
+\input{sections/s5b_ablation}
+
+\subsection{Robustness under Telemetry Perturbations}
+\label{sec:attack}
+Table~\ref{tab:attack-auc} reports threshold-free ranking performance under each frozen perturbation. \AttAucFracSmall\,\% of the model--scenario combinations change the pooled ROC-AUC by less than 0.03 and none by more than \AttAucMaxAbsChange{} (the largest drops occur for acceleration-spike injection in E-CB and DQN and for speed down-scaling in gradient boosting), and several perturbations even raise it slightly: the detectors depend only weakly on the frame-rate, orientation and locomotion channels, mainly because the dominant inputs selected on validation data are exposure time, cumulative exposure and questionnaire answers. At the cost-optimal operating points (Table~\ref{tab:attack}), the per-session worst-case evasion adversary lowers recall on event seconds from \EDDQNAttCleanRecall\,\% to \EDDQNAttWorstRecall\,\% for E-DDQN, from \ECBAttCleanRecall\,\% to \ECBAttWorstRecall\,\% for E-CB and from \RFAttCleanRecall\,\% to \RFAttWorstRecall\,\% for the random forest, while the false-alarm adversary drives the false-positive rate of every model to \EDDQNAttWorstFPR--100\,\% (it is already \RFAttCleanFPR--\CSMLPAttCleanFPR\,\% without attack). These are feature-space stress tests: they show how far bounded manipulation of the logged channels can move the detectors' decisions, not what a real rendering attack would do to a participant, and they cannot evaluate field-of-view manipulation, which never varies in the data.
+
+\begin{table*}[t]
+\centering
+\caption{Threshold-free robustness: pooled outer-test ROC-AUC of the seed-ensemble score on clean telemetry and under whole-session perturbations (the last column gives the most negative and most positive change over all 21 whole-session variants).}
+\label{tab:attack-auc}
+\resizebox{\textwidth}{!}{\input{generated/tab_attack_auc.tex}}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Recall/false-positive rate (\%) on perturbed seconds at the D1 operating point, and per-session adaptive worst cases (evasion: minimum recall; false-alarm induction: maximum FPR) over all whole-session candidates.}
+\label{tab:attack}
+\resizebox{\textwidth}{!}{\input{generated/tab_attack.tex}}
+\end{table*}
+
+\subsection{Explainability}
+\label{sec:xai}
+SHAP attributions of the E-DDQN decision margin $\Delta Q$ (Fig.~\ref{fig:shap}) are dominated by \ShapTopFive{}. The detector's decisions are driven mainly by exposure time, cumulative exposure and questionnaire answers rather than by instantaneous telemetry, which is consistent with its insensitivity to the telemetry perturbations above. Because attributions are computed after the decision, they add no latency to detection.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{figs/shap_margin.pdf}
+\caption{Mean absolute SHAP value of the E-DDQN decision margin $\Delta Q$, averaged over the five outer folds (one model per fold; attributions on that fold's test groups).}
+\label{fig:shap}
+\end{figure}

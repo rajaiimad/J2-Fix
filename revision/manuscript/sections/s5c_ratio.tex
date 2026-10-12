@@ -1,0 +1,9 @@
+Table~\ref{tab:ratio} varies the false-negative to false-positive regret of the reward from 1:1 to 10:1 (E-DDQN configuration per fold fixed; ratio 5:1 reproduces the main E-DDQN run bit for bit, which also confirms the determinism of the pipeline). The greedy policy moves along the trade-off exactly as Eq.~\eqref{eq:margin} predicts: recall rises from \RatioArgOneRecall\,\% (1:1) to \RatioArgFiveRecall\,\% (5:1) and \RatioArgOneZeroRecall\,\% (10:1), while specificity falls from \RatioArgOneSpec\,\% to \RatioArgFiveSpec\,\% and \RatioArgOneZeroSpec\,\%. Once the threshold is chosen on validation data, however, all ratios end at statistically indistinguishable costs (\RatioTunedOneCost--\RatioTunedOneZeroCost) and similar ranking: the reward ratio sets the default operating point, but it does not create discrimination that a threshold cannot reproduce. The 5:1 ratio is therefore best understood as a declared safety preference whose operating point can equally be reached by cost-weighted training or threshold selection.
+
+\begin{table*}[t]
+\centering
+\caption{Reward-ratio sensitivity of E-DDQN: operating point of the greedy (arg-max) policy, whose implied cut-off on $P(y=1\mid s)$ is $1/(1+R)$, and of the validation-tuned threshold (rule D1). Mean ($\pm$ SD) over five seeds.}
+\label{tab:ratio}
+\footnotesize
+\input{generated/tab_ratio_policy.tex}
+\end{table*}

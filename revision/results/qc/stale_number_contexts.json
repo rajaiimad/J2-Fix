@@ -1,0 +1,78 @@
+{
+ "main.pdf": [
+  {
+   "number": "96.88",
+   "context": "ions. An earlier version of this work reported 96.88 % accuracy and 99.53 % "
+  },
+  {
+   "number": "96.88",
+   "context": "on telemetry, so the decision problem is a contextual bandit The submitted version reported 96.88 % accuracy and (Section III-D). E-DDQN "
+  },
+  {
+   "number": "99.53",
+   "context": " version of this work reported 96.88 % accuracy and 99.53 % "
+  },
+  {
+   "number": "99.53",
+   "context": "d version reported 96.88 % accuracy and (Section III-D). E-DDQN remains a valid value-based learner 99.53 % recall for E-DDQN and a large gain over a standard "
+  },
+  {
+   "number": "8.8",
+   "context": "0 0.543\u00b10.000 0.692\u00b10.000 0.593\u00b10.000 124 4,479 RF 98.5\u00b10.3 18.2\u00b10.7 48.8\u00b10.2 65.2\u00b10.1 58.3\u00b10.3 0.266\u00b10.004 0.491\u00b10.0"
+  },
+  {
+   "number": "14,680",
+   "context": "el, which reproduces the submitted partition IV. E XPERIMENTAL S ETUP sizes (14,680 / 3,146 / 3,146) exactly. The same 21 raw "
+  },
+  {
+   "number": "2,359",
+   "context": " forest. Because the reward encodes the same 5:1 operating of the 2,359 positive test rows (92 %) have an exact duplicate "
+  }
+ ],
+ "supplement.pdf": [
+  {
+   "number": "8.8",
+   "context": "QN 0.9\u20130.99 5.998 8.898 \u22122.900 \u00b1 8.250 S"
+  },
+  {
+   "number": "8.8",
+   "context": "p 45 window60 99.5 100.0 95.4 98.8 0.509 0.514 CS"
+  },
+  {
+   "number": "8.8",
+   "context": "p 72 window60 99.5 100.0 96.6 98.8 0.511 0.510 CS"
+  },
+  {
+   "number": "8.8",
+   "context": " CS-MLP rot jitter 0.05 whole 99.4 98.8 93.9 91.4 0.537 "
+  },
+  {
+   "number": "8.8",
+   "context": "hole 90.4 94.9 91.9 93.8 0.726 0.637 E-DDQN accel spikes 20 window60 88.8 90.4 94.5 96.0 0.796 0.774 E-DDQN "
+  },
+  {
+   "number": "8.8",
+   "context": " 99.4 99.4 85.6 85.6 0.457 0.457 RF fps restore 90 whole 98.7 98.8 81.7 81.8 0.485 0.483 RF rot jitte"
+  },
+  {
+   "number": "28.6",
+   "context": "st: with 172 baseline and 98 E-DDQN errors, b \u2212 c must equal 74, whereas the reported b = 96, c = 34 give 62; \u03c72 = 28.6 was computed correctly from these impossible counts. \u2022 \u201c"
+  },
+  {
+   "number": "20,972",
+   "context": " logs. Exact reproduction was therefore impossible. The partition sizes of the submitted paper (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples per grade) are reproduced "
+  },
+  {
+   "number": "14,680",
+   "context": " code, trained models or logs. Exact reproduction was therefore impossible. The partition sizes of the submitted paper (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples pe"
+  },
+  {
+   "number": "14,680",
+   "context": " the online network in training mode. 5. The test set was scored and printed every 10 episodes. 6. Warm-up filled 14,680 transitions (manuscript: 25,000); learning every 25 chunks "
+  },
+  {
+   "number": "2,359",
+   "context": " 41.1 92.1 7.7 \u22120.004 \u2013 Under the reconstructed submitted protocol, 2,170 of the 2,359 positive test rows (92 %) have an exact duplicate in the tr"
+  }
+ ]
+}

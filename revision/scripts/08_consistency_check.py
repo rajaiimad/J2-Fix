@@ -42,8 +42,12 @@ def check(cond, msg):
         fails.append(msg)
 
 
+def num(x):
+    return float(str(x).replace("$-$", "-").replace(",", ""))
+
+
 def close(a, b, tol):
-    return abs(float(a) - float(b)) <= tol
+    return abs(num(a) - num(b)) <= tol
 
 
 # ---------------------------------------------------------------- 1. recompute
@@ -75,7 +79,7 @@ for m, k in MKEY.items():
                 for met, mk, tol in (("FN", "FN", 0), ("FP", "FP", 0), ("TP", "TP", 0), ("TN", "TN", 0)):
                     key = f"{k}{rk}{mk}Ens"
                     if key in MAC:
-                        check(int(MAC[key].replace(",", "")) == int(rowd[met]), f"{key}: macro {MAC[key]} vs recomputed {rowd[met]}")
+                        check(int(num(MAC[key])) == int(rowd[met]), f"{key}: macro {MAC[key]} vs recomputed {rowd[met]}")
         ps = pd.DataFrame(per_seed)
         for met, mk, scale, tol in (("recall", "Recall", 100, 0.051), ("specificity", "Spec", 100, 0.051),
                                     ("expected_cost", "Cost", 1, 0.0006), ("roc_auc", "RocAuc", 1, 0.0006),
@@ -104,7 +108,7 @@ if "E-DDQN" in preds:
         check(bb - cc == (~cb).sum() - (~ca).sum(), f"McNemar identity {m}")
         key = f"PairDOne{MKEY[m]}"
         if key + "b" in MAC:
-            check(int(MAC[key + "b"].replace(",", "")) == bb and int(MAC[key + "c"].replace(",", "")) == cc,
+            check(int(num(MAC[key + "b"])) == bb and int(num(MAC[key + "c"])) == cc,
                   f"McNemar counts {m}: macro b={MAC[key + 'b']} c={MAC[key + 'c']} vs {bb},{cc}")
         mc_rows.append({"B": m, "b": int(bb), "c": int(cc), "errors_A": int((~ca).sum()), "errors_B": int((~cb).sum()),
                         "p_exact_statsmodels": float(r.pvalue), "chi2_cc_statsmodels": float(rc.statistic),

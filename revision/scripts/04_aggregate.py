@@ -274,6 +274,51 @@ def confusion_figure(preds: dict, rule="D1_min_cost"):
     plt.close(fig)
 
 
+def attack_auc(runs_by_tag: dict, F: Frames):
+    """Threshold-free robustness (descriptive): pooled ROC-AUC / PR-AUC of the
+    seed-ensemble score on clean vs. perturbed test telemetry (whole-session
+    variants), and the D0 (untuned 1/6) operating point under each variant."""
+    from sklearn.metrics import average_precision_score, roc_auc_score
+    masks = load(PROCESSED / "attack_masks.pkl")
+    var = [v for v in masks["variants"] if v["window"] == "whole"]
+    rows = []
+    for tag, runs in runs_by_tag.items():
+        if not runs[(0, SEEDS[0])]["attacks"]:
+            continue
+        y = np.concatenate([F.test[k].y.to_numpy() for k in range(KO)])
+        clean = np.concatenate([np.mean([runs[(k, s)]["test"] for s in SEEDS], axis=0) for k in range(KO)])
+        base = {"model": tag, "variant": "clean", "kind": "clean", "value": np.nan,
+                "roc_auc": roc_auc_score(y, clean), "pr_auc": average_precision_score(y, clean),
+                **{f"D0_{a}": b for a, b in binary_metrics((clean >= 1 / 6).astype(int), y).items() if a in ("recall", "fpr", "expected_cost")}}
+        rows.append(base)
+        for v in var:
+            sc = np.concatenate([np.mean([runs[(k, s)]["attacks"][v["name"]] for s in SEEDS], axis=0) for k in range(KO)])
+            rows.append({"model": tag, "variant": v["name"], "kind": v["kind"], "value": v["value"],
+                         "roc_auc": roc_auc_score(y, sc), "pr_auc": average_precision_score(y, sc),
+                         **{f"D0_{a}": b for a, b in binary_metrics((sc >= 1 / 6).astype(int), y).items() if a in ("recall", "fpr", "expected_cost")}})
+    df = pd.DataFrame(rows)
+    df.to_csv(TAB / "attack_threshold_free.csv", index=False)
+    return df
+
+
+def optimism_gap(sel: dict):
+    """Selected configuration's pooled inner-OOF cost (HPO seed) vs. outer-test
+    cost of the same family (seed mean, D1) per outer fold."""
+    pf = pd.read_csv(TAB / "metrics_per_outer_fold_D1.csv")
+    rows = []
+    for fam, d in sel.items():
+        for k, v in d.items():
+            t = pf[(pf.model == fam) & (pf.outer == int(k))]
+            if t.empty:
+                continue
+            rows.append({"model": fam, "outer": int(k), "inner_oof_cost_at_selection": v["pooled_oof_min_cost"],
+                         "outer_test_cost": float(t.expected_cost.iloc[0])})
+    df = pd.DataFrame(rows)
+    df["optimism_gap"] = df.outer_test_cost - df.inner_oof_cost_at_selection
+    df.to_csv(TAB / "optimism_gap.csv", index=False)
+    return df
+
+
 def attack_tables(runs_by_tag: dict, preds: dict, F: Frames):
     masks = load(PROCESSED / "attack_masks.pkl")
     var = masks["variants"]
@@ -387,6 +432,22 @@ def overestimation(runs_by_tag: dict, F: Frames, sel: dict):
     return df
 
 
+def ratio_argmax():
+    """Policy induced by each reward ratio R: greedy arg-max Q, i.e. implied
+    P(y=1|s) >= 1/(1+R) (no threshold tuning). Mean over seeds."""
+    rows = []
+    for f in sorted(PRED.glob("RATIO_*.csv.gz")):
+        r = float(f.name.split("_")[1].split(".")[0])
+        df = pd.read_csv(f)
+        for seed, g in df[df.seed != "ens"].groupby("seed"):
+            m = binary_metrics((g.score >= 1 / (1 + r)).astype(int), g.y)
+            rows.append({"ratio": r, "seed": seed, **{k: m[k] for k in ("recall", "specificity", "fpr", "expected_cost", "alarm_rate")}})
+    if rows:
+        d = pd.DataFrame(rows).drop(columns="seed").groupby("ratio").agg(["mean", "std"])
+        d.columns = [f"{a}_{b}" for a, b in d.columns]
+        d.reset_index().to_csv(TAB / "ratio_argmax_policy.csv", index=False)
+
+
 if __name__ == "__main__":
     F = Frames()
     sel = json.loads((RESULTS / "selected_configs.json").read_text())
@@ -420,13 +481,18 @@ if __name__ == "__main__":
     overestimation(runs, F, sel)
     if (PROCESSED / "attack_masks.pkl").exists():
         attack_tables(runs, preds, F)
+        attack_auc(runs, F)
+    optimism_gap(sel)
     # ablations and reward-ratio sensitivity
-    extra = [p.name for p in RUNS.iterdir() if p.name.startswith(("ABL ", "RATIO "))] if RUNS.exists() else []
+    complete = KO * len(SEEDS) * KI
+    extra = [p.name for p in RUNS.iterdir() if p.name.startswith(("ABL ", "RATIO ")) and len(list(p.glob("*.pkl"))) == complete] \
+        if RUNS.exists() else []
     if extra:
         er = {t: collect(t, F) for t in extra}
         ep = {t: predictions_for(t, er[t], F) for t in extra}
         emt = pd.concat([metric_table(t, ep[t]) for t in extra])
         emt.to_csv(TAB / "ablation_ratio_metrics_per_seed.csv", index=False)
         summarise(emt).to_csv(TAB / "ablation_ratio_summary.csv", index=False)
+    ratio_argmax()
     print(summ[summ.rule == "D1_min_cost"][["model", "recall_mean", "specificity_mean", "expected_cost_mean",
                                              "roc_auc_mean", "pr_auc_mean", "mcc_mean"]].round(3).to_string())

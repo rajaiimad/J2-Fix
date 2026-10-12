@@ -54,7 +54,10 @@ Features of second $t$ use only seconds $0,\dots,t$ of the same session (verifie
 \label{sec:formulation}
 Following the submitted version, detection is cast as a sequential decision process over each recorded session (an \emph{episode}). The state $s_t\in\mathbb{R}^d$ is the causal feature vector at second $t$; the action $a_t\in\{0,1\}$ is \emph{stay silent} or \emph{raise an alarm}; the reward is $r_t=R(a_t,y_t)$ with
 \begin{equation}
-R(1,1)=+0.5,\ R(0,0)=+0.1,\ R(0,1)=-0.5,\ R(1,0)=-0.1;
+\begin{aligned}
+R(1,1)&=+0.5, & R(0,0)&=+0.1,\\
+R(0,1)&=-0.5, & R(1,0)&=-0.1;
+\end{aligned}
 \label{eq:reward}
 \end{equation}
 the next state $s_{t+1}$ is the next second \emph{of the same session}, and the last sample of a session is terminal. No transition ever links two sessions.
@@ -123,4 +126,4 @@ We report accuracy, precision, recall, specificity, F1, balanced accuracy, MCC~\
 
 \subsection{Explainability}
 \label{sec:shap}
-SHAP values~\cite{lundberg2017shap} are computed with DeepExplainer~\cite{shrikumar2017deeplift} for the decision margin $\Delta Q(s)=Q(s,1)-Q(s,0)$ of E-DDQN (one model per outer fold, background drawn from that fold's training groups, attributions on its test groups). The submitted version attributed $Q(s,\textit{Attack})$, which contains the state value $V(s)$ shared by both actions and therefore does not explain the decision.
+SHAP values~\cite{lundberg2017shap} are computed for the decision margin $\Delta Q(s)=Q(s,1)-Q(s,0)$ of E-DDQN (one model per outer fold---the first final model of that fold---with 200 background samples drawn from its training groups and attributions for 400 of its test samples). DeepExplainer~\cite{shrikumar2017deeplift} was attempted first with its additivity check enabled; it failed that check for the selected layer-normalised networks in every fold, so the expected-gradients estimator of the SHAP library (GradientExplainer) was used instead (\texttt{results/\allowbreak tables/\allowbreak shap\_method\_by\_fold.csv}). The submitted version attributed $Q(s,\textit{Attack})$, which contains the state value $V(s)$ shared by both actions and therefore does not explain the decision.

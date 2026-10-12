@@ -1,9 +1,9 @@
 \section{Reproducibility}
 \label{sec:s-repro}
 \begin{itemize}
-\item Software: Python 3.13.16, PyTorch 2.14.1 (CPU), scikit-learn 1.9.1, NumPy 2.5.3, pandas 3.0.5, SciPy 1.18.1, SHAP 0.53.0, statsmodels 0.15.0 (\texttt{revision/requirements.txt}).
-\item One command regenerates everything from the raw XML files: \texttt{bash revision/run\_all.sh --fresh} (about 10 CPU-hours on four cores, dominated by the reinforcement-learning hyper-parameter search).
+\item Software: Python 3.13.16, PyTorch 2.14.1 (CPU), scikit-learn 1.9.1, NumPy 2.5.3, pandas 3.0.5, SciPy 1.18.1, SHAP 0.53.0, statsmodels 0.15.0 (\texttt{revision/\allowbreak requirements.txt}).
+\item One command regenerates everything from the raw XML files: \texttt{bash revision/\allowbreak run\_all.sh --fresh} (about 10 CPU-hours on four cores, dominated by the reinforcement-learning hyper-parameter search).
 \item Seeds: split 20261012 (outer) and 20261013--20261017 (inner); hyper-parameter search 777 (+family index for configuration sampling); final training 1000--1004; perturbations 4242; bootstrap 11 (CIs) and 5 (paired tests).
-\item Every number in the manuscript and in this supplement is produced by \texttt{scripts/05\_make\_tables.py} from \texttt{results/tables/*.csv}, which \texttt{scripts/04\_aggregate.py} computes from the per-sample predictions in \texttt{results/predictions/}. \texttt{scripts/08\_consistency\_check.py} recomputes confusion matrices, metrics and McNemar statistics with independent library implementations and checks them against the manuscript macros.
-\item Executable sanity tests of the corrected agent: \texttt{scripts/00\_sanity\_tests.py} (reward regret ratio, implied threshold, within-session transitions, terminal flags, reward/action consistency of replay, target-network buffer synchronisation, Q-value bounds, McNemar identity).
+\item Every number in the manuscript and in this supplement is produced by \texttt{scripts/\allowbreak 05\_make\_tables.py} from \texttt{results/\allowbreak tables/\allowbreak *.csv}, which \texttt{scripts/\allowbreak 04\_aggregate.py} computes from the per-sample predictions in \texttt{results/\allowbreak predictions/\allowbreak }. \texttt{scripts/\allowbreak 08\_consistency\_check.py} recomputes confusion matrices, metrics and McNemar statistics with independent library implementations and checks them against the manuscript macros.
+\item Executable sanity tests of the corrected agent: \texttt{scripts/\allowbreak 00\_sanity\_tests.py} (reward regret ratio, implied threshold, within-session transitions, terminal flags, reward/action consistency of replay, target-network buffer synchronisation, Q-value bounds, McNemar identity).
 \end{itemize}
