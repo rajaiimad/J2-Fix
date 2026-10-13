@@ -15,7 +15,7 @@ Fig.~\ref{fig:pipeline} summarizes the procedure. The data are rebuilt from the 
 \node[box=blue!6, right=of grp] (split) {Nested grouped split\\outer \nOuter{} folds (test)\\inner \nInner{} folds (validation)};
 \node[box=blue!6, right=of split] (feat) {Causal features per session\\(trailing windows, cumulative)\\fit on training groups only};
 \node[box=blue!6, right=of feat] (scale) {Robust scaling\\fit on training groups only};
-\node[box=orange!10, below=7mm of raw] (hpo) {Random search (16 configs;\\12 for LogReg)\\inner-OOF 5:1 cost};
+\node[box=orange!10, below=10mm of raw] (hpo) {Random search (16 configs;\\12 for LogReg)\\inner-OOF 5:1 cost};
 \node[box=orange!10, right=of hpo] (train) {E-DDQN / baselines\\cross-fitted on inner folds\\checkpoint on validation};
 \node[box=orange!10, right=of train] (thr) {Operating threshold from\\pooled inner-OOF scores\\(min 5:1 cost; recall rules)};
 \node[box=green!10, right=of thr] (test) {Outer-test fold scored once\\clean + 29 bounded\\telemetry perturbations};
@@ -24,7 +24,7 @@ Fig.~\ref{fig:pipeline} summarizes the procedure. The data are rebuilt from the 
 \draw[arr] (grp) -- (split);
 \draw[arr] (split) -- (feat);
 \draw[arr] (feat) -- (scale);
-\draw[arr] (scale.south) |- ++(0,-3mm) -| (hpo.north);
+\draw[arr] (scale.south) -- ($(scale.south |- feat.south)+(0,-2.5mm)$) -| (hpo.north);   % route below the tallest box
 \draw[arr] (hpo) -- (train);
 \draw[arr] (train) -- (thr);
 \draw[arr] (thr) -- (test);

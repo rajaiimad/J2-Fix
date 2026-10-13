@@ -30,8 +30,9 @@ python3 scripts/03_run_protocol.py ratio    --workers "$WORKERS"
 python3 scripts/04_aggregate.py
 python3 scripts/07_shap.py
 python3 scripts/05_make_tables.py                        # LaTeX numbers/tables for manuscript + supplement
-( cd manuscript && latexmk -pdf -interaction=nonstopmode -quiet main.tex )
-( cd supplementary && latexmk -pdf -interaction=nonstopmode -quiet supplement.tex )
+# revision manuscript for the original journal (not part of the public archive)
+if [[ -f manuscript/main.tex ]]; then ( cd manuscript && latexmk -pdf -interaction=nonstopmode -quiet main.tex ); fi
+if [[ -f supplementary/supplement.tex ]]; then ( cd supplementary && latexmk -pdf -interaction=nonstopmode -quiet supplement.tex ); fi
 python3 scripts/11_posthoc.py run --workers "$WORKERS"  # post-hoc baselines (configs/posthoc.json)
 python3 scripts/11_posthoc.py analyze                    # post-hoc statistics, tables, figures, macros
 bash    paper/build.sh                                   # new-submission paper + supplement

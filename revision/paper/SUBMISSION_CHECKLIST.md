@@ -52,6 +52,16 @@
 - [x] The consistency check in the clone passed 594 checks with 0 failures.
 - Details: `results/qc/clean_rerun.md` and `results/qc/clean_rerun_comparison.csv`. The code is ready to be archived.
 
+## Submission package (done)
+- [x] `python3 scripts/12_make_submission_package.py` builds `submission_package/`, which is not tracked by git:
+  - final manuscript and supplementary material, as PDFs with self-contained LaTeX sources;
+  - Figures 1–4 as separate PDF and 600-dpi PNG files;
+  - draft cover letter and highlights, with numbers taken from the paper;
+  - `code_and_data_archive.zip` for the DOI deposit.
+- [x] The archive was tested in an empty folder: sanity tests, data audit, reconstruction of the earlier script, splits (byte-identical), tables, paper build and consistency check (594/594) all ran, and the paper and supplement text was identical.
+- [x] The archive excludes: correspondence with journals, internal review notes, the earlier manuscript, the old revision text, the game build and the Weka files.
+- [x] Figure 1: the connector line no longer crosses the "Causal features" box.
+
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
 - [ ] **Title.** Confirm it (one line in `paper/main.tex`).

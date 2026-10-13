@@ -21,6 +21,7 @@ Everything produced for the revision lives here.
 | 8 | Reviewer-response draft | `reviewer_response/response_to_reviewers.md` |
 | 9 | Final quality-control report | `reports/07_quality_control.md` (+ `results/qc/`) |
 | – | Reference verification | `reports/06_reference_verification.md` |
+| – | **Submission package** (final manuscript, supplement, separate figures, cover letter and highlights drafts, curated code-and-data archive for a DOI) | `python3 scripts/12_make_submission_package.py` → `submission_package/` (not tracked; templates in `submission/`) |
 | – | **New-submission version** (re-framed paper for a new journal; includes post-hoc exposure-time baselines and sensitivity analyses) | `paper/main.pdf`, `paper/supplement/supplement.pdf` (build: `bash paper/build.sh`); checklist `paper/SUBMISSION_CHECKLIST.md`; post-hoc spec `configs/posthoc.json`, code `scripts/11_posthoc.py`, results `results/tables/posthoc/` |
 
 ## Reproduce

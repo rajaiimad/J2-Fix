@@ -36,7 +36,10 @@ OUT.mkdir(parents=True, exist_ok=True)
 
 
 def inventory():
-    files = subprocess.run(["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True).stdout.split("\n")
+    r = subprocess.run(["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True)
+    files = r.stdout.split("\n") if r.returncode == 0 and r.stdout.strip() else \
+        sorted(str(p.relative_to(REPO_ROOT)) for p in REPO_ROOT.rglob("*")      # archive without git history
+               if p.is_file() and ".git" not in p.parts)
     rows = []
     for f in files:
         if not f or f.startswith("revision/"):
