@@ -47,7 +47,13 @@ AGENT_FIXED = {
 }
 
 
+# Post-hoc baselines added after the frozen primary analysis
+# (configs/posthoc.json): an existing family restricted to a fixed feature set.
+POSTHOC_BASE = {"Time-LR": "LogReg", "TimeGame-HGB": "HGB"}
+
+
 def make_model(family: str, cfg: dict, n_in: int, seed: int):
+    family = POSTHOC_BASE.get(family, family)
     if family in AGENT_FIXED or family.startswith("E-DDQN"):
         c = AgentConfig(**{k: (tuple(v) if k == "hidden" else v) for k, v in cfg.items()
                            if k in AgentConfig.__dataclass_fields__})

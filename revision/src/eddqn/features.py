@@ -60,7 +60,10 @@ def feature_columns(all_names: list, feature_set: str) -> list:
     prof = [c for c in all_names if c.startswith("prof_")]
     tele = [c for c in all_names if not c.startswith("prof_")]
     sets = {"telemetry": tele, "telemetry+profile": tele + prof,
-            "exposure": EXPOSURE, "exposure+profile": EXPOSURE + prof}
+            "exposure": EXPOSURE, "exposure+profile": EXPOSURE + prof,
+            # post-hoc exposure-time baselines (configs/posthoc.json); never
+            # offered to the frozen families
+            "time": ["elapsed_s"], "time+game": ["elapsed_s", "is_flight"]}
     return sets[feature_set]
 
 

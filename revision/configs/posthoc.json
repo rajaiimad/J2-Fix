@@ -1,0 +1,89 @@
+{
+  "_comment": "POST-HOC analyses, specified on 2026-10-13 after the frozen primary analysis (configs/protocol.json) had been completed and reported, in response to a pre-submission review. They add baselines and sensitivity analyses; they do not alter any primary result or any choice in protocol.json. Every post-hoc model uses the frozen splits, inner folds, selection objective, checkpoint/threshold rules, cross-fitting recipe and final seeds of protocol.json.",
+  "rationale": "Labels are near step functions (median onset 82 s; 9/35 sessions never report discomfort) and 29 of 35 selected configurations of the primary analysis use the exposure feature sets; an exposure-time-only model is therefore the natural minimal baseline.",
+  "families": {
+    "Time-LR": {
+      "base": "LogReg",
+      "feature_set": "time",
+      "features": [
+        "elapsed_s"
+      ],
+      "search_space": {
+        "C": [
+          0.0001,
+          0.001,
+          0.01,
+          0.1,
+          1.0,
+          10.0
+        ]
+      },
+      "budget": 6,
+      "hpo_seed": 801,
+      "note": "logistic regression on elapsed time only (class weight 5); full C grid"
+    },
+    "TimeGame-HGB": {
+      "base": "HGB",
+      "feature_set": "time+game",
+      "features": [
+        "elapsed_s",
+        "is_flight"
+      ],
+      "search_space": {
+        "learning_rate": [
+          0.02,
+          0.05,
+          0.1
+        ],
+        "max_iter": [
+          50,
+          100,
+          200,
+          400
+        ],
+        "max_leaf_nodes": [
+          4,
+          8,
+          16,
+          31
+        ],
+        "min_samples_leaf": [
+          20,
+          100,
+          300
+        ],
+        "l2_regularization": [
+          0.0,
+          1.0,
+          10.0
+        ]
+      },
+      "budget": 16,
+      "hpo_seed": 802,
+      "note": "gradient boosting on elapsed time and game (game-specific, non-linear onset curves); same HGB space and budget as the primary analysis"
+    }
+  },
+  "multiplicity": "Holm step-down adjustment over the six paired comparisons of E-DDQN with the other primary models, per operating rule (group-bootstrap p-values)",
+  "grouping_sensitivity": [
+    "paired bootstrap resampling sessions (35 units) instead of linkage groups (21 units)",
+    "leave-one-group-out jackknife of each model's 5:1 cost and of the paired cost differences"
+  ],
+  "always_alarm_comparison": "paired group bootstrap of each model's D1 cost against the always-alarm policy",
+  "cost_curves": {
+    "fn_fp_ratios": [
+      1,
+      1.5,
+      2,
+      3,
+      4,
+      5,
+      7,
+      10,
+      15,
+      20
+    ],
+    "threshold": "for each ratio R, the threshold minimising R*FN+FP on the pooled inner-OOF seed-ensemble scores of each outer fold's development groups (validation only), applied to that outer-test fold",
+    "normalisation": "test cost divided by the cost of the better trivial policy at the same R (always alarm or never alarm)"
+  },
+  "n_boot": 2000
+}
