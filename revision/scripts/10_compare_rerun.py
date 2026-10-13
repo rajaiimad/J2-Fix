@@ -78,8 +78,11 @@ def main(other: Path):
         same_txt = same_shape and all((a[c].astype(str) == b[c].astype(str)).all() for c in a.columns if c not in num)
         rows.append((f"predictions/{p.name}", f"max |diff| = {maxdiff:.3g}; non-numeric identical: {same_txt}"))
     # 2. every CSV/JSON table
+    posthoc = RESULTS / "tables" / "posthoc"
     for p in sorted(list((RESULTS / "tables").glob("*.csv")) + list((RESULTS / "tables").glob("*.json")) +
                     [RESULTS / "selected_configs.json", RESULTS / "hpo_results.csv"] +
+                    list(posthoc.glob("*.csv")) + list(posthoc.glob("*.json")) + list(posthoc.glob("*.tex")) +
+                    [RESULTS / "selected_configs_posthoc.json", RESULTS / "hpo_results_posthoc.csv"] +
                     list((RESULTS / "preprocessing").glob("*")) + list((RESULTS / "audit").glob("*.csv")) +
                     list((RESULTS / "audit").glob("*.json")) + list((REVISION_ROOT / "data" / "processed").glob("*.csv"))):
         rel = p.relative_to(REVISION_ROOT)
@@ -99,8 +102,14 @@ def main(other: Path):
     timing_diff = sorted(k for k in set(ma) | set(mb) if ma.get(k) != mb.get(k) and k.endswith("MeanSeconds"))
     rows.append(("manuscript macros", f"{len(ma)} macros; {len(diff)} result macros differ" + (f": {diff[:10]}" if diff else "") +
                  (f"; wall-clock timing macros differ (expected): {timing_diff}" if timing_diff else "")))
+    # 3b. post-hoc macros (new-submission paper)
+    pa = json.loads((RESULTS / "tables" / "posthoc" / "posthoc_macros.json").read_text())
+    pb_path = other / "results" / "tables" / "posthoc" / "posthoc_macros.json"
+    pb = json.loads(pb_path.read_text()) if pb_path.exists() else {}
+    ph_diff = sorted(k for k in set(pa) | set(pb) if pa.get(k) != pb.get(k))
+    rows.append(("post-hoc macros", f"{len(pa)} macros; {len(ph_diff)} differ" + (f": {ph_diff[:10]}" if ph_diff else "")))
     # 4. generated LaTeX
-    for d in ("manuscript/generated", "supplementary/generated"):
+    for d in ("manuscript/generated", "supplementary/generated", "paper/generated"):
         for p in sorted((REVISION_ROOT / d).glob("*.tex")):
             q = other / d / p.name
             if not q.exists():
@@ -108,27 +117,37 @@ def main(other: Path):
             else:
                 rows.append((f"{d}/{p.name}", "identical" if sha(p) == sha(q) else content_equal(p, q)))
     n_diff = sum(1 for _, s in rows if ("DIFFERS" in s or "MISSING" in s or
-                                         ("max |diff|" in s and not s.startswith("max |diff| = 0;"))))
+                                         ("max |diff|" in s and not s.startswith("max |diff| = 0;")) or
+                                         " differ: " in s))
     pred_bad = [r for r in rows if r[0].startswith("predictions/") and not r[1].startswith("max |diff| = 0;")]
     log = (other.parent.parent / "clean_rerun.log")
     tail = log.read_text().splitlines()[-6:] if log.exists() else []
-    md = ["Clean-state rerun: the pushed branch was cloned into an empty directory and `bash revision/run_all.sh --fresh --workers 4` "
+    commit = ""
+    try:
+        import subprocess
+        commit = subprocess.run(["git", "-C", str(other), "log", "--format=%h", "-1"], capture_output=True, text=True).stdout.strip()
+    except Exception:  # noqa: BLE001
+        pass
+    md = [f"Clean-state rerun of commit `{commit}`: the pushed branch was cloned into an empty directory and `bash revision/run_all.sh --fresh --workers 4` "
           "deleted every generated artefact and regenerated everything from the raw XML files (sanity tests, audits, proxy runs of the "
-          "submitted script, preprocessing audit, development calibration, hyper-parameter search, selection, final evaluation, "
-          "ablation, reward ratio, aggregation, SHAP, tables, LaTeX builds, consistency check, document rendering).", "",
+          "earlier script, preprocessing audit, development calibration, hyper-parameter search, selection, final evaluation, "
+          "ablation, reward ratio, aggregation, SHAP, tables, LaTeX builds, post-hoc baselines and analyses, new-submission paper and "
+          "supplement, consistency check, document rendering).", "",
           f"* Exit status / timing (tail of the log): `{' | '.join(t.strip() for t in tail if t.strip())}`",
           f"* Artefacts compared: {len(rows)}; differing or missing: {n_diff}.",
           f"* Per-sample prediction files with any numeric difference: {len(pred_bad)}.",
-          f"* Result macros differing: {len(diff)} (wall-clock timing macros, which are not used in the text, are excluded: {timing_diff}).", ""]
+          f"* Result macros differing: {len(diff)} (wall-clock timing macros, which are not used in the text, are excluded: {timing_diff}).",
+          f"* Post-hoc macros differing: {len(ph_diff)} of {len(pa)}.", ""]
     if n_diff:
         md.append("Differences:")
         md += [f"* `{a}`: {b}" for a, b in rows if ("DIFFERS" in b or "MISSING" in b or (b.startswith("max |diff|") and not b.startswith("max |diff| = 0;")))]
     else:
         n_bit = sum(1 for _, b in rows if b.startswith("identical"))
         n_cont = sum(1 for _, b in rows if b.startswith("same content"))
+        reasons = sorted({b for _, b in rows if b.startswith("same content")})
         md.append(f"All result-bearing artefacts reproduce: every per-sample score is identical, {n_bit} files are byte-identical and "
-                  f"{n_cont} are identical in content (their only differences are wall-clock timing fields, which naturally vary between runs, "
-                  "and column order in `hpo_results.csv`). Details: `results/qc/clean_rerun_comparison.csv`.")
+                  f"{n_cont} are identical in content. The content-only differences are: " + "; ".join(f"`{r}`" for r in reasons) +
+                  ". Details: `results/qc/clean_rerun_comparison.csv`.")
     out = RESULTS / "qc" / "clean_rerun.md"
     out.write_text("\n".join(md) + "\n")
     pd.DataFrame(rows, columns=["artefact", "comparison"]).to_csv(RESULTS / "qc" / "clean_rerun_comparison.csv", index=False)
