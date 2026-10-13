@@ -90,7 +90,7 @@ This is consistent with the theory that bootstrapping can only add noise here.
 * The October-2019 raw sessions were used only for development and calibration.
 
 **R1.6 — Unmatched baselines.**
-* All models now share the same splits, candidate feature sets, target, random-search budget ({{HPOBudget}} configurations per family), checkpoint rule, cross-fitting recipe, threshold rules and paired statistics. The models are:
+* All models now share the same splits, candidate feature sets, target, random-search budget ({{HPOBudget}} configurations per family; 12 for logistic regression), checkpoint rule, cross-fitting recipe, threshold rules and paired statistics. The models are:
   * E-DDQN;
   * a standard DQN (symmetric ±1 reward, max-operator target, hard target copies, uniform replay);
   * E-CB (contextual bandit);

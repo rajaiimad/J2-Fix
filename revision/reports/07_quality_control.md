@@ -11,7 +11,7 @@ Every row links a reviewer concern to the code change, the experiment, the manus
 | Leakage assertions (`scripts/02_preprocessing_audit.py`): feature causality, train-only fitting, zero session/group/profile/duplicate overlap | pass (script asserts) |
 | Independent recomputation of confusion matrices, metrics and McNemar tables with scikit-learn/statsmodels vs. manuscript macros (`scripts/08_consistency_check.py`) | 282 checks, 0 failures |
 | Macros used in manuscript + supplement text | 119 distinct macros, all defined |
-| Numbers from the submitted version found in the compiled PDFs | main: 7, supplement: 11; every occurrence is in an explicitly labelled description of the submitted version (contexts listed in `results/qc/stale_number_contexts.json`) |
+| Numbers from the submitted version found in the compiled PDFs | main: 7, supplement: 13; each occurrence is either in an explicitly labelled description of the submitted version or a coincidental substring of a different number (e.g. "8.8" inside "58.8"); contexts are listed in `results/qc/stale_number_contexts.json` |
 | Frozen protocol committed before any evaluation-set training | commit in `configs/FROZEN_PROTOCOL_COMMIT.txt` |
 | Clean-state rerun | see §C |
 
@@ -22,7 +22,7 @@ Every row links a reviewer concern to the code change, the experiment, the manus
 | R1.1 | Is it RL? Action does not affect next state | γ tuned incl. 0; E-CB (γ=0) as a separate model; `agents.py` docstring | HPO selected γ = 0.99, 0.99, 0.99, 0.99, 0.9; E-CB ROC-AUC 0.653 vs. E-DDQN 0.538; optimism gap E-DDQN +0.288 | Sec. III-D (Eqs. 2–3, contextual bandit), Sec. VI-B; claim of adaptive sequential control removed | `00_sanity_tests.py` (implied threshold 1/6; argmax-Q ⇔ p ≥ 1/6) |
 | R1.2 | Transitions / episodes | `_sessions_to_stream`: within-session s', terminal flags, (1−done) in target | all agent runs | Sec. III-E, Alg. 1 | unit tests: next state in the same session, next second, one terminal per session |
 | R1.3 | Teacher forcing invalid | removed; optional full-information replay stores each action with its own reward | ablation "± full-information replay" | Sec. III-E; old claim deleted | unit test: replay reward == R(stored action, label) |
-| R1.4 | Temporal / participant leakage | raw XML parser, linkage groups, grouped nested CV, causal features, train-only scaler | leakage audit: submitted protocol 99.8 % recall vs. grouped ROC-AUC 0.523; 92 % duplicated positives | Secs. III-A–C, V-A; Suppl. S1, S5 | truncation test (max diff 0), tampering test, overlap checks = 0 |
+| R1.4 | Temporal / participant leakage | raw XML parser, linkage groups, grouped nested CV, causal features, train-only scaler | leakage audit (gradient boosting): reconstructed submitted protocol 99.8 % recall vs. grouped split ROC-AUC 0.523; 92 % of positive test rows duplicated in training; unmodified submitted script MCC 0.870 (leaky) vs. -0.004 (grouped) | Secs. III-A–C, V-A; Suppl. S1, S5 | truncation test (max diff 0), tampering test, overlap checks = 0 |
 | R1.5 | Test-set usage contradictions | HPO caches exclude outer-test rows; final stage scores each fold once; predictions saved | `results/predictions/*.csv.gz` | Sec. III-H; old per-checkpoint test plots removed | frozen-protocol commit precedes all evaluation runs |
 | R1.6 | Unmatched baselines | `experiment.py`: identical splits, feature-set options, budget (16), checkpoint rule, cross-fitting, thresholds | 7 model families × 5 seeds × 5 outer folds; ablation; reward ratio | Secs. III-F, IV, V-B–V-G | identical row alignment asserted in paired tests |
 | R1.7 | BN target statistics, train-mode arg-max, warm-up/update mismatch | `_sync_target` copies buffers; eval-mode arg-max; explicit hyper-parameters | — | Sec. III-E | unit test: target BN buffers equal online buffers |
@@ -35,7 +35,15 @@ Every row links a reviewer concern to the code change, the experiment, the manus
 
 ## C. Clean-state rerun
 
-Not yet run.
+Clean-state rerun: the pushed branch was cloned into an empty directory and `bash revision/run_all.sh --fresh --workers 4` deleted every generated artefact and regenerated everything from the raw XML files (sanity tests, audits, proxy runs of the submitted script, preprocessing audit, development calibration, hyper-parameter search, selection, final evaluation, ablation, reward ratio, aggregation, SHAP, tables, LaTeX builds, consistency check, document rendering).
+
+* Exit status / timing (tail of the log): `wrote reports/07_quality_control.md | real	170m47.606s | user	585m8.472s | sys	2m3.134s | EXIT 0`
+* Artefacts compared: 90; differing or missing: 0.
+* Per-sample prediction files with any numeric difference: 0.
+* Result macros differing: 0 (wall-clock timing macros, which are not used in the text, are excluded: ['DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds']).
+
+All result-bearing artefacts reproduce: every per-sample score is identical, 62 files are byte-identical and 7 are identical in content (their only differences are wall-clock timing fields, which naturally vary between runs, and column order in `hpo_results.csv`). Details: `results/qc/clean_rerun_comparison.csv`.
+
 
 ## D. Remaining unresolved issues
 

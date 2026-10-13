@@ -150,7 +150,7 @@ for pdf in (REVISION_ROOT / "manuscript" / "main.pdf", REVISION_ROOT / "suppleme
 
 report = {"checks": checks, "failures": fails, "macros_defined": len(defined), "macros_used_in_text": len(used),
           "stale_number_occurrences": {k: len(v) for k, v in pdf_hits.items()},
-          "note": "stale-number occurrences are listed with context in stale_number_contexts.json and must all be inside the explicitly labelled audit of the submitted version"}
+          "note": "stale-number occurrences are listed with context in stale_number_contexts.json; each must be either inside an explicitly labelled description of the submitted version or a coincidental substring of a different number (e.g. 8.8 inside 98.8)"}
 (QC / "consistency_report.json").write_text(json.dumps(report, indent=1))
 print(json.dumps(report, indent=1)[:3000])
 sys.exit(1 if fails else 0)

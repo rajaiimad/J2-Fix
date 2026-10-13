@@ -1,0 +1,91 @@
+artefact,comparison
+predictions/ABL_+--_full-information_replay_(toggled).csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_-asymmetric_reward_(symmetric_+-1).csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_-class-balanced_replay_(uniform).csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_-double_estimator.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_-dueling_head.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_-soft_target_(hard_copy_every_10_updates).csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_-warm-up.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/ABL_gamma_=_0_(contextual_bandit).csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/CS-MLP.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/DQN.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/E-CB.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/E-DDQN.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/HGB.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/LogReg.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/RATIO_1.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/RATIO_10.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/RATIO_2.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/RATIO_5.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/RF.csv.gz,max |diff| = 0; non-numeric identical: True
+data/processed/inner_folds.csv,identical (SHA-256)
+data/processed/outer_folds.csv,identical (SHA-256)
+results/audit/inventory.csv,identical (SHA-256)
+results/audit/leakage_demo.csv,identical (SHA-256)
+results/audit/leakage_demo_duplicates.json,identical (SHA-256)
+results/audit/manuscript_number_check.csv,identical (SHA-256)
+results/audit/provenance.json,identical (SHA-256)
+results/hpo_results.csv,same content (row/column order ignored; only wall-clock timing columns ['mean_seconds'] differ)
+results/preprocessing/counts_by_outer_fold.csv,identical (SHA-256)
+results/preprocessing/counts_by_role.csv,identical (SHA-256)
+results/preprocessing/counts_eval_by_game.csv,identical (SHA-256)
+results/preprocessing/counts_eval_by_session.csv,identical (SHA-256)
+results/preprocessing/data_quality.json,identical (SHA-256)
+results/preprocessing/feature_dictionary.csv,identical (SHA-256)
+results/preprocessing/leakage_checks.json,identical (SHA-256)
+results/preprocessing/learned_parameters_by_outer_fold.csv,identical (SHA-256)
+results/preprocessing/linkage_log.csv,identical (SHA-256)
+results/preprocessing/partition_overlap_checks.csv,identical (SHA-256)
+results/preprocessing/session_table.csv,identical (SHA-256)
+results/selected_configs.json,same content (parsed JSON)
+results/tables/ablation_ratio_metrics_per_seed.csv,identical (SHA-256)
+results/tables/ablation_ratio_summary.csv,identical (SHA-256)
+results/tables/attack_summary.csv,identical (SHA-256)
+results/tables/attack_threshold_free.csv,identical (SHA-256)
+results/tables/attack_variants_by_fold.csv,identical (SHA-256)
+results/tables/attack_worst_case.csv,identical (SHA-256)
+results/tables/bootstrap_cis_D1.json,identical (SHA-256)
+results/tables/event_level_D1.csv,identical (SHA-256)
+results/tables/manuscript_macros.json,"same content except wall-clock timing macros ['DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds']"
+results/tables/matched_operating_points.csv,identical (SHA-256)
+results/tables/metrics_per_outer_fold_D1.csv,identical (SHA-256)
+results/tables/metrics_per_seed.csv,identical (SHA-256)
+results/tables/metrics_summary.csv,identical (SHA-256)
+results/tables/optimism_gap.csv,same content (row/column order ignored)
+results/tables/overestimation.csv,identical (SHA-256)
+results/tables/paired_tests_D0_bayes_1_6.csv,identical (SHA-256)
+results/tables/paired_tests_D1_min_cost.csv,identical (SHA-256)
+results/tables/paired_tests_recallge0.95.csv,identical (SHA-256)
+results/tables/ratio_argmax_policy.csv,identical (SHA-256)
+results/tables/roc_points_at_recall_targets_descriptive.csv,identical (SHA-256)
+results/tables/shap_margin_by_fold.csv,identical (SHA-256)
+results/tables/shap_margin_summary.csv,identical (SHA-256)
+results/tables/shap_method_by_fold.csv,identical (SHA-256)
+results/tables/training_diagnostics.csv,same content (row/column order ignored; only wall-clock timing columns ['seconds'] differ)
+results/tables/trivial_baselines.csv,identical (SHA-256)
+manuscript macros,"1820 macros; 0 result macros differ; wall-clock timing macros differ (expected): ['DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds']"
+manuscript/generated/numbers.tex,same content except wall-clock timing macros (*MeanSeconds)
+manuscript/generated/tab_ablation_D0.tex,identical
+manuscript/generated/tab_ablation_D1.tex,identical
+manuscript/generated/tab_attack.tex,identical
+manuscript/generated/tab_attack_auc.tex,identical
+manuscript/generated/tab_ci.tex,identical
+manuscript/generated/tab_event.tex,identical
+manuscript/generated/tab_leakage.tex,identical
+manuscript/generated/tab_main_D0.tex,identical
+manuscript/generated/tab_main_D1.tex,identical
+manuscript/generated/tab_main_R95.tex,identical
+manuscript/generated/tab_matched.tex,identical
+manuscript/generated/tab_optimism.tex,identical
+manuscript/generated/tab_paired_D0.tex,identical
+manuscript/generated/tab_paired_D1.tex,identical
+manuscript/generated/tab_paired_R95.tex,identical
+manuscript/generated/tab_ratio.tex,identical
+manuscript/generated/tab_ratio_policy.tex,identical
+supplementary/generated/numbers.tex,same content except wall-clock timing macros (*MeanSeconds)
+supplementary/generated/tab_attack_full.tex,identical
+supplementary/generated/tab_full_metrics.tex,not produced by the rerun commit (table added afterwards from compared CSVs)
+supplementary/generated/tab_overestimation.tex,identical
+supplementary/generated/tab_per_fold.tex,identical
+supplementary/generated/tab_search_space.tex,identical
+supplementary/generated/tab_selected_configs.tex,identical

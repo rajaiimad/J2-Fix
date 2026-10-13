@@ -1,9 +1,12 @@
 """SHAP attribution of the E-DDQN DECISION MARGIN dQ = Q(s,alarm) - Q(s,silent).
 
 For each outer fold: retrain the selected E-DDQN configuration on inner split 0
-(seed 1000, identical to the first final model of that fold), compute
-DeepExplainer SHAP values of dQ for up to 400 test samples with a background of
-200 training samples, and aggregate mean |SHAP| per feature over folds.
+(seed 1000, identical to the first final model of that fold), compute SHAP
+values of dQ for up to 400 test samples with a background of 200 training
+samples (DeepExplainer with an additivity check; GradientExplainer, i.e.
+expected gradients, when DeepExplainer does not support a layer; the method
+used per fold is recorded in shap_method_by_fold.csv), and aggregate mean
+|SHAP| per feature over folds.
 """
 
 from __future__ import annotations

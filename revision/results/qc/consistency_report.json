@@ -5,7 +5,7 @@
  "macros_used_in_text": 119,
  "stale_number_occurrences": {
   "main.pdf": 7,
-  "supplement.pdf": 11
+  "supplement.pdf": 13
  },
- "note": "stale-number occurrences are listed with context in stale_number_contexts.json and must all be inside the explicitly labelled audit of the submitted version"
+ "note": "stale-number occurrences are listed with context in stale_number_contexts.json; each must be either inside an explicitly labelled description of the submitted version or a coincidental substring of a different number (e.g. 8.8 inside 98.8)"
 }
