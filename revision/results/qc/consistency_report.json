@@ -1,6 +1,18 @@
 {
- "checks": 590,
+ "checks": 594,
  "failures": [],
+ "pending_author_inputs": [
+  "paper/main.tex: DOI to be added on deposit",
+  "paper/main.tex: Add your institution's ruling if it requires a formal exemption for secondary analysis of public data, and the ethics approval of the original data collection if the journal asks for it.",
+  "paper/main.tex: To be completed by the authors with CRediT roles",
+  "paper/main.tex: roles",
+  "paper/main.tex: roles",
+  "paper/main.tex: roles",
+  "paper/main.tex: roles",
+  "paper/main.tex: roles",
+  "paper/main.tex: version and period of use",
+  "paper/main.tex: Confirm that this describes your use, and adapt it to the target journal's policy."
+ ],
  "macros_defined": 1820,
  "macros_used_in_text": 119,
  "stale_number_occurrences": {

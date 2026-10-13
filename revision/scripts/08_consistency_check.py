@@ -224,8 +224,19 @@ if PH_JSON.exists():
         check("submitted" not in txt.lower(), f"{pdf.name}: the word 'submitted' appears")
         paper_hits[pdf.name] = hits
     (QC / "paper_stale_number_contexts.json").write_text(json.dumps(paper_hits, indent=1))
+    # author inputs still to be completed (listed, not counted as failures)
+    pending = []
+    for tex in sorted((REVISION_ROOT / "paper").rglob("*.tex")):
+        if "generated" in tex.parts:
+            continue
+        body = "\n".join(l for l in tex.read_text().splitlines() if not l.lstrip().startswith("%"))
+        for mt in re.finditer(r"\\authorinput\{([^}]*)\}", body):
+            if not mt.group(0).startswith("\\authorinput}"):
+                pending.append(f"{tex.relative_to(REVISION_ROOT)}: {mt.group(1)}")
+    pending = [x for x in pending if not x.endswith(": #1")]
 
-report = {"checks": checks, "failures": fails, "macros_defined": len(defined), "macros_used_in_text": len(used),
+report = {"checks": checks, "failures": fails,
+          "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),
           "stale_number_occurrences": {k: len(v) for k, v in pdf_hits.items()},
           "note": "stale-number occurrences are listed with context in stale_number_contexts.json; each must be either inside an explicitly labelled description of the submitted version or a coincidental substring of a different number (e.g. 8.8 inside 98.8)"}
 (QC / "consistency_report.json").write_text(json.dumps(report, indent=1))

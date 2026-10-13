@@ -290,7 +290,16 @@ def analyze():
             qb.append({"model": fam, "outer": k, "gamma": g, "q_abs_max": q, "bound": rmax / (1 - g), "ratio": q / (rmax / (1 - g))})
     pd.DataFrame(qb).to_csv(OUT / "q_value_bounds.csv", index=False)
 
-    # 10. ROC/PR figure including the post-hoc baselines
+    # 10. label dynamics: the discomfort level is the participant's most recent report, logged with every sample
+    lab = []
+    for sid, d in F.long.groupby("session_id"):
+        d = d.sort_values("step")
+        g, yb = d.DiscomfortLevel.to_numpy(), d.y.to_numpy()
+        lab.append({"session_id": sid, "grade_changes": int((np.diff(g) != 0).sum()), "binary_changes": int((np.diff(yb) != 0).sum()),
+                    "non_decreasing": bool((np.diff(g) >= 0).all())})
+    pd.DataFrame(lab).to_csv(OUT / "label_dynamics.csv", index=False)
+
+    # 11. ROC/PR figure including the post-hoc baselines
     plot_roc_with_time(E)
     macros(summ, cis, cc, jk, js, sd)
 
@@ -532,6 +541,11 @@ def macros(summ, cis, cc, jk, js, sd):
     for game in ("Flight", "Race"):
         put("Grade" + game + "Severe", f"{int(gc.loc[game, 'grade2'] + gc.loc[game, 'grade3']):,}")
         put("Grade" + game + "Samples", f"{int(gc.loc[game, 'samples']):,}")
+    ld = pd.read_csv(OUT / "label_dynamics.csv")
+    put("LabelGradeChanges", f"{ld.grade_changes.mean():.1f}")
+    put("LabelBinaryChanges", f"{ld.binary_changes.mean():.1f}")
+    put("LabelNonDecreasing", str(int(ld.non_decreasing.sum())))
+    put("LabelSessions", str(len(ld)))
     qb = pd.read_csv(OUT / "q_value_bounds.csv")
     for fam in ("E-DDQN", "E-CB", "DQN"):
         g = qb[qb.model == fam]

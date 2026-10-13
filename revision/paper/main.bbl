@@ -53,7 +53,8 @@ M.~S. Dennison, A.~Z. Wisti, and M.~D'Zmura, ``Use of physiological signals to
 R.~Islam, Y.~Lee, M.~Jaloli, I.~Muhammad, D.~Zhu, P.~Rad, Y.~Huang, and
   J.~Quarles, ``Automatic detection and prediction of cybersickness severity
   using deep neural networks from user's physiological signals,'' in
-  \emph{Proc. IEEE Int. Symp. Mixed and Augmented Reality ({ISMAR})}, 2020.
+  \emph{Proc. IEEE Int. Symp. Mixed and Augmented Reality ({ISMAR})}, 2020, pp.
+  400--411.
 
 \bibitem{islam2021fusion}
 R.~Islam, K.~Desai, and J.~Quarles, ``Cybersickness prediction from integrated
@@ -125,7 +126,8 @@ R.~S. Kennedy, N.~E. Lane, K.~S. Berbaum, and M.~G. Lilienthal, ``Simulator
 \bibitem{kundu2023litevr}
 R.~K. Kundu, R.~Islam, J.~Quarles, and K.~A. Hoque, ``{LiteVR}: Interpretable
   and lightweight cybersickness detection using explainable {AI},'' in
-  \emph{Proc. IEEE Conf. Virtual Reality and 3D User Interfaces ({VR})}, 2023.
+  \emph{Proc. IEEE Conf. Virtual Reality and 3D User Interfaces ({VR})}, 2023,
+  pp. 609--619.
 
 \bibitem{kundu2023vrlens}
 R.~K. Kundu, O.~Y. Elsaid, P.~Calyam, and K.~A. Hoque, ``{VR-LENS}: Super
@@ -145,8 +147,8 @@ T.~Porcino, D.~Trevisan, and E.~Clua, ``An experimental methodology to capture
 \bibitem{porcino2022identifying}
 T.~Porcino, E.~O. Rodrigues, F.~Bernardini, D.~Trevisan, and E.~Clua,
   ``Identifying cybersickness causes in virtual reality games using symbolic
-  machine learning algorithms,'' \emph{Entertainment Computing}, 2022,
-  {ScienceDirect} {PII} S1875952121000707.
+  machine learning algorithms,'' \emph{Entertainment Computing}, vol.~41, 2022,
+  art. no. 100473.
 
 \bibitem{kaufman2012leakage}
 S.~Kaufman, S.~Rosset, C.~Perlich, and O.~Stitelman, ``Leakage in data mining:
@@ -169,9 +171,13 @@ A.~Giaretta, ``Security and privacy in virtual reality: A literature survey,''
   \emph{Virtual Reality}, vol.~29, p.~10, 2025.
 
 \bibitem{cheng2023perceptual}
+\BIBentryALTinterwordspacing
 K.~Cheng, J.~F. Tian, T.~Kohno, and F.~Roesner, ``Exploring user reactions and
   mental models towards perceptual manipulation attacks in mixed reality,'' in
-  \emph{Proc. 32nd {USENIX} Security Symp.}, 2023.
+  \emph{Proc. 32nd {USENIX} Security Symp.}\hskip 1em plus 0.5em minus
+  0.4em\relax USENIX Association, 2023. [Online]. Available:
+  \url{https://www.usenix.org/conference/usenixsecurity23/presentation/cheng-kaiming}
+\BIBentrySTDinterwordspacing
 
 \bibitem{ahmed2025adversarialvr}
 I.~Ahmed, R.~K. Kundu, and K.~A. Hoque, ``Adversarial-{VR}: An open-source
@@ -186,6 +192,15 @@ V.~Mnih \emph{et~al.}, ``Human-level control through deep reinforcement
 J.~Garc\'ia and F.~Fern\'andez, ``A comprehensive survey on safe reinforcement
   learning,'' \emph{J. Machine Learning Research}, vol.~16, no.~42, pp.
   1437--1480, 2015.
+
+\bibitem{porcino2019demo}
+\BIBentryALTinterwordspacing
+T.~Porcino, D.~Trevisan, and E.~Clua, ``{DEMO}: Using gameplay data to classify
+  cybersickness level in virtual environments,'' in \emph{Anais Estendidos do
+  Simp\'osio de Realidade Virtual e Aumentada ({SVR})}.\hskip 1em plus 0.5em
+  minus 0.4em\relax SBC, 2019. [Online]. Available:
+  \url{https://sol.sbc.org.br/index.php/svr_estendido/article/view/8462}
+\BIBentrySTDinterwordspacing
 
 \bibitem{lattimore2020bandit}
 T.~Lattimore and C.~Szepesv\'ari, \emph{Bandit Algorithms}.\hskip 1em plus
@@ -265,7 +280,7 @@ A.~Shrikumar, P.~Greenside, and A.~Kundaje, ``Learning important features
 \bibitem{paszke2019pytorch}
 A.~Paszke \emph{et~al.}, ``{PyTorch}: An imperative style, high-performance
   deep learning library,'' in \emph{Advances in Neural Information Processing
-  Systems ({NeurIPS})}, 2019.
+  Systems ({NeurIPS})}, vol.~32, 2019.
 
 \bibitem{varma2006bias}
 S.~Varma and R.~Simon, ``Bias in error estimation when using cross-validation
