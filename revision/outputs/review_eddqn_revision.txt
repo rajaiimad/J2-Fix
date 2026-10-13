@@ -1,0 +1,125 @@
+Review of "Enhanced Double Deep Q-Network (E-DDQN) with Asymmetric Reward Design Versus Standard Deep Q-Network for Safety-Prioritized Cybersickness Detection in Virtual Reality Under an Adversarial Threat Model: A Comparative Analysis" (revised manuscript, 13 pages, with supplement)
+
+Scope of this review. This is a pre-submission self-review. It was written by the same assistant that rebuilt the analysis and drafted the revision, so it is not an independent referee report. The reviewer read the full manuscript and supplement. The external literature was checked through web-search records of primary pages (arXiv abstract pages, PMC, IEEE Xplore and publisher indexes). Full texts of the external papers could not be opened in this environment, so statements about them are limited to their abstracts and index records. No numeric score is given because no venue rubric was supplied.
+
+
+1. Summary
+
+The paper studies per-second detection of self-reported cybersickness from game telemetry and questionnaire answers in the public UFFCSData release (35 curated sessions, 9,390 samples). It compares a dueling Double DQN trained with a 5:1 asymmetric reward (E-DDQN) with a standard DQN, a contextual-bandit variant and cost-weighted supervised models. The evaluation uses nested, session-grouped cross-validation under a protocol frozen before evaluation.
+
+The paper argues that, on logged data, the task is a contextual bandit whose asymmetric-reward optimum equals the 5:1 cost-sensitive Bayes threshold. It shows that an earlier version's near-perfect results are reproduced by oversampling before a row-level split. It reports that E-DDQN ranks last (expected cost 0.663, ROC-AUC 0.538) and that no model achieves high recall with controlled false alarms. Bounded perturbations of the logged telemetry serve as stress tests of the detectors.
+
+
+2. Strengths
+
+The evaluation protocol is the paper's main asset. Splits are made at the level of session-linkage groups before any feature is computed. Preprocessing is fitted on training groups only. Features are causal, and this is checked by recomputing them on truncated sessions. Every model receives the same candidate feature sets, search budget, checkpoint rule, cross-fitting recipe and threshold rules (Sections III-B, III-C, III-F and III-H). Table III includes always-alarm and never-alarm references, which makes the size of every improvement immediately interpretable; this is unusual and valuable in this literature.
+
+The leakage audit in Section V-A and Table II is convincing and of general interest. On the same 21 raw columns, an untuned gradient-boosting classifier reaches ROC-AUC 0.995 when the data are oversampled and then split by row, 0.992 under a plain row split, and 0.523 under a grouped split. This isolates the split protocol as the cause. The count of duplicated positive test rows (2,170 of 2,359) shows the mechanism.
+
+The formal clarification in Section III-D is correct and useful. Because the alarm cannot influence the logged telemetry, the bootstrapped term in Eq. (2) does not depend on the action. The greedy policy is therefore myopic for every discount, and the asymmetric reward implies the threshold p(s) >= 1/6. The implied-probability mapping puts RL and supervised scores on one scale.
+
+The empirical results agree with this theory. The gamma = 0 variant ranks better than the strongly bootstrapped agent (ROC-AUC 0.653 versus 0.538). Changing the reward ratio moves the greedy operating point as predicted while the validation-tuned costs remain statistically indistinguishable (Table IX). The selection-optimism analysis (Table VII) gives a plausible mechanism for E-DDQN's poor transfer from validation to test.
+
+The paper reports a negative result candidly. It relies on a group bootstrap rather than on sample-level McNemar tests, and it verifies the McNemar contingency identity. It repeatedly states that the perturbations are feature-space stress tests rather than demonstrations of rendering attacks. The release of code, the frozen configuration and the per-sample predictions supports independent checking.
+
+
+3. Weaknesses
+
+3.1 The title and contribution statements describe a different paper from the one the evidence supports.
+
+The title promises a comparison of E-DDQN and DQN for safety-prioritized detection "under an adversarial threat model". Contribution 1 presents "a safety-prioritised formulation of cybersickness detection under an adversarial threat model". The results show three things that cut against this framing:
+- E-DDQN does not outperform DQN: cost difference +0.190, 95 percent CI -0.017 to +0.493, p = 0.079 (Table VI).
+- No model achieves the safety objective (Section VI-C).
+- The dataset contains no attacked sessions, so the threat model cannot be evaluated (Sections III-G and VI-D).
+
+What the paper actually contributes is a re-evaluation: a leakage audit, a formal reduction of the RL formulation to cost-sensitive classification, and a matched comparison showing that the RL machinery adds nothing on these data.
+
+The novelty of the formal part should also be stated modestly. The threshold in Eq. (3) is the standard cost-sensitive result of Elkan [27], applied once one notes that the alarm does not affect transitions. Dueling double DQN with class-dependent rewards for imbalanced detection has been proposed before, by Lin et al. [26] and by Yang et al. [R1]; the latter is not cited.
+
+Contributions 2 and 5 are defined relative to "the submitted version": the corrected teacher forcing, the target-network statistics, and the previously reported 96.88 percent accuracy. Journal readers cannot access that version unless it is public. As written, a substantial share of the paper (Sections I, III-A, III-E, V-A and VI-A, and Supplement S5) answers earlier reviewers rather than contributing to the literature.
+
+The implication is that readers will judge the paper against claims it explicitly refutes. Aligning the title, abstract and contribution list with the re-evaluation would make the paper's real value visible.
+
+3.2 The missing baseline is exposure time; without it, the paper cannot say what any model detects.
+
+Several reported facts point the same way:
+- Labels are close to step functions (mean 1.1 switches per session), 9 of 35 sessions never report discomfort, and the median onset is 82 seconds after the start (Supplement S1.2).
+- In Supplement S2.2, 29 of the 35 selected model-fold configurations use the "exposure" or "exposure+profile" feature sets rather than the telemetry sets.
+- The SHAP analysis ranks cumulative rotation and elapsed time first (Fig. 3).
+- Table II shows that the 21 raw columns give ROC-AUC 0.523 under a grouped split. The tuned gradient-boosting model with causal features, which add elapsed and cumulative quantities, reaches 0.692 (Table III), although tuning also differs between the two.
+
+Together these suggest that much of the usable signal may be "time since the start of the session", possibly modulated by game.
+
+The paper needs a logistic regression or step-function model on elapsed time alone (and on elapsed time plus game), evaluated under the same protocol. This would establish whether any of the seven models, and therefore any of the telemetry, contributes beyond a population onset curve. If the time-only model matches the best models, then the conclusions about RL versus supervised learning only describe how well each model fits an exposure curve. In that case, the premise that the telemetry carries detectable signal, on which the threat model rests, is not supported.
+
+3.3 The perturbation study is weaker and less well positioned than the framing implies.
+
+Positioning against prior work. The paper cites Kundu et al. [3] as introducing cybersickness attacks. It does not mention that [3] evaluated its attacks and an XAI-guided attack detector on the Gameplay dataset, which is the same UFFCSData race and flight release. TruVR [22] also reports 94.10 percent accuracy on this release. The related-work statement that quoted figures were obtained "on their own datasets" (Section II) is therefore inaccurate for these two works. Table I says "Only [2], [3] consider attacks", which omits recent work such as the Adversarial-VR testbed [R2]. That testbed attacks deep cybersickness detectors with MI-FGSM, PGD and C&W in a closed loop with field-of-view mitigation. The paper should explain how its bounded, physically motivated perturbations relate to these optimization-based attacks.
+
+Strength of the adversary. The adaptive adversary picks the worst of 29 fixed perturbations for each session (Section III-G). This is a lower bound on vulnerability, not a worst case in the usual adversarial-robustness sense, and the text should say so.
+
+Scenario coverage. Keeping the labels fixed tests evasion and false-alarm induction. The motivating threat, however, is an adversary who induces sickness, which would change the labels. That scenario is not evaluated at all.
+
+Interpretation of robustness. Table X reports that 87 percent of model-scenario pairs change ROC-AUC by less than 0.03. This follows from the detectors relying on exposure and questionnaire inputs (Section V-H). It reflects insensitivity to the manipulated channels rather than a desirable defensive property, and the abstract's sentence on perturbations should carry that qualification.
+
+3.4 The statistical evidence for the pairwise conclusions is thinner than Section V-D suggests.
+
+All inference rests on 21 linkage groups of very unequal size, with about four groups per outer test fold.
+
+Multiplicity. Section V-D reports six paired comparisons of E-DDQN with p-values of 0.001, 0.014, 0.026, 0.035, 0.039 and 0.079, without any adjustment. Under a Holm correction, only the comparison with the random forest stays below 0.05. The text should either adjust or state that the other comparisons are descriptive.
+
+Instability with few clusters. The DQN comparison (difference +0.190, p = 0.079) and the CS-MLP comparison (difference +0.190, p = 0.039) have the same effect size but different p-values, which shows how unstable these intervals are with 21 clusters. A percentile group bootstrap with few, unequal clusters can also be anti-conservative. The paper should state how the bootstrap p-value is defined; with 2,000 replicates, the smallest attainable two-sided value is about 0.001. It should also add a sensitivity analysis, for example leave-one-group-out estimates or a session-level grouping.
+
+Presentation of the McNemar tests. Table VI gives prominence to sample-level McNemar results (p < 0.001 throughout), which the text itself says overstate the evidence. These belong in the supplement.
+
+Wording in the abstract. The abstract says the random forest had a "materially lower cost than always alarming" and also that its confidence interval includes the always-alarm cost. The paper should choose one characterization. The evidence supports "not statistically distinguishable from always alarming".
+
+3.5 The primary metric operates at a nearly degenerate point, and the safety objective is not defined.
+
+With prevalence 0.44 and a Bayes cut-off of 1/6, the cost-optimal policy for weakly informative features is close to always alarming. Table III confirms this: every model has a specificity between 3 and 18 percent. At such an operating point, the 5:1 cost mostly measures how close each model's validation-chosen threshold lands to always alarming. This is why selection optimism (Table VII) matters so much for the ranking. The 5:1 ratio itself is stated as a preference rather than derived from harm data.
+
+Two changes would make the comparison more informative:
+- Cost curves or decision curves across a range of cost ratios for all models. Table IX does this for E-DDQN only.
+- An explicit, pre-specified definition of the safety objective, for example a recall target together with a maximum false-positive rate. This would turn "not achieved" in Section VI-C from a judgement into a test.
+
+Relatedly, the binary label merges "slight" discomfort (grade 1) with severe discomfort. The paper does not report the grade distribution by game, and a safety-oriented detector would plausibly target grade 2 or higher. A sensitivity analysis at that threshold, where the data allow it, would show whether the negative result depends on the label definition.
+
+
+4. Questions and Suggestions
+
+Questions
+
+(1) Has the earlier version of this work been released publicly, for example as a preprint? If not, why is the leakage audit framed against it rather than against published studies on the same dataset that report sample-level splits, such as [22]?
+
+(2) How was the discomfort level elicited during play, and how often? If reports were sparse and carried forward to every second, the effective number of labels is much smaller than 9,390. This matters for both the per-second metrics and the bootstrap.
+
+(3) Published descriptions of the Gameplay release refer to 35 participants (for example, [22]), while the paper forms 21 groups. Can the authors reconcile this with the dataset authors' documentation, or obtain participant identifiers from them? How many groups merge sessions that are likely to come from different people?
+
+(4) The outer-test score is the average of three inner models, each trained on two thirds of the development groups. Why not refit one model on all development groups? The choice is applied equally to every model, but it reduces the training data of all of them.
+
+(5) Section V-F says the largest E-DDQN Q-value, 61.78, "slightly" exceeds the bound r_max/(1 - gamma). At gamma = 0.99 that bound is 50, an overshoot of about 24 percent. Is "slightly" the right word?
+
+Suggestions, in order of priority
+
+(1) Add exposure-only baselines (elapsed time, and elapsed time plus game) under the same protocol, and report them in Tables III and X.
+
+(2) Align the title, abstract and contribution list with what the evidence supports. Move the account of the earlier submission to the response letter or to a short reproducibility subsection. Position the formal result relative to [27] and to the DRL-for-imbalance literature ([26], [R1]).
+
+(3) Apply a multiplicity correction to the paired comparisons, move the sample-level McNemar results to the supplement, and add a leave-one-group-out or session-level sensitivity analysis.
+
+(4) Add cost or decision curves for all models and a pre-specified safety target.
+
+(5) Position the stress tests against [3] and [R2], state that the adaptive adversary is a lower bound, and consider an optimization-based attack on the differentiable models for comparability.
+
+(6) Fix several presentation issues before submission:
+- Table VIII is set in a font too small to read in print, while Table V is set much larger than the surrounding tables.
+- The legends of Fig. 2 are illegible at column width.
+- Reference [12] still contains the note "venue to be confirmed by the authors", and reference [32] lacks a precise access date.
+- The Data Availability statement points to a local path ("revision/") rather than to a persistent archive with a DOI.
+
+
+5. References
+
+[R1] J. Yang, R. El-Bouri, O. O'Donoghue, A. S. Lachapelle, A. A. S. Soltan, D. W. Eyre, L. Lu, and D. A. Clifton, "Deep reinforcement learning for multi-class imbalanced training: applications in healthcare," Machine Learning, vol. 113, pp. 2655-2674, 2024, doi:10.1007/s10994-023-06481-z.
+
+[R2] I. Ahmed, R. K. Kundu, and K. A. Hoque, "Adversarial VR: An open-source testbed for evaluating adversarial robustness of VR cybersickness detection and mitigation," arXiv:2512.17029, 2025.
