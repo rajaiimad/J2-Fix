@@ -279,9 +279,23 @@ def analyze():
     # restore the primary attack table (attack_auc writes a fixed filename)
     AG.attack_auc({t: runs[t] for t in MAIN}, F)
 
-    # 9. ROC/PR figure including the post-hoc baselines
+    # 9. Q-value scale: largest |Q| relative to the return bound r_max / (1 - gamma) (r_max = 0.5 asymmetric, 1 symmetric)
+    psel = json.loads((RESULTS / "selected_configs.json").read_text())
+    td = pd.read_csv(RESULTS / "tables" / "training_diagnostics.csv")
+    qb = []
+    for fam, rmax in (("E-DDQN", 0.5), ("E-CB", 0.5), ("DQN", 1.0)):
+        for k in range(KO):
+            g = psel[fam][str(k)]["config"].get("gamma", 0.0)
+            q = td[(td.model == fam) & (td.outer == k)].q_abs_max.max()
+            qb.append({"model": fam, "outer": k, "gamma": g, "q_abs_max": q, "bound": rmax / (1 - g), "ratio": q / (rmax / (1 - g))})
+    pd.DataFrame(qb).to_csv(OUT / "q_value_bounds.csv", index=False)
+
+    # 10. ROC/PR figure including the post-hoc baselines
     plot_roc_with_time(E)
     macros(summ, cis, cc, jk, js, sd)
+
+
+SHORT = {"TimeGame-HGB": "Time+game HGB"}
 
 
 def plot_cost_curves(cc):
@@ -292,7 +306,7 @@ def plot_cost_curves(cc):
              "TimeGame-HGB": dict(lw=2.0, ls="-.", color="#555555")}
     fig, ax = plt.subplots(figsize=(3.5, 3.0))   # one journal column
     for t, g in cc.groupby("model", sort=False):
-        ax.plot(g.ratio, g.relative_cost, marker="o", ms=3, label=t, **style.get(t, dict(lw=1.2)))
+        ax.plot(g.ratio, g.relative_cost, marker="o", ms=3, label=SHORT.get(t, t), **style.get(t, dict(lw=1.2)))
     ax.axhline(1.0, color="k", ls=":", lw=1)
     ax.axvline(5.0, color="#999999", ls=":", lw=1)
     ax.set_xscale("log")
@@ -318,7 +332,7 @@ def plot_roc_with_time(E):
         fpr, tpr, _ = roc_curve(g.y, g.score)
         st = dict(lw=2.4, color="#c0392b") if t == "E-DDQN" else (dict(lw=2.0, ls="--", color="black") if t == "Time-LR" else
                                                                      dict(lw=2.0, ls="-.", color="#555555") if t == "TimeGame-HGB" else dict(lw=1.1))
-        ax.plot(fpr, tpr, label=f"{t} ({roc_auc_score(g.y, g.score):.3f})", **st)
+        ax.plot(fpr, tpr, label=f"{SHORT.get(t, t)} ({roc_auc_score(g.y, g.score):.3f})", **st)
     ax.plot([0, 1], [0, 1], "k:", lw=0.8)
     ax.set_xlabel("False-positive rate", fontsize=8)
     ax.set_ylabel("Recall", fontsize=8)
@@ -352,6 +366,56 @@ def main_table_with_posthoc(summ):
         rows.append(" & ".join(cells) + " \\\\")
     out = src[:cut] + rows + src[cut:]
     (OUT / "tab_main_D1_with_posthoc.tex").write_text("\n".join(out) + "\n")
+
+
+def _tab(path, header, rows, cols):
+    body = ["\\begin{tabular}{" + cols + "}", "\\toprule", header + " \\\\", "\\midrule"] + \
+           [" & ".join(r) + " \\\\" for r in rows] + ["\\bottomrule", "\\end{tabular}"]
+    (OUT / path).write_text("\n".join(body).replace("TimeGame-HGB", "Time+game HGB") + "\n")
+
+
+def supplement_tables():
+    def f3(x):
+        return f"{x:+.3f}".replace("-", "$-$")
+
+    def pv(x):
+        return "$<$0.001" if x < 0.001 else f"{x:.3f}"
+    rule_name = {"D1_min_cost": "D1 (min cost)", "D0_bayes_1_6": "D0 ($\\hat p\\ge1/6$)", "recall>=0.95": "val.\\ recall $\\ge$0.95"}
+    hl = pd.read_csv(OUT / "paired_tests_holm.csv")
+    _tab("tab_ph_holm.tex", "Rule & B & $\\Delta$Cost (E-DDQN$-$B) & 95\\,\\% CI & $p_{\\text{group}}$ & $p_{\\text{Holm}}$",
+         [[rule_name[r.rule], r.B, f3(r.cost_A_minus_B), f"[{f3(r.cost_diff_ci_low)}, {f3(r.cost_diff_ci_high)}]",
+           pv(r.cost_diff_p_cluster_bootstrap), pv(r.p_holm)] for r in hl.itertuples()], "llcccc")
+    va = pd.read_csv(OUT / "vs_always_alarm.csv")
+    g, se = va[va.unit == "group"].set_index("model"), va[va.unit == "session"].set_index("model")
+    _tab("tab_ph_always.tex", "Model & $\\Delta$Cost (model$-$always) & CI (groups) & $p$ & $p_{\\text{Holm}}$ & CI (sessions) & $p$",
+         [[m, f3(g.loc[m, "cost_model_minus_always"]), f"[{f3(g.loc[m, 'ci_low'])}, {f3(g.loc[m, 'ci_high'])}]", pv(g.loc[m, "p"]),
+           pv(g.loc[m, "p_holm"]), f"[{f3(se.loc[m, 'ci_low'])}, {f3(se.loc[m, 'ci_high'])}]", pv(se.loc[m, "p"])] for m in g.index],
+         "lcccccc")
+    sd = pd.read_csv(OUT / "paired_tests_session_units.csv").set_index("B")
+    js = pd.read_csv(OUT / "jackknife_summary.csv")
+    jk = js[js.A == "E-DDQN"].drop_duplicates("B").set_index("B")
+    rows = []
+    for b in sd.index:
+        h = sd.loc[b, "p_holm_primary"]
+        rows.append([b, f3(sd.loc[b, "cost_A_minus_B"]), f"[{f3(sd.loc[b, 'ci_low'])}, {f3(sd.loc[b, 'ci_high'])}]", pv(sd.loc[b, "p"]),
+                     "--" if pd.isna(h) else pv(h), f"{f3(jk.loc[b, 'jk_min'])} to {f3(jk.loc[b, 'jk_max'])}", str(int(jk.loc[b, "sign_flips"]))])
+    _tab("tab_ph_sensitivity.tex", "B & $\\Delta$Cost (E-DDQN$-$B) & CI (sessions) & $p$ & $p_{\\text{Holm}}$ & jackknife range & sign flips",
+         rows, "lcccccc")
+    cc = pd.read_csv(OUT / "cost_curves.csv")
+    piv = cc.pivot(index="model", columns="ratio", values="relative_cost").reindex(MAIN + PH_FAMS)
+    _tab("tab_ph_costcurves.tex", "Model & " + " & ".join(f"{r:g}" for r in piv.columns),
+         [[m] + [f"{v:.3f}" for v in piv.loc[m]] for m in piv.index], "l" + "c" * len(piv.columns))
+    sel = pd.read_csv(OUT / "selected_configs_posthoc.csv")
+    rows = []
+    for r in sel.itertuples():
+        hp = "C = " + f"{r.C:g}" if r.model == "Time-LR" else \
+            f"lr {r.learning_rate:g}, iter {int(r.max_iter)}, leaves {int(r.max_leaf_nodes)}, min leaf {int(r.min_samples_leaf)}, $\\ell_2$ {r.l2_regularization:g}"
+        rows.append([r.model, str(r.outer), r.feature_set, hp, f"{r.pooled_oof_min_cost:.3f}"])
+    _tab("tab_ph_selected.tex", "Model & Outer fold & Feature set & Selected hyper-parameters & Inner-OOF cost", rows, "lcllc")
+    qb = pd.read_csv(OUT / "q_value_bounds.csv")
+    _tab("tab_ph_qbounds.tex", "Model & Outer fold & $\\gamma$ & max $|Q|$ & bound $r_{\\max}/(1-\\gamma)$ & ratio",
+         [[r.model, str(r.outer), f"{r.gamma:g}", f"{r.q_abs_max:.2f}", f"{r.bound:.2f}", f"{r.ratio:.2f}"] for r in qb.itertuples()],
+         "lccccc")
 
 
 # --------------------------------------------------------------- macros
@@ -435,7 +499,20 @@ def macros(summ, cis, cc, jk, js, sd):
             put("Cc" + KEY[t] + {1: "One", 2: "Two", 5: "Five", 10: "Ten", 20: "Twenty"}[R], f"{g.loc[R, 'relative_cost']:.3f}")
         put("Cc" + KEY[t] + "Below", str(int((g.relative_cost < 1).sum())))
     put("CcNratios", str(cc.ratio.nunique()))
+    low = cc[cc.ratio.isin([1.5, 2]) & (cc.model != "E-DDQN")].relative_cost
+    put("CcLowRMin", f"{low.min():.2f}")
+    put("CcLowRMax", f"{low.max():.2f}")
+    gc = pd.read_csv(RESULTS / "preprocessing" / "counts_eval_by_game.csv").set_index("game")
+    for game in ("Flight", "Race"):
+        put("Grade" + game + "Severe", f"{int(gc.loc[game, 'grade2'] + gc.loc[game, 'grade3']):,}")
+        put("Grade" + game + "Samples", f"{int(gc.loc[game, 'samples']):,}")
+    qb = pd.read_csv(OUT / "q_value_bounds.csv")
+    for fam in ("E-DDQN", "E-CB", "DQN"):
+        g = qb[qb.model == fam]
+        put("QRatioMax" + KEY[fam], f"{g.ratio.max():.1f}")
+        put("QRatioFolds" + KEY[fam], str(int((g.ratio > 1).sum())))
     main_table_with_posthoc(summ)
+    supplement_tables()
     (OUT / "posthoc_macros.json").write_text(json.dumps(M, indent=1))
     tex = ["% generated by scripts/11_posthoc.py -- do not edit"] + \
           [f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in sorted(M.items())]

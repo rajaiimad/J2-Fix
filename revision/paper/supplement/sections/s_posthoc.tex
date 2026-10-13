@@ -1,0 +1,45 @@
+\section{Post-hoc analyses}
+\label{sec:s-posthoc}
+The analyses in this section were specified after the primary results were known, committed (\texttt{configs/\allowbreak posthoc.json}) before they were run, and use the splits, inner folds, selection objective, checkpoint and threshold rules, cross-fitting recipe and final seeds of the primary protocol. No primary result was changed.
+
+\subsection{Exposure-time baselines: selected configurations}
+Time-LR searched all six values of $C$; Time+game HGB used the HGB search space and budget (16 configurations).
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_selected.tex}
+\end{center}
+
+\subsection{Holm adjustment of the paired comparisons}
+Group-bootstrap comparisons of E-DDQN with the six other primary models under each operating rule, with Holm's step-down adjustment over the six comparisons of each rule.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_holm.tex}
+\end{center}
+
+\subsection{Comparison with always alarming}
+Paired bootstrap of each model's D1 cost (seed ensemble) minus the cost of always alarming; Holm adjustment over the nine models (group units).
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_always.tex}}
+\end{center}
+
+\subsection{Grouping sensitivity}
+Paired bootstrap resampling sessions instead of linkage groups (Holm over the six primary comparisons), and the range of the cost difference in a leave-one-group-out jackknife over the \nGroupsEval{} groups.
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_sensitivity.tex}}
+\end{center}
+
+\subsection{Validation-chosen cost curves}
+Test cost of the seed ensemble divided by the cost of the better trivial policy, for each false-negative to false-positive ratio $R$ (threshold chosen on inner-validation predictions at each $R$). At $R=5$ the values reproduce the D1 seed-ensemble costs exactly (checked programmatically).
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_costcurves.tex}}
+\end{center}
+
+\subsection{Q-value scale}
+Largest absolute Q-value over the final runs of each outer fold relative to the return bound $r_{\max}/(1-\gamma)$ of the selected discount ($r_{\max}=0.5$ for the asymmetric reward, 1 for the symmetric reward).
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_qbounds.tex}
+\end{center}

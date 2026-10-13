@@ -11,7 +11,9 @@ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONHASHSEED=0
 if [[ $FRESH == 1 ]]; then   # remove every generated artefact
   rm -rf results/* data/processed/* manuscript/generated manuscript/figs supplementary/generated supplementary/figs \
          manuscript/main.pdf supplementary/supplement.pdf reports/05_results.md reports/07_quality_control.md \
-         reviewer_response/response_to_reviewers.md
+         reviewer_response/response_to_reviewers.md \
+         paper/generated paper/figs paper/main.pdf paper/supplement/generated paper/supplement/figs \
+         paper/supplement/supplement.pdf
   mkdir -p results data/processed
 fi
 python3 scripts/00_sanity_tests.py                      # unit checks of the corrected agent
@@ -30,5 +32,8 @@ python3 scripts/07_shap.py
 python3 scripts/05_make_tables.py                        # LaTeX numbers/tables for manuscript + supplement
 ( cd manuscript && latexmk -pdf -interaction=nonstopmode -quiet main.tex )
 ( cd supplementary && latexmk -pdf -interaction=nonstopmode -quiet supplement.tex )
+python3 scripts/11_posthoc.py run --workers "$WORKERS"  # post-hoc baselines (configs/posthoc.json)
+python3 scripts/11_posthoc.py analyze                    # post-hoc statistics, tables, figures, macros
+bash    paper/build.sh                                   # new-submission paper + supplement
 python3 scripts/08_consistency_check.py                  # every number in the PDFs traced to results
 python3 scripts/09_render_docs.py                        # reviewer response, results and QC reports from templates

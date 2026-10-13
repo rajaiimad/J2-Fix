@@ -148,6 +148,59 @@ for pdf in (REVISION_ROOT / "manuscript" / "main.pdf", REVISION_ROOT / "suppleme
     pdf_hits[pdf.name] = hits
 (QC / "stale_number_contexts.json").write_text(json.dumps(pdf_hits, indent=1))
 
+# ------------------------------------------- 4. post-hoc baselines and new paper
+PH_JSON = RESULTS / "tables" / "posthoc" / "posthoc_macros.json"
+paper_hits = {}
+if PH_JSON.exists():
+    PH = json.loads(PH_JSON.read_text())
+    for m, k in (("Time-LR", "TimeLR"), ("TimeGame-HGB", "TimeHGB")):
+        df = pd.read_csv(RESULTS / "predictions" / f"{m}.csv.gz", dtype={"seed": str})
+        per = []
+        for seed, g in df[df.seed != "ens"].groupby("seed"):
+            y, yp, sc = g.y.to_numpy(), g.pred_D1_min_cost.to_numpy(), g.score.to_numpy()
+            tn, fp, fn, tp = confusion_matrix(y, yp, labels=[0, 1]).ravel()
+            per.append({"recall": recall_score(y, yp), "spec": tn / (tn + fp), "cost": (5 * fn + fp) / len(y),
+                        "auc": roc_auc_score(y, sc), "prauc": average_precision_score(y, sc), "mcc": matthews_corrcoef(y, yp)})
+        per = pd.DataFrame(per).mean()
+        check(close(PH[f"PH{k}RecallMean"], 100 * per.recall, 0.051), f"PH {k} recall")
+        check(close(PH[f"PH{k}SpecMean"], 100 * per.spec, 0.051), f"PH {k} spec")
+        check(close(PH[f"PH{k}CostMean"], per.cost, 0.0006), f"PH {k} cost")
+        check(close(PH[f"PH{k}RocAucMean"], per.auc, 0.0006), f"PH {k} auc")
+        check(close(PH[f"PH{k}PrAucMean"], per.prauc, 0.0006), f"PH {k} prauc")
+        check(close(PH[f"PH{k}MCCMean"], per.mcc, 0.0006), f"PH {k} mcc")
+        e = df[df.seed == "ens"]
+        tn, fp, fn, tp = confusion_matrix(e.y, e.pred_D1_min_cost, labels=[0, 1]).ravel()
+        check(int(num(PH[f"PH{k}FN"])) == fn and int(num(PH[f"PH{k}FP"])) == fp, f"PH {k} ensemble FN/FP")
+    # Holm adjustment recomputed with statsmodels
+    from statsmodels.stats.multitest import multipletests
+    hl = pd.read_csv(RESULTS / "tables" / "posthoc" / "paired_tests_holm.csv")
+    for rule, g in hl.groupby("rule"):
+        adj = multipletests(g.cost_diff_p_cluster_bootstrap, method="holm")[1]
+        check(np.allclose(adj, g.p_holm, atol=1e-12), f"Holm {rule}")
+    # every macro used in the new paper and its supplement is defined
+    pdef = defined | set(PH)
+    for tex in (REVISION_ROOT / "paper").rglob("*.tex"):
+        if "generated" in tex.parts:
+            continue
+        for name in re.findall(r"\\([A-Z][A-Za-z]+)(?![A-Za-z])", tex.read_text()):
+            if re.match(r"^(PH|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
+                check(name in pdef, f"paper/{tex.name}: macro \\{name} not defined")
+    # stale numbers of the earlier version may appear only where that version is named
+    for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf"):
+        if not pdf.exists():
+            continue
+        txt = re.sub(r"\s+", " ", subprocess.run(["pdftotext", str(pdf), "-"], capture_output=True, text=True).stdout)
+        hits = []
+        for st in ("96.88", "99.53", "14,680", "20,972"):
+            for mt in re.finditer(re.escape(st), txt):
+                ctx = txt[max(0, mt.start() - 200): mt.end() + 40]
+                ok = "earlier" in ctx.lower()
+                hits.append({"number": st, "named_as_earlier_version": ok, "context": ctx})
+                check(ok, f"{pdf.name}: {st} outside a passage naming the earlier version")
+        check("submitted" not in txt.lower(), f"{pdf.name}: the word 'submitted' appears")
+        paper_hits[pdf.name] = hits
+    (QC / "paper_stale_number_contexts.json").write_text(json.dumps(paper_hits, indent=1))
+
 report = {"checks": checks, "failures": fails, "macros_defined": len(defined), "macros_used_in_text": len(used),
           "stale_number_occurrences": {k: len(v) for k, v in pdf_hits.items()},
           "note": "stale-number occurrences are listed with context in stale_number_contexts.json; each must be either inside an explicitly labelled description of the submitted version or a coincidental substring of a different number (e.g. 8.8 inside 98.8)"}

@@ -21,6 +21,7 @@ Everything produced for the revision lives here.
 | 8 | Reviewer-response draft | `reviewer_response/response_to_reviewers.md` |
 | 9 | Final quality-control report | `reports/07_quality_control.md` (+ `results/qc/`) |
 | – | Reference verification | `reports/06_reference_verification.md` |
+| – | **New-submission version** (re-framed paper for a new journal; includes post-hoc exposure-time baselines and sensitivity analyses) | `paper/main.pdf`, `paper/supplement/supplement.pdf` (build: `bash paper/build.sh`); checklist `paper/SUBMISSION_CHECKLIST.md`; post-hoc spec `configs/posthoc.json`, code `scripts/11_posthoc.py`, results `results/tables/posthoc/` |
 
 ## Reproduce
 
@@ -50,6 +51,15 @@ The last step independently recomputes every confusion matrix, metric and McNema
 * **Features and preprocessing:** causal features only; all learned preprocessing is fitted on training groups.
 * **Fair comparison:** every model gets the same tuning budget, checkpoint rule, cross-fitting recipe, operating rules and paired statistics.
 * **Primary decision rule:** the threshold minimising the 5:1 cost on validation predictions.
+
+## Post-hoc analyses (after the primary results)
+
+These analyses were specified in `configs/posthoc.json` and committed before they were run. They use the frozen protocol's splits, rules and seeds.
+
+* **Elapsed-time baseline (Time-LR).** A logistic regression on elapsed time alone reaches ROC-AUC 0.704, the highest of all models. Its ranking is statistically indistinguishable from the random forest's. The random forest still has a lower 5:1 cost.
+* **Holm adjustment.** Of the paired comparisons with E-DDQN, only the one with the random forest remains significant.
+* **Always-alarm comparison.** No model is shown to beat always-alarm at 5:1 after adjustment.
+* **Robustness of conclusions.** Neither the session-level bootstrap nor the leave-one-group-out jackknife changes any conclusion.
 
 ## Headline
 

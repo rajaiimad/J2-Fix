@@ -1,0 +1,38 @@
+# Submission checklist (new-submission version)
+
+`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passed all 523 checks.
+
+## Done
+- [x] Elapsed-time baselines (Time-LR, Time+game HGB), added post hoc under the same protocol (`configs/posthoc.json`, committed before they were run).
+- [x] Multiple-comparison handling:
+  - Holm adjustment of the paired tests.
+  - Comparison of every model against always-alarm.
+  - Session-level bootstrap and leave-one-group-out jackknife.
+  - Cost curves.
+- [x] New title, abstract, research questions and contribution list.
+- [x] Every "submitted version" reference removed. The earlier version is mentioned once, as unpublished and leakage-affected, together with its reconstruction (Supplement S6).
+- [x] Missing citations added and verified:
+  - Yang et al. 2024, *Machine Learning*;
+  - Ahmed et al. 2025, arXiv;
+  - Holm 1979;
+  - Kundu et al. used the same gameplay data.
+- [x] PRECYSE reference completed: *Proc. ACM IMWUT* 2024, DOI 10.1145/3659594.
+- [x] Readability fixes: unreadable tables re-set, column-width figures, US spelling.
+
+## Your decisions and actions
+- [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
+- [ ] **Title.** Confirm it (one line in `paper/main.tex`).
+- [ ] **Previous journal.** If the paper is still under review elsewhere, withdraw it formally first.
+- [ ] **Co-authors.** All of them read and approve the new conclusions.
+- [ ] **Code archive.** Deposit the code and results (e.g. on Zenodo) and replace `[DOI to be added on deposit]` in the Data and Code Availability section.
+- [ ] **Remaining references to check:**
+  - VR-LENS (ref. "kundu2023vrlens") is cited as arXiv 2302.01985. Check whether a peer-reviewed version exists.
+  - Ahmed et al. (Adversarial-VR): one source says it appeared at ISMAR-Adjunct 2025, but this could not be confirmed. It is cited as arXiv.
+- [ ] **UFFCSData access date.** Add the date you downloaded the dataset if the journal style needs one.
+- [ ] **Similarity check.** Run a similarity check (e.g. Turnitin) before submission.
+- [ ] **English.** Proofread, or have the paper proofread.
+- [ ] **Forms.** Collect ORCID iDs and the copyright and declaration forms the journal asks for.
+
+## Not done (and why)
+- **No second dataset.** This would strengthen generality the most, but needs a new data source and is a larger project.
+- **No sensitivity analysis for severe discomfort (grade >= 2).** The Flight game has only 41 such samples, so it is stated as a limitation instead.

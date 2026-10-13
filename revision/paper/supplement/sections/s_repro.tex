@@ -1,0 +1,10 @@
+\section{Reproducibility}
+\label{sec:s-repro}
+\begin{itemize}
+\item Software: Python 3.13.16, PyTorch 2.14.1 (CPU), scikit-learn 1.9.1, NumPy 2.5.3, pandas 3.0.5, SciPy 1.18.1, SHAP 0.53.0, statsmodels 0.15.0 (\texttt{requirements.txt}).
+\item One command regenerates everything from the raw XML files: \texttt{bash run\_all.sh -{}-fresh} (about 3 hours of wall time on four CPU cores, dominated by the reinforcement-learning hyper-parameter search and ablation).
+\item The post-hoc analyses (Section~\ref{sec:s-posthoc}) are specified in \texttt{configs/\allowbreak posthoc.json}, which was committed before they were run, and are produced by \texttt{scripts/\allowbreak 11\_posthoc.py} (\texttt{run} and \texttt{analyze}; seeds 801--802 for the post-hoc search, bootstrap seeds 5--7).
+\item Seeds: split 20261012 (outer) and 20261013--20261017 (inner); hyper-parameter search 777 (+family index for configuration sampling); final training 1000--1004; perturbations 4242; bootstrap 11 (CIs) and 5 (paired tests).
+\item Every number in the manuscript and in this supplement is produced by \texttt{scripts/\allowbreak 05\_make\_tables.py} from \texttt{results/\allowbreak tables/\allowbreak *.csv}, which \texttt{scripts/\allowbreak 04\_aggregate.py} computes from the per-sample predictions in \texttt{results/\allowbreak predictions/\allowbreak }. \texttt{scripts/\allowbreak 08\_consistency\_check.py} recomputes confusion matrices, metrics and McNemar statistics with independent library implementations and checks them against the manuscript macros.
+\item Executable sanity tests of the corrected agent: \texttt{scripts/\allowbreak 00\_sanity\_tests.py} (reward regret ratio, implied threshold, within-session transitions, terminal flags, reward/action consistency of replay, target-network buffer synchronisation, Q-value bounds, McNemar identity).
+\end{itemize}

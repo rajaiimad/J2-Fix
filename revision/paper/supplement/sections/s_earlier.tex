@@ -1,0 +1,19 @@
+\section{Reconstruction of the earlier protocol}
+\label{sec:s-earlier}
+An earlier, unpublished version of this study reported 96.88\,\% accuracy and 99.53\,\% recall for E-DDQN. Its 41-feature input files, preprocessing code and trained models were not available, so the following is a reconstruction of its protocol, not an exact reproduction. The earlier version's partition sizes (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples per grade) are reproduced exactly by oversampling every discomfort grade of the curated release to the size of grade 0 (5,243) and then splitting at row level.
+
+\noindent\resizebox{\textwidth}{!}{\input{generated/tab_leakage.tex}}
+
+\medskip
+Under this protocol \LeakDupPos{} of the \LeakTestPos{} positive test rows (\LeakDupPct\,\%) have an exact duplicate in the training split, and all sessions occur in both splits.
+
+\subsection*{Implementation pitfalls found in the earlier code}
+The following defects of the earlier E-DDQN implementation are guarded against by the unit tests of the present code (Section~\ref{sec:s-repro}); they are listed because they are easy to make whenever a classifier is trained as a Q-learner.
+\begin{enumerate}
+\item The next state was the next row of a shuffled chunk, with no terminal flags, so $\gamma=0.99$ bootstrapped across unrelated samples.
+\item The true label was stored as the action together with the reward of the random action actually taken (a form of teacher forcing).
+\item The Polyak update ignored batch-normalization buffers, so the target network normalized with mean 0 and variance 1 throughout training.
+\item The Double-DQN arg-max ran the online network in training mode.
+\item The test set was scored during training (every 10 episodes), which invites test-set monitoring.
+\item SHAP attributed $Q(s,1)$, which contains $V(s)$, on 50 test rows with the additivity check disabled.
+\end{enumerate}

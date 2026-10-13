@@ -328,5 +328,17 @@
  "PHCcTimeHGBTen": "1.014",
  "PHCcTimeHGBTwenty": "1.064",
  "PHCcTimeHGBBelow": "7",
- "PHCcNratios": "10"
+ "PHCcNratios": "10",
+ "PHCcLowRMin": "0.72",
+ "PHCcLowRMax": "0.91",
+ "PHGradeFlightSevere": "41",
+ "PHGradeFlightSamples": "5,397",
+ "PHGradeRaceSevere": "1,450",
+ "PHGradeRaceSamples": "3,993",
+ "PHQRatioMaxEDDQN": "2.3",
+ "PHQRatioFoldsEDDQN": "2",
+ "PHQRatioMaxECB": "1.9",
+ "PHQRatioFoldsECB": "5",
+ "PHQRatioMaxDQN": "2.2",
+ "PHQRatioFoldsDQN": "3"
 }

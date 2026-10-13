@@ -1,0 +1,62 @@
+% New-submission version of the study (journal not yet chosen; IEEEtran is a
+% neutral working format).  Every result number is a macro: primary analysis
+% in generated/numbers.tex (scripts/05_make_tables.py), post-hoc analyses in
+% generated/posthoc_macros.tex (scripts/11_posthoc.py).  Run ./build.sh.
+\documentclass[journal]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+\usepackage{url}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+\input{generated/numbers.tex}
+\input{generated/posthoc_macros.tex}
+\newcommand{\pct}[1]{#1\,\%}
+
+\begin{document}
+
+\title{Does an Asymmetric-Reward E-DDQN Improve Safety-Prioritized Cybersickness Detection in Virtual Reality? A Leakage-Free Comparison with Standard DQN and Cost-Sensitive Baselines}
+
+\author{Rajai~Darabee,
+        Manoranjitham~Muniandy,
+        Omar~Shindi,
+        Cheng~Wai~Khuen,
+        and~Ebrahim~Hamid~Sumiea
+\thanks{R. Darabee, M. Muniandy, C. W. Khuen and E. H. Sumiea are with the Faculty of Science, Management \& Computing, Universiti Teknologi PETRONAS, 32610 Seri Iskandar, Perak, Malaysia. O. Shindi is with the School of Information Technology, Crown Institute of Higher Education, Sydney, Australia. Corresponding author: R. I. A. Darabee (e-mail: rajai\_24006920@utp.edu.my).}}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/s1_introduction}
+\input{sections/s2_related}
+\input{sections/s3_method}
+\input{sections/s4_setup}
+\input{sections/s5_results}
+\input{sections/s6_discussion}
+\input{sections/s7_conclusion}
+
+\section*{Data and Code Availability}
+The data are the publicly available UFFCSData release~\cite{porcino2019uffcsdata} (AGPL-3.0). All code, the evaluation protocol (\texttt{configs/\allowbreak protocol.json}, committed before any model was trained on the evaluation sessions), the specification of the post-hoc analyses (\texttt{configs/\allowbreak posthoc.json}, committed before those analyses were run), the split tables, the per-sample predictions of every model and the scripts that produce every number, table and figure of this paper are archived at [DOI to be added on deposit]. A single script regenerates everything from the raw XML files. Seeds are fixed for data splitting (20261012), hyper-parameter search (777; 801--802 for the post-hoc baselines) and final training (1000--1004); CPU execution with one thread per process was used, and minor floating-point differences across hardware are possible.
+
+\section*{Acknowledgment}
+The authors thank Universiti Teknologi PETRONAS for institutional and computational support, and the authors of the UFFCSData dataset for making their data public.
+
+\section*{Conflict of Interest}
+The authors declare no conflict of interest.
+
+\section*{Funding}
+This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
