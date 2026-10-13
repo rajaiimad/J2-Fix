@@ -116,6 +116,16 @@ def main(other: Path):
                 rows.append((f"{d}/{p.name}", "not produced by the rerun commit (table added afterwards from compared CSVs)"))
             else:
                 rows.append((f"{d}/{p.name}", "identical" if sha(p) == sha(q) else content_equal(p, q)))
+    # 5. text of the compiled PDFs (PDF bytes differ by build timestamps, so compare extracted text)
+    import subprocess
+    for d in ("paper/main.pdf", "paper/supplement/supplement.pdf", "manuscript/main.pdf", "supplementary/supplement.pdf"):
+        a, b = REVISION_ROOT / d, other / d
+        if not b.exists():
+            rows.append((d, "MISSING in rerun"))
+            continue
+        ta = subprocess.run(["pdftotext", str(a), "-"], capture_output=True, text=True).stdout
+        tb = subprocess.run(["pdftotext", str(b), "-"], capture_output=True, text=True).stdout
+        rows.append((d, "identical text (pdftotext)" if ta == tb else "DIFFERS (PDF text)"))
     n_diff = sum(1 for _, s in rows if ("DIFFERS" in s or "MISSING" in s or
                                          ("max |diff|" in s and not s.startswith("max |diff| = 0;")) or
                                          " differ: " in s))
@@ -142,11 +152,12 @@ def main(other: Path):
         md.append("Differences:")
         md += [f"* `{a}`: {b}" for a, b in rows if ("DIFFERS" in b or "MISSING" in b or (b.startswith("max |diff|") and not b.startswith("max |diff| = 0;")))]
     else:
-        n_bit = sum(1 for _, b in rows if b.startswith("identical"))
+        n_bit = sum(1 for _, b in rows if b.startswith("identical") and "pdftotext" not in b)
+        n_pdf = sum(1 for _, b in rows if "pdftotext" in b)
         n_cont = sum(1 for _, b in rows if b.startswith("same content"))
         reasons = sorted({b for _, b in rows if b.startswith("same content")})
         md.append(f"All result-bearing artefacts reproduce: every per-sample score is identical, {n_bit} files are byte-identical and "
-                  f"{n_cont} are identical in content. The content-only differences are: " + "; ".join(f"`{r}`" for r in reasons) +
+                  f"{n_cont} are identical in content, and the {n_pdf} compiled PDFs have identical text. The content-only differences are: " + "; ".join(f"`{r}`" for r in reasons) +
                   ". Details: `results/qc/clean_rerun_comparison.csv`.")
     out = RESULTS / "qc" / "clean_rerun.md"
     out.write_text("\n".join(md) + "\n")

@@ -9,7 +9,7 @@ Every row links a reviewer concern to the code change, the experiment, the manus
 |---|---|
 | Agent / metric unit tests (`scripts/00_sanity_tests.py`) | 22/22 pass |
 | Leakage assertions (`scripts/02_preprocessing_audit.py`): feature causality, train-only fitting, zero session/group/profile/duplicate overlap | pass (script asserts) |
-| Independent recomputation of confusion matrices, metrics and McNemar tables with scikit-learn/statsmodels vs. manuscript macros (`scripts/08_consistency_check.py`) | 282 checks, 0 failures |
+| Independent recomputation of confusion matrices, metrics and McNemar tables with scikit-learn/statsmodels vs. manuscript macros (`scripts/08_consistency_check.py`) | 594 checks, 0 failures |
 | Macros used in manuscript + supplement text | 119 distinct macros, all defined |
 | Numbers from the submitted version found in the compiled PDFs | main: 7, supplement: 13; each occurrence is either in an explicitly labelled description of the submitted version or a coincidental substring of a different number (e.g. "8.8" inside "58.8"); contexts are listed in `results/qc/stale_number_contexts.json` |
 | Frozen protocol committed before any evaluation-set training | commit in `configs/FROZEN_PROTOCOL_COMMIT.txt` |
@@ -35,14 +35,15 @@ Every row links a reviewer concern to the code change, the experiment, the manus
 
 ## C. Clean-state rerun
 
-Clean-state rerun: the pushed branch was cloned into an empty directory and `bash revision/run_all.sh --fresh --workers 4` deleted every generated artefact and regenerated everything from the raw XML files (sanity tests, audits, proxy runs of the submitted script, preprocessing audit, development calibration, hyper-parameter search, selection, final evaluation, ablation, reward ratio, aggregation, SHAP, tables, LaTeX builds, consistency check, document rendering).
+Clean-state rerun of commit `deb2cd9`: the pushed branch was cloned into an empty directory and `bash revision/run_all.sh --fresh --workers 4` deleted every generated artefact and regenerated everything from the raw XML files (sanity tests, audits, proxy runs of the earlier script, preprocessing audit, development calibration, hyper-parameter search, selection, final evaluation, ablation, reward ratio, aggregation, SHAP, tables, LaTeX builds, post-hoc baselines and analyses, new-submission paper and supplement, consistency check, document rendering).
 
-* Exit status / timing (tail of the log): `wrote reports/07_quality_control.md | real	170m47.606s | user	585m8.472s | sys	2m3.134s | EXIT 0`
-* Artefacts compared: 90; differing or missing: 0.
+* Exit status / timing (tail of the log): `real	154m25.457s | user	519m1.706s | sys	1m46.138s | EXIT 0 | END Tue Oct 13 18:56:20 UTC 2026`
+* Artefacts compared: 142; differing or missing: 0.
 * Per-sample prediction files with any numeric difference: 0.
-* Result macros differing: 0 (wall-clock timing macros, which are not used in the text, are excluded: ['DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds']).
+* Result macros differing: 0 (wall-clock timing macros, which are not used in the text, are excluded: ['CSMLPMeanSeconds', 'DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds', 'HGBMeanSeconds']).
+* Post-hoc macros differing: 0 of 389.
 
-All result-bearing artefacts reproduce: every per-sample score is identical, 62 files are byte-identical and 7 are identical in content (their only differences are wall-clock timing fields, which naturally vary between runs, and column order in `hpo_results.csv`). Details: `results/qc/clean_rerun_comparison.csv`.
+All result-bearing artefacts reproduce: every per-sample score is identical, 107 files are byte-identical and 8 are identical in content, and the 4 compiled PDFs have identical text. The content-only differences are: `same content (parsed JSON)`; `same content (row/column order ignored)`; `same content (row/column order ignored; only wall-clock timing columns ['mean_seconds'] differ)`; `same content (row/column order ignored; only wall-clock timing columns ['seconds'] differ)`; `same content except wall-clock timing macros (*MeanSeconds)`; `same content except wall-clock timing macros ['CSMLPMeanSeconds', 'DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds', 'HGBMeanSeconds']`. Details: `results/qc/clean_rerun_comparison.csv`.
 
 
 ## D. Remaining unresolved issues
