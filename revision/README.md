@@ -49,7 +49,7 @@ The last step independently recomputes every confusion matrix, metric and McNema
 * **Unit of independence:** conservative *session-linkage groups*, because the release contains no participant IDs.
 * **Splits:** nested grouped cross-validation (5 outer × 3 inner). Outer-test rows are not featurised during tuning, and each outer fold is scored once.
 * **Features and preprocessing:** causal features only; all learned preprocessing is fitted on training groups.
-* **Fair comparison:** every model gets the same tuning budget, checkpoint rule, cross-fitting recipe, operating rules and paired statistics.
+* **Fair comparison:** every model gets the same search procedure and budget (16 configurations; 12 for logistic regression, whose space has only 24 configurations), checkpoint rule, cross-fitting recipe, operating rules and paired statistics.
 * **Primary decision rule:** the threshold minimising the 5:1 cost on validation predictions.
 
 ## Post-hoc analyses (after the primary results)

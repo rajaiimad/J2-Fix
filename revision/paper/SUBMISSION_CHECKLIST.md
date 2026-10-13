@@ -19,6 +19,13 @@
 - [x] PRECYSE reference completed: *Proc. ACM IMWUT* 2024, DOI 10.1145/3659594.
 - [x] Readability fixes: unreadable tables re-set, column-width figures, US spelling.
 
+## Corrections after the pre-submission assessment
+- [x] Seed means and seed ensembles are both reported. Table III now has a seed-ensemble block (recall, specificity, cost, FN, FP), and Section IV-C explains that the paired tests use the ensemble and why the two can differ.
+- [x] The number of CSPQ indicators is corrected from 14 to 11, in the paper and the supplement.
+- [x] "Equal/identical tuning budgets" is replaced by the actual budgets: 16 configurations per model, 12 for logistic regression.
+- [x] "Elapsed time ranks as well as any model" and similar equivalence wording is replaced by "no model ranked significantly better"; the same applies to the reward-ratio costs.
+- [x] The consistency check now also verifies the ensemble metrics, the seed-mean and ensemble differences, and the stated indicator count (590 checks, 0 failures).
+
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
 - [ ] **Title.** Confirm it (one line in `paper/main.tex`).

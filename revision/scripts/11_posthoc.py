@@ -350,22 +350,48 @@ LABEL = {"Time-LR": "Time-LR (elapsed time)", "TimeGame-HGB": "Time+game HGB"}
 
 
 def main_table_with_posthoc(summ):
-    """Primary Table (rule D1) with the post-hoc baselines inserted as a separate
-    block above the trivial policies; primary rows are copied verbatim."""
-    src = (RESULTS.parent / "manuscript" / "generated" / "tab_main_D1.tex").read_text().splitlines()
-    cut = max(i for i, l in enumerate(src) if l.strip() == "\\midrule")
-    d1 = summ[summ.rule == "D1_min_cost"].set_index("model")
+    """Table III of the paper (rule D1): mean +- SD over the five seeds AND the
+    seed ensemble (the single prediction per sample used by the paired tests,
+    the comparison with always alarming and the cost curves), for the primary
+    models, the post-hoc baselines and the trivial policies."""
+    prim = pd.read_csv(RESULTS / "tables" / "metrics_summary.csv")
+    allm = pd.concat([prim, summ])
+    d1 = allm[allm.rule == "D1_min_cost"].set_index("model")
+    triv = pd.read_csv(RESULTS / "tables" / "trivial_baselines.csv").set_index("model")
+    best_mean = d1.loc[MAIN, "expected_cost_mean"].idxmin()
+    best_ens = d1.loc[MAIN, "ens_expected_cost"].idxmin()
 
     def ms(r, m, scale, nd):
         return f"{scale * r[f'{m}_mean']:.{nd}f}$\\pm${scale * r[f'{m}_std']:.{nd}f}"
-    rows = ["\\midrule", "\\multicolumn{12}{l}{\\emph{Post-hoc exposure-time baselines (added after the primary analysis)}} \\\\"]
-    for t in PH_FAMS:
+
+    def row(t, name):
         r = d1.loc[t]
-        cells = [LABEL[t]] + [ms(r, m, 100, 1) for m in ("recall", "specificity", "precision", "f1", "balanced_accuracy")] + \
-                [ms(r, m, 1, 3) for m in ("mcc", "expected_cost", "roc_auc", "pr_auc")] + [f"{int(r.ens_FN):,}", f"{int(r.ens_FP):,}"]
-        rows.append(" & ".join(cells) + " \\\\")
-    out = src[:cut] + rows + src[cut:]
-    (OUT / "tab_main_D1_with_posthoc.tex").write_text("\n".join(out) + "\n")
+        cost_m, cost_e = ms(r, "expected_cost", 1, 3), f"{r.ens_expected_cost:.3f}"
+        if t == best_mean:
+            cost_m = f"\\textbf{{{cost_m}}}"
+        if t == best_ens:
+            cost_e = f"\\textbf{{{cost_e}}}"
+        cells = [name] + [ms(r, m, 100, 1) for m in ("recall", "specificity", "balanced_accuracy")] + \
+                [ms(r, "mcc", 1, 3), cost_m, ms(r, "roc_auc", 1, 3), ms(r, "pr_auc", 1, 3)] + \
+                [f"{100 * r.ens_recall:.1f}", f"{100 * r.ens_specificity:.1f}", cost_e, f"{int(r.ens_FN):,}", f"{int(r.ens_FP):,}"]
+        return " & ".join(cells) + " \\\\"
+
+    def trow(t):
+        r = triv.loc[t]
+        cells = [t, f"{100 * r.recall:.1f}", f"{100 * r.specificity:.1f}", f"{100 * r.balanced_accuracy:.1f}", f"{r.mcc:.3f}",
+                 f"{r.expected_cost:.3f}", "--", "--", f"{100 * r.recall:.1f}", f"{100 * r.specificity:.1f}",
+                 f"{r.expected_cost:.3f}", f"{int(r.FN):,}", f"{int(r.FP):,}"]
+        return " & ".join(cells) + " \\\\"
+
+    lines = ["\\begin{tabular}{lccccccc|ccccc}", "\\toprule",
+             " & \\multicolumn{7}{c|}{Mean $\\pm$ SD over five seeds} & \\multicolumn{5}{c}{Seed ensemble (paired tests)} \\\\",
+             "Model & Recall & Spec. & Bal.\\ acc. & MCC & Cost$_{5:1}$ & ROC-AUC & PR-AUC & Recall & Spec. & Cost$_{5:1}$ & FN & FP \\\\",
+             "\\midrule"]
+    lines += [row(t, "\\textbf{E-DDQN}" if t == "E-DDQN" else t) for t in MAIN]
+    lines += ["\\midrule", "\\multicolumn{13}{l}{\\emph{Post-hoc exposure-time baselines (added after the primary analysis)}} \\\\"]
+    lines += [row(t, LABEL[t]) for t in PH_FAMS]
+    lines += ["\\midrule", trow("Always alarm"), trow("Never alarm"), "\\bottomrule", "\\end{tabular}"]
+    (OUT / "tab_main_D1_with_posthoc.tex").write_text("\n".join(lines) + "\n")
 
 
 def _tab(path, header, rows, cols):
@@ -511,6 +537,17 @@ def macros(summ, cis, cc, jk, js, sd):
         g = qb[qb.model == fam]
         put("QRatioMax" + KEY[fam], f"{g.ratio.max():.1f}")
         put("QRatioFolds" + KEY[fam], str(int((g.ratio > 1).sum())))
+    prim = pd.read_csv(RESULTS / "tables" / "metrics_summary.csv")
+    d1all = pd.concat([prim, summ])
+    d1all = d1all[d1all.rule == "D1_min_cost"].set_index("model")
+    for t in MAIN + PH_FAMS:
+        r = d1all.loc[t]
+        put("Ens" + KEY[t] + "Cost", f"{r.ens_expected_cost:.3f}")
+        put("Ens" + KEY[t] + "Recall", pc(r.ens_recall))
+        put("Ens" + KEY[t] + "Spec", pc(r.ens_specificity))
+        if t != "E-DDQN":
+            put("MeanDiff" + KEY[t], sgn(d1all.loc["E-DDQN", "expected_cost_mean"] - r.expected_cost_mean))
+            put("EnsDiff" + KEY[t], sgn(d1all.loc["E-DDQN", "ens_expected_cost"] - r.ens_expected_cost))
     main_table_with_posthoc(summ)
     supplement_tables()
     (OUT / "posthoc_macros.json").write_text(json.dumps(M, indent=1))

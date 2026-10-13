@@ -171,6 +171,30 @@ if PH_JSON.exists():
         e = df[df.seed == "ens"]
         tn, fp, fn, tp = confusion_matrix(e.y, e.pred_D1_min_cost, labels=[0, 1]).ravel()
         check(int(num(PH[f"PH{k}FN"])) == fn and int(num(PH[f"PH{k}FP"])) == fp, f"PH {k} ensemble FN/FP")
+    # seed-ensemble metrics (Table III, right block) and seed-mean vs ensemble cost differences
+    ens_cost, mean_cost = {}, {}
+    for m, k in list(MKEY.items()) + [("Time-LR", "TimeLR"), ("TimeGame-HGB", "TimeHGB")]:
+        df = pd.read_csv(RESULTS / "predictions" / f"{m}.csv.gz", dtype={"seed": str})
+        e = df[df.seed == "ens"]
+        tn, fp, fn, tp = confusion_matrix(e.y, e.pred_D1_min_cost, labels=[0, 1]).ravel()
+        ens_cost[m] = (5 * fn + fp) / len(e)
+        mean_cost[m] = np.mean([(5 * ((g.y == 1) & (g.pred_D1_min_cost == 0)).sum() + ((g.y == 0) & (g.pred_D1_min_cost == 1)).sum()) / len(g)
+                                for _, g in df[df.seed != "ens"].groupby("seed")])
+        check(close(PH[f"PHEns{k}Cost"], ens_cost[m], 0.0006), f"PH ensemble cost {m}")
+        check(close(PH[f"PHEns{k}Recall"], 100 * tp / (tp + fn), 0.051), f"PH ensemble recall {m}")
+        check(close(PH[f"PHEns{k}Spec"], 100 * tn / (tn + fp), 0.051), f"PH ensemble specificity {m}")
+    for m, k in list(MKEY.items()) + [("Time-LR", "TimeLR"), ("TimeGame-HGB", "TimeHGB")]:
+        if m == "E-DDQN":
+            continue
+        check(close(PH[f"PHMeanDiff{k}"], mean_cost["E-DDQN"] - mean_cost[m], 0.0006), f"PH seed-mean cost difference {m}")
+        check(close(PH[f"PHEnsDiff{k}"], ens_cost["E-DDQN"] - ens_cost[m], 0.0006), f"PH ensemble cost difference {m}")
+        key = f"PairDOne{k}CostDiff"
+        if key in MAC:   # Table VI differences are ensemble differences
+            check(close(MAC[key], ens_cost["E-DDQN"] - ens_cost[m], 0.0006), f"{key} equals the ensemble difference")
+    # number of questionnaire indicators stated in the text equals the number used by the code
+    n_prof = int(pd.read_csv(RESULTS / "preprocessing" / "feature_dictionary.csv").feature.str.startswith("prof_").sum())
+    ptxt = (REVISION_ROOT / "paper" / "sections" / "s3_method.tex").read_text()
+    check(f"{n_prof} CSPQ indicators" in ptxt, f"paper states the number of CSPQ indicators ({n_prof})")
     # Holm adjustment recomputed with statsmodels
     from statsmodels.stats.multitest import multipletests
     hl = pd.read_csv(RESULTS / "tables" / "posthoc" / "paired_tests_holm.csv")
