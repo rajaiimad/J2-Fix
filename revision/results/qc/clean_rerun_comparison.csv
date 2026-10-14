@@ -8,8 +8,14 @@ predictions/ABL_-soft_target_(hard_copy_every_10_updates).csv.gz,max |diff| = 0;
 predictions/ABL_-warm-up.csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/ABL_gamma_=_0_(contextual_bandit).csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/CS-MLP.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/DQN-draw2.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/DQN-draw3.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/DQN-exposure.csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/DQN.csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/E-CB.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/E-DDQN-draw2.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/E-DDQN-draw3.csv.gz,max |diff| = 0; non-numeric identical: True
+predictions/E-DDQN-exposure.csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/E-DDQN.csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/HGB.csv.gz,max |diff| = 0; non-numeric identical: True
 predictions/LogReg.csv.gz,max |diff| = 0; non-numeric identical: True
@@ -29,6 +35,7 @@ results/audit/manuscript_number_check.csv,identical (SHA-256)
 results/audit/provenance.json,identical (SHA-256)
 results/hpo_results.csv,same content (row/column order ignored; only wall-clock timing columns ['mean_seconds'] differ)
 results/hpo_results_posthoc.csv,identical (SHA-256)
+results/hpo_results_search_draw.csv,same content (row/column order ignored; only wall-clock timing columns ['mean_seconds'] differ)
 results/preprocessing/counts_by_outer_fold.csv,identical (SHA-256)
 results/preprocessing/counts_by_role.csv,identical (SHA-256)
 results/preprocessing/counts_eval_by_game.csv,identical (SHA-256)
@@ -42,6 +49,7 @@ results/preprocessing/partition_overlap_checks.csv,identical (SHA-256)
 results/preprocessing/session_table.csv,identical (SHA-256)
 results/selected_configs.json,same content (parsed JSON)
 results/selected_configs_posthoc.json,identical (SHA-256)
+results/selected_configs_search_draw.json,identical (SHA-256)
 results/tables/ablation_ratio_metrics_per_seed.csv,identical (SHA-256)
 results/tables/ablation_ratio_summary.csv,identical (SHA-256)
 results/tables/attack_summary.csv,identical (SHA-256)
@@ -96,6 +104,13 @@ results/tables/posthoc/vs_always_alarm.csv,identical (SHA-256)
 results/tables/posthoc/within_fold_roc_auc.csv,identical (SHA-256)
 results/tables/ratio_argmax_policy.csv,identical (SHA-256)
 results/tables/roc_points_at_recall_targets_descriptive.csv,identical (SHA-256)
+results/tables/search_draw/decisions.json,identical (SHA-256)
+results/tables/search_draw/pairs.csv,identical (SHA-256)
+results/tables/search_draw/sd_macros.json,identical (SHA-256)
+results/tables/search_draw/sd_macros.tex,identical (SHA-256)
+results/tables/search_draw/tab_sd_pairs.tex,identical (SHA-256)
+results/tables/search_draw/tab_sd_variants.tex,identical (SHA-256)
+results/tables/search_draw/variants_summary.csv,identical (SHA-256)
 results/tables/shap_margin_by_fold.csv,identical (SHA-256)
 results/tables/shap_margin_summary.csv,identical (SHA-256)
 results/tables/shap_method_by_fold.csv,identical (SHA-256)
@@ -103,6 +118,7 @@ results/tables/training_diagnostics.csv,same content (row/column order ignored; 
 results/tables/trivial_baselines.csv,identical (SHA-256)
 manuscript macros,"1821 macros; 0 result macros differ; wall-clock timing macros differ (expected): ['CSMLPMeanSeconds', 'DQNMeanSeconds', 'ECBMeanSeconds', 'EDDQNMeanSeconds', 'HGBMeanSeconds', 'RFMeanSeconds']"
 post-hoc macros,479 macros; 0 differ
+search-draw macros,102 macros; 0 differ
 manuscript/generated/numbers.tex,same content except wall-clock timing macros (*MeanSeconds)
 manuscript/generated/tab_ablation_D0.tex,identical
 manuscript/generated/tab_ablation_D1.tex,identical
@@ -130,6 +146,7 @@ supplementary/generated/tab_search_space.tex,identical
 supplementary/generated/tab_selected_configs.tex,identical
 paper/generated/numbers.tex,same content except wall-clock timing macros (*MeanSeconds)
 paper/generated/posthoc_macros.tex,identical
+paper/generated/sd_macros.tex,identical
 paper/generated/tab_ablation_D0.tex,identical
 paper/generated/tab_ablation_D1.tex,identical
 paper/generated/tab_attack.tex,identical

@@ -45,6 +45,7 @@ The consistency check now passes all of its checks (736 after the wording fixes;
 **Verification:**
 - Draw 1 reproduces the primary results exactly.
 - Five search and final jobs retrained from scratch reproduced bit for bit.
+- A clean rerun of the final version (commit `2e49e93`) from an empty directory reproduced all 170 compared artefacts exactly, including every variant's per-sample predictions and all 102 search-draw macros. It was interrupted once by a container restart and resumed from its saved per-job outputs; this is recorded in `results/qc/clean_rerun.md`.
 - The consistency check recomputes every new number independently: costs, within-fold ROC-AUC, the selection rule in all 30 variant folds, the exact sign-flip p-values and the outcomes of R1–R3.
 
 **Results**

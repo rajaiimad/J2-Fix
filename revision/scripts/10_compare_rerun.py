@@ -63,7 +63,7 @@ def content_equal(p: Path, q: Path) -> str:
     return "DIFFERS"
 
 
-def main(other: Path):
+def main(other: Path, note: str = ""):
     rows = []
     # 1. per-sample predictions (numeric comparison; gzip headers contain timestamps)
     for p in sorted((RESULTS / "predictions").glob("*.csv.gz")):
@@ -155,7 +155,10 @@ def main(other: Path):
           f"* Artefacts compared: {len(rows)}; differing or missing: {n_diff}.",
           f"* Per-sample prediction files with any numeric difference: {len(pred_bad)}.",
           f"* Result macros differing: {len(diff)} (wall-clock timing macros, which are not used in the text, are excluded: {timing_diff}).",
-          f"* Post-hoc macros differing: {len(ph_diff)} of {len(pa)}.", ""]
+          f"* Post-hoc macros differing: {len(ph_diff)} of {len(pa)}.",
+          f"* Search-draw macros differing: {len(sd_diff)} of {len(sa)}.", ""]
+    if note:   # how the run actually went (interruptions, resumptions), stated by the person who ran it
+        md[1:1] = ["", f"**Run history.** {note}"]
     if n_diff:
         md.append("Differences:")
         md += [f"* `{a}`: {b}" for a, b in rows if ("DIFFERS" in b or "MISSING" in b or (b.startswith("max |diff|") and not b.startswith("max |diff| = 0;")))]
@@ -174,4 +177,9 @@ def main(other: Path):
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]).resolve())
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("clone", help="path to the rerun clone's revision/ directory")
+    ap.add_argument("--note", default="", help="run history to record in the report (e.g. an interruption and resumption)")
+    a = ap.parse_args()
+    main(Path(a.clone).resolve(), a.note)

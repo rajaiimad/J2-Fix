@@ -28,7 +28,7 @@ Everything produced for the revision lives here.
 
 ```bash
 pip install -r revision/requirements.txt         # CPU is sufficient
-bash revision/run_all.sh --fresh --workers 4      # ~3-3.5 h on 4 CPU cores (109 and 154 min in two clean reruns before the search-draw stage, which adds ~61 min)
+bash revision/run_all.sh --fresh --workers 4      # ~2.5-3.5 h on 4 CPU cores (2 h 46 min of computing in the clean rerun of the final version)
 ```
 
 `run_all.sh` runs these steps in order:

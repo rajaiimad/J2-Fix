@@ -115,7 +115,7 @@
 - [x] Search-draw experiment specified, with decision rules R1–R3, and committed (`b15fa6e`) before any of its models was trained; run under the full protocol (61 min); reported in Section V-G (iv) and Supplementary S5.11.
 - [x] **Outcome, which changes the paper's framing of E-DDQN:** R1 not challenged (no draw gives E-DDQN a significantly lower cost than the DQN); R2 draw-dependent (E-DDQN within-fold ROC-AUC 0.539–0.714); R3 supported (exposure-only gap 0.026). In ranking, the DQN is better with draw 1 and E-DDQN with draw 2. Abstract, contributions, Results, Discussion, limitations and Conclusion now say that E-DDQN's last place reflects its primary draw.
 - [x] Determinism: five search and final jobs retrained from scratch reproduced bit for bit; every new number recomputed independently by the consistency check.
-- [ ] Clean rerun of the final version including the new stage (about 3–3.5 h); update `results/qc/clean_rerun.md`, Supplement S7 and the cover letter when it finishes.
+- [x] Clean rerun of the final version (commit `2e49e93`) from raw data in an empty directory, including the search-draw stage: exit 0, about 2 h 46 min of computing; interrupted once by a container restart and resumed from its saved per-job outputs (recorded in `results/qc/clean_rerun.md`); 170 artefacts compared, 0 differing; every per-sample prediction (including the six search-draw variants), all 479 post-hoc and 102 search-draw macros and the text of all four PDFs identical; consistency check 921/921 inside the clone.
 
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
