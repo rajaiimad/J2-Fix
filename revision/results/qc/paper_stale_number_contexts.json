@@ -6,11 +6,6 @@
    "context": "h leakage [15], and published results on the gameplay dataset used here were obtained by splitting samples rather than participants [16]. An earlier, unpublished version of the present study reported 96.88 % accuracy for E-DDQN under an oversamp"
   },
   {
-   "number": "96.88",
-   "named_as_earlier_version": true,
-   "context": "uation of the same columns gives 0.523. Accuracy figures on gameplay cybersickness data should therefore be read together with the split protocol, and an earlier version of this study, which reported 96.88 % accuracy for EDDQN, was affected in e"
-  },
-  {
    "number": "14,680",
    "named_as_earlier_version": true,
    "context": "rt grade to the size of grade 0 (5,243 samples) before a random 70/15/15 row-level split, the protocol of the earlier, unpublished version of this study (it reproduces that version\u2019s partition sizes, 14,680 / 3,146 / 3,146, exactly); (ii) a row-l"

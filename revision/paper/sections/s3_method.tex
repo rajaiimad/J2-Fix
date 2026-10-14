@@ -30,7 +30,7 @@ Fig.~\ref{fig:pipeline} summarizes the procedure. The data are rebuilt from the 
 \draw[arr] (thr) -- (test);
 \draw[arr] (test) -- (stats);
 \end{tikzpicture}
-\caption{Leakage-free evaluation pipeline. Blue: data construction (no step looks across a partition boundary); orange: model development using inner (validation) folds only; green: single evaluation of each outer-test fold with the frozen protocol.}
+\caption{Leakage-controlled, session-grouped evaluation pipeline. Blue: data construction (no step looks across a partition boundary); orange: model development using inner (validation) folds only; green: single evaluation of each outer-test fold with the frozen protocol.}
 \label{fig:pipeline}
 \end{figure*}
 

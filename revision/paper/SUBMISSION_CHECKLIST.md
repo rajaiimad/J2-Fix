@@ -62,6 +62,16 @@
 - [x] The archive excludes: correspondence with journals, internal review notes, the earlier manuscript, the old revision text, the game build and the Weka files.
 - [x] Figure 1: the connector line no longer crosses the "Causal features" box.
 
+## Framing of the leakage analysis (done)
+- [x] The leakage analysis is no longer a standalone contribution; it is presented as a methodological finding that motivates the session-grouped design. It quantifies a known pitfall on this dataset and explains the earlier inflated results.
+- [x] Title, abstract, research questions and body say "leakage-controlled" or "session-grouped" instead of "leakage-free", because session-linkage groups cannot exclude leakage across participants (Limitations, item ii).
+- [x] There are now three research questions: the formal link, the comparison and the perturbations.
+- [x] Results V-A is retitled "Why Session-Grouped Evaluation Is Required".
+- [x] Table I no longer claims "Quantified leakage".
+- [x] The earlier version's 96.88% is mentioned once in the paper (Introduction), with the technical detail in Setup IV-D and Supplement S6.
+- [x] The Conclusion states the main answer first.
+- [x] The cover letter and highlights use the same framing.
+
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
 - [ ] **Title.** Confirm it (one line in `paper/main.tex`).

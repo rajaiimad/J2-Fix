@@ -24,7 +24,7 @@ Table~\ref{tab:gaps} summarizes the gaps this study addresses. The common thread
 \toprule
 Gap & Evidence & This study \\
 \midrule
-Sample-level splits of 1-Hz session data & Sample-level splits on the same gameplay data~\cite{kundu2022truvr}; leakage literature~\cite{kapoor2023leakage,kaufman2012leakage,roberts2017cv} & Quantified leakage; session-linkage groups, nested grouped evaluation, train-only preprocessing, protocol fixed before testing \\
+Sample-level splits of 1-Hz session data & Sample-level splits on the same gameplay data~\cite{kundu2022truvr}; leakage literature~\cite{kapoor2023leakage,kaufman2012leakage,roberts2017cv} & Session-linkage groups, nested grouped evaluation, train-only preprocessing, protocol fixed before testing; effect of the split protocol reported as motivation (Section~\ref{sec:leak}) \\
 Relation of asymmetric rewards to cost-sensitive learning left implicit & \cite{lin2020imbalanced,yang2024drlimbalanced} & Proof that the 5:1 reward equals the 5:1 cost-sensitive Bayes threshold (Eq.~\ref{eq:margin}); RL and cost-weighted models on one probability scale \\
 RL detectors not compared with matched cost-sensitive or minimal baselines & -- & Seven models with the same search procedure, comparable budgets and identical decision rules; two exposure-time baselines; group-bootstrap inference with multiplicity adjustment \\
 Robustness assessed with optimization-based input attacks only & \cite{kundu2025securing,ahmed2025adversarialvr} & Bounded, physically motivated telemetry perturbations with adaptive evasion and false-alarm worst cases \\
