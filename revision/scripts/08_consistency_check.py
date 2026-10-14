@@ -321,8 +321,26 @@ if PH_JSON.exists():
                 "because the detectors hardly use those channels", "comparable budgets", "excludes leakage",
                 "no information can pass", "samples rather than participants", "using exposure features (Section",
                 "which was committed before they were run, and are produced", "committed before those analyses were run",
-                "explains the inflated results", "predicted exactly once"):
+                "explains the inflated results", "predicted exactly once",
+                "higher than always alarming)", "close to chance", "ranks much better", "ranks last of"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
+    # bootstrap p-values between 0.01 and 0.05 are read as approximate (Section III-G): a main-text
+    # paragraph that quotes one must say so or report the comparison as not significant
+    pv = {**MAC, **PH}
+    zone = [k for k, v in pv.items() if re.search(r"(Pboot|P|Holm)$", k) and not k.startswith("PHSf")
+            and re.fullmatch(r"0\.\d+", str(v)) and 0.01 <= float(v) <= 0.05]
+    n_zone = 0
+    for tex in sorted((REVISION_ROOT / "paper" / "sections").glob("*.tex")):
+        for para in re.split(r"\n\s*\n", tex.read_text()):
+            for k in zone:
+                if re.search(r"\\" + k + r"(?![A-Za-z])", para):
+                    n_zone += 1
+                    check(re.search(r"approximate|not significant|suggestive", para) is not None,
+                          f"{tex.name}: p = {pv[k]} (\\{k}) quoted without the approximate / not-significant caveat")
+    check(n_zone >= 3, f"approximate-zone p-values found in the main text: {n_zone}")
+    res_txt = (REVISION_ROOT / "paper" / "sections" / "s5_results.tex").read_text()
+    for k in ("PHTimeLRvsEDDQNAucP", "PHTimeHGBvsEDDQNAucP", "PHAlwEDDQNGrpP", "EDDQNCIRocAucLo"):
+        check("\\" + k in res_txt, f"Results quote \\{k} (baselines vs E-DDQN, E-DDQN vs always alarm, E-DDQN ROC-AUC CI)")
     # every macro used in the new paper and its supplement is defined
     pdef = defined | set(PH)
     for tex in (REVISION_ROOT / "paper").rglob("*.tex"):
