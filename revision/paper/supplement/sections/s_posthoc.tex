@@ -1,6 +1,6 @@
 \section{Post-hoc analyses}
 \label{sec:s-posthoc}
-The analyses in this section were specified after the primary results were known, committed (\texttt{configs/\allowbreak posthoc.json}) before they were run, and use the splits, inner folds, selection objective, checkpoint and threshold rules, cross-fitting recipe and final seeds of the primary protocol. No primary result was changed. Sections~S5.7--S5.9 were added after a pre-submission review, when all other results were known (\texttt{configs/\allowbreak posthoc.json}, key \texttt{review\_round\_2}); they use only the saved per-sample predictions and selected configurations.
+All analyses in this section were specified after the primary results were known. They use the splits, inner folds, selection objective, checkpoint and threshold rules, cross-fitting recipe and final seeds of the primary protocol, and no primary result was changed. They differ in when they were specified. The exposure-time baselines (S5.1), the Holm adjustment (S5.2), the comparison with always alarming (S5.3), the grouping sensitivity analyses (S5.4) and the cost curves (S5.5) were committed (\texttt{configs/\allowbreak posthoc.json}) before they were run. The paired comparisons of the exposure-time baselines with the primary models (main text, Section~V-C) and the Q-value scale (S5.6) were added while the results were written up, without prior commitment. Sections~S5.7--S5.10 were added after a pre-submission review, when all other results were known (key \texttt{review\_round\_2}); they use only the saved per-sample predictions, selected configurations and search logs.
 
 \subsection{Exposure-time baselines: selected configurations}
 Time-LR searched all six values of $C$; Time+game HGB used the HGB search space and budget (16 configurations).
@@ -63,5 +63,18 @@ Exploratory. Feature set selected on validation data for each primary model and 
 
 \begin{center}\footnotesize
 \input{generated/tab_ph_featureset.tex}
+\end{center}
+
+\subsection{Search draw}
+Feature sets among each family's random-search candidates (T: telemetry; T+Q: telemetry and questionnaire indicators; E: exposure; E+Q: exposure and questionnaire indicators). The candidates were drawn once per family with a fixed seed and reused in every outer fold.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_searchdraw.tex}
+\end{center}
+
+For E-DDQN, the lowest pooled inner-validation 5:1 cost among candidates with (Q) and without the questionnaire indicators in each outer fold; the selection rule picks the lower value.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_searchdraw_val.tex}
 \end{center}
 

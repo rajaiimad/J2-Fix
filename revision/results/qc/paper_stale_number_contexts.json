@@ -3,7 +3,7 @@
   {
    "number": "96.88",
    "named_as_earlier_version": true,
-   "context": "h leakage [15], and published results on the gameplay dataset used here were obtained by splitting samples rather than participants [16]. An earlier, unpublished version of the present study reported 96.88 % accuracy for E-DDQN under an oversamp"
+   "context": "lay dataset used here were obtained with a 70/30 split of the data for which no participant- or sessionlevel separation is reported [16]. An earlier, unpublished version of the present study reported 96.88 % accuracy for EDDQN under an oversampl"
   },
   {
    "number": "14,680",
@@ -15,12 +15,12 @@
   {
    "number": "96.88",
    "named_as_earlier_version": true,
-   "context": "E 0.736 T 0.702 E 0.712 T 0.761 E 0.761 E+Q 0.476 E+Q 0.446 E+Q 0.515 T 0.644 E+Q 0.610 E 0.585 T+Q 0.683 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
+   "context": "on cost, candidates without Q 13 0 1 2 3 4 0.424 0.487 0.452 0.483 0.484 0.521 0.490 0.518 0.483 0.542 S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
   },
   {
    "number": "99.53",
    "named_as_earlier_version": true,
-   "context": "12 T 0.761 E 0.761 E+Q 0.476 E+Q 0.446 E+Q 0.515 T 0.644 E+Q 0.610 E 0.585 T+Q 0.683 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
+   "context": "ithout Q 13 0 1 2 3 4 0.424 0.487 0.452 0.483 0.484 0.521 0.490 0.518 0.483 0.542 S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
   },
   {
    "number": "14,680",

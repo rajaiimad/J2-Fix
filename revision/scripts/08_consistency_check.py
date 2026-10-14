@@ -286,11 +286,42 @@ if PH_JSON.exists():
     n_rf = int(np.prod([len(v) for v in proto_sp["RF"].values()]))
     n_ed = int(np.prod([len(v) for k, v in {**proto_sp["_neural_common"], **proto_sp["_agent_common"], **proto_sp["E-DDQN"]}.items()]))
     check(PH["PHSpaceRF"] == f"{n_rf:,}" and PH["PHSpaceEDDQN"] == f"{n_ed:,}", "search-space sizes")
+    # review round 3: search draw, baseline sign-flip, fold differences, pre-registration and README statements
+    hpo = pd.read_csv(RESULTS / "hpo_results.csv")
+    h0 = hpo[hpo.outer == 0]
+    for fam, k in (("E-DDQN", "EDDQN"), ("E-CB", "ECB"), ("DQN", "DQN")):
+        g = h0[h0.family == fam]
+        check(int(PH[f"PHDrawExposure{k}"]) == int((g.cfg_feature_set == "exposure").sum())
+              and int(PH[f"PHDrawQ{k}"]) == int(g.cfg_feature_set.str.contains("profile").sum()), f"search draw counts {fam}")
+    he = hpo[hpo.family == "E-DDQN"]
+    n_lower = sum(gk[gk.cfg_feature_set.str.contains("profile")].pooled_oof_min_cost.min()
+                  < gk[~gk.cfg_feature_set.str.contains("profile")].pooled_oof_min_cost.min() for _, gk in he.groupby("outer"))
+    check(int(PH["PHDrawFoldsQLowerEDDQN"]) == n_lower, "E-DDQN folds where questionnaire candidates had lower validation cost")
+    fdiff = [pfold.loc[("E-DDQN", k), "expected_cost"] - pfold.loc[("RF", k), "expected_cost"] for k in range(5)]
+    check(close(PH["PHFoldDiffEDDQNRFMin"], min(fdiff), 0.0006) and close(PH["PHFoldDiffEDDQNRFMax"], max(fdiff), 0.0006),
+          "per-fold E-DDQN minus RF cost range")
+    tl = pd.read_csv(RESULTS / "predictions" / "Time-LR.csv.gz", dtype={"seed": str}).query("seed == 'ens'") \
+        .sort_values(["outer", "session_id", "step"]).reset_index(drop=True)
+    ctl = 5 * ((tl.pred_D1_min_cost.to_numpy() == 0) & (yv == 1)) + ((tl.pred_D1_min_cost.to_numpy() == 1) & (yv == 0))
+    D2 = pd.Series(ctl - cvec["RF"]).groupby(gv).sum().to_numpy(float)
+    hs2 = np.array([np.dot(s, D2[:11]) for s in itertools.product((1, -1), repeat=11)])
+    ts2 = np.array([np.dot(s, D2[11:]) for s in itertools.product((1, -1), repeat=len(D2) - 11)])
+    p2 = float((np.abs(hs2[:, None] + ts2[None, :]) >= abs(D2.sum()) - 1e-9).mean())
+    check(close(PH["PHSfTimeLRvsRFP"], p2, 0.0006), "exact sign-flip p (Time-LR vs RF), independent enumeration")
+    readme = (REVISION_ROOT / "README.md").read_text()
+    for k in ("PHTimeLRRocAucMean", "PHWfRFAuc", "PHWfTimeLRAuc", "PHTimeLRvsRFCostP", "PHSfTimeLRvsRFP", "PHHolmRF", "PHSfRFHolm"):
+        check(PH[k] in readme, f"README quotes {k} = {PH[k]}")
+    sp_txt = (REVISION_ROOT / "paper" / "supplement" / "sections" / "s_posthoc.tex").read_text()
+    check("cost curves (S5.5) were committed" in sp_txt and "without prior commitment" in sp_txt,
+          "Supplement S5 distinguishes pre-committed from later analyses")
     # wording corrected in the deep audit must not come back
     body = "\n".join(t.read_text() for t in (REVISION_ROOT / "paper").rglob("*.tex") if "generated" not in t.parts)
     for bad in ("participants are not shared", "sessions and participants are not shared", "calibrated-probability",
                 "21 whole-session", "every curve approaches 1", "exactly as Eq", "explain E-DDQN's under-performance",
-                "because the detectors hardly use those channels", "comparable budgets"):
+                "because the detectors hardly use those channels", "comparable budgets", "excludes leakage",
+                "no information can pass", "samples rather than participants", "using exposure features (Section",
+                "which was committed before they were run, and are produced", "committed before those analyses were run",
+                "explains the inflated results", "predicted exactly once"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # every macro used in the new paper and its supplement is defined
     pdef = defined | set(PH)

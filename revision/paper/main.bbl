@@ -186,9 +186,10 @@ K.~Cheng, J.~F. Tian, T.~Kohno, and F.~Roesner, ``Exploring user reactions and
 \BIBentrySTDinterwordspacing
 
 \bibitem{ahmed2025adversarialvr}
-I.~Ahmed, R.~K. Kundu, and K.~A. Hoque, ``Adversarial-{VR}: An open-source
+I.~Ahmed, R.~K. Kundu, and K.~A. Hoque, ``Adversarial {VR}: An open-source
   testbed for evaluating adversarial robustness of {VR} cybersickness detection
-  and mitigation,'' 2025, arXiv:2512.17029.
+  and mitigation,'' in \emph{Proc. IEEE Int. Symp. Mixed and Augmented Reality
+  Adjunct ({ISMAR-Adjunct})}, 2025.
 
 \bibitem{mnih2015human}
 V.~Mnih \emph{et~al.}, ``Human-level control through deep reinforcement

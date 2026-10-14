@@ -55,13 +55,18 @@ The last step independently recomputes every confusion matrix, metric and McNema
 
 ## Post-hoc analyses (after the primary results)
 
-These analyses were specified in `configs/posthoc.json` and committed before they were run. They use the frozen protocol's splits, rules and seeds.
+All of these were specified after the primary results were known and use the frozen protocol's splits, rules and seeds. They differ in when they were specified:
 
-* **Elapsed-time baseline (Time-LR).** A logistic regression on elapsed time alone reaches ROC-AUC 0.704, the highest of all models. Its ranking is statistically indistinguishable from the random forest's. The random forest still has a lower 5:1 cost.
-* **Holm adjustment.** Of the paired comparisons with E-DDQN, only the one with the random forest remains significant.
+* **Committed in `configs/posthoc.json` before they were run:** the two exposure-time baselines, the Holm adjustment, the comparison with always alarming, the grouping sensitivity analyses (session bootstrap and leave-one-group-out jackknife) and the cost curves.
+* **Added later without prior commitment:** the paired comparisons of the exposure-time baselines with the primary models, the Q-value-scale diagnostic, and (after a pre-submission review, key `review_round_2`) the within-fold ROC-AUC, the exact group sign-flip tests and the feature-set and search-draw analyses.
+
+Main post-hoc results:
+
+* **Elapsed-time baseline (Time-LR).** A logistic regression on elapsed time alone reaches pooled ROC-AUC 0.704, the highest pooled value of all models; within folds the random forest is slightly higher (0.715 vs 0.709). No model ranks seconds significantly better than Time-LR, but equivalence is not established either. At the 5:1 operating point the random forest has a lower cost (group bootstrap p = 0.021, exact sign-flip p = 0.044; approximate with 21 groups).
+* **E-DDQN vs the random forest.** E-DDQN's cost is higher in every outer fold (marginally in one). The difference is significant under the group bootstrap after Holm adjustment (p = 0.006), but not under the more conservative exact sign-flip test (Holm-adjusted p = 0.083).
 * **Always-alarm comparison.** No model is shown to beat always-alarm at 5:1 after adjustment.
-* **Robustness of conclusions.** Neither the session-level bootstrap nor the leave-one-group-out jackknife changes any conclusion.
+* **Grouping sensitivity.** The session-level bootstrap and the leave-one-group-out jackknife give the same direction for every comparison.
 
 ## Headline
 
-Under this protocol E-DDQN does **not** outperform the standard DQN. It is significantly worse than a cost-weighted random forest, and no model achieves high recall with a controlled false-alarm rate on these data. See `reports/05_results.md`.
+Under this protocol E-DDQN does **not** outperform the standard DQN. It has a higher cost than a cost-weighted random forest in every outer fold (significant under the group bootstrap, not after Holm adjustment under the exact sign-flip test), and no model achieves high recall with a controlled false-alarm rate on these data. See `reports/05_results.md`.

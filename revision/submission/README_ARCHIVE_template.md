@@ -11,7 +11,7 @@ This archive regenerates every number, table and figure of the paper and its sup
 | `revision/src/eddqn/` | Raw-data parser, session-linkage grouping, causal features, E-DDQN and baseline models, metrics and statistics |
 | `revision/scripts/` | Pipeline steps `00_`–`11_` (see below); `08_consistency_check.py` recomputes the reported numbers with independent library implementations |
 | `revision/configs/protocol.json` | Evaluation protocol, committed before any model was trained on the evaluation sessions |
-| `revision/configs/posthoc.json` | Specification of the post-hoc analyses, committed before they were run |
+| `revision/configs/posthoc.json` | Specification of the post-hoc analyses; the exposure-time baselines, Holm adjustment, always-alarm comparison, grouping sensitivity and cost curves were committed before they were run, and later additions are recorded under `review_round_2` and `_later_additions` |
 | `revision/configs/attacks.json` | Telemetry-perturbation scenarios |
 | `revision/data/processed/` | Outer and inner split tables (session-linkage groups) |
 | `revision/results/` | Per-sample predictions (`predictions/*.csv.gz`), metric tables, figures, audits, QC reports |

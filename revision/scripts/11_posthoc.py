@@ -364,6 +364,33 @@ def review_round_2(preds, E, y, grp, always):
     fa = pd.DataFrame(rows)
     fa["deviation_from_fold_mean"] = fa.roc_auc_seed_mean - fa.groupby("outer").roc_auc_seed_mean.transform("mean")
     fa.to_csv(OUT / "featureset_auc.csv", index=False)
+    # (e) search draw: feature sets among each family's random-search candidates (identical in every outer fold)
+    #     and, per fold, the lowest pooled inner-OOF cost of candidates with / without questionnaire indicators
+    hpo = pd.read_csv(RESULTS / "hpo_results.csv")
+    rows = []
+    for fam in MAIN:
+        g = hpo[(hpo.family == fam) & (hpo.outer == 0)]
+        vc = g.cfg_feature_set.value_counts()
+        rows.append({"model": fam, "n_candidates": len(g), **{fs: int(vc.get(fs, 0)) for fs in
+                     ("telemetry", "telemetry+profile", "exposure", "exposure+profile")}})
+    pd.DataFrame(rows).to_csv(OUT / "search_draw_featuresets.csv", index=False)
+    rows = []
+    for fam in MAIN:
+        for k, g in hpo[hpo.family == fam].groupby("outer"):
+            prof = g.cfg_feature_set.str.contains("profile")
+            rows.append({"model": fam, "outer": int(k), "best_cost_with_q": g[prof].pooled_oof_min_cost.min(),
+                         "best_cost_without_q": g[~prof].pooled_oof_min_cost.min()})
+    pd.DataFrame(rows).to_csv(OUT / "search_draw_validation.csv", index=False)
+    # (f) exact sign-flip tests of the exposure-time baselines versus the random forest (D1 cost)
+    crf = _cost_vec(E["RF"].pred_D1_min_cost.to_numpy(), y)
+    sf = pd.read_csv(OUT / "signflip_tests.csv")
+    sf = sf[sf.comparison != "baseline vs RF"]
+    extra = []
+    for t in PH_FAMS:
+        d = _cost_vec(E[t].pred_D1_min_cost.to_numpy(), y) - crf
+        extra.append({"comparison": "baseline vs RF", "A": t, "B": "RF", "cost_A_minus_B": d.mean(), "p_signflip": _signflip_p(d, grp)})
+    pd.concat([sf, pd.DataFrame(extra)]).to_csv(OUT / "signflip_tests.csv", index=False)
+
     # (d) search-space sizes of the primary families
     rows = []
     for fam in MAIN:
@@ -527,6 +554,9 @@ def supplement_tables():
     for r in sf[sf.comparison == "E-DDQN vs model"].itertuples():
         pb, hb = (pv(bt.loc[r.B, "cost_diff_p_cluster_bootstrap"]), pv(bt.loc[r.B, "p_holm"])) if r.B in bt.index else ("--", "--")
         rows.append(["E-DDQN vs " + r.B, f3(r.cost_A_minus_B), pb, hb, pv(r.p_signflip), "--" if pd.isna(r.p_holm) else pv(r.p_holm)])
+    pvp = pd.read_csv(OUT / "posthoc_vs_primary.csv").set_index(["A", "B"])
+    for r in sf[sf.comparison == "baseline vs RF"].itertuples():
+        rows.append([r.A + " vs RF", f3(r.cost_A_minus_B), pv(pvp.loc[(r.A, "RF"), "cost_p"]), "", pv(r.p_signflip), ""])
     for r in sf[sf.comparison == "model vs always alarm"].itertuples():
         rows.append([r.A + " vs always alarm", f3(r.cost_A_minus_B), "", "", pv(r.p_signflip), pv(r.p_holm)])
     _tab("tab_ph_signflip.tex", "Comparison (D1, seed ensembles) & $\\Delta$Cost & $p_{\\text{boot}}$ & $p_{\\text{boot,Holm}}$ & $p_{\\text{sign-flip}}$ & $p_{\\text{sign-flip,Holm}}$",
@@ -538,6 +568,16 @@ def supplement_tables():
         g = fa[fa.model == t].set_index("outer")
         rows.append([t] + [f"{abbr[g.loc[k, 'feature_set']]} {g.loc[k, 'roc_auc_seed_mean']:.3f}" for k in range(KO)])
     _tab("tab_ph_featureset.tex", "Model & " + " & ".join(f"Fold {k}" for k in range(KO)), rows, "l" + "c" * KO)
+    dr = pd.read_csv(OUT / "search_draw_featuresets.csv")
+    dv = pd.read_csv(OUT / "search_draw_validation.csv")
+    de = dv[dv.model == "E-DDQN"].set_index("outer")
+    _tab("tab_ph_searchdraw.tex", "Model & Candidates & T & T+Q & E & E+Q",
+         [[r.model, str(r.n_candidates), str(r.telemetry), str(getattr(r, "_4")), str(r.exposure), str(getattr(r, "_6"))]
+          for r in dr.itertuples()], "lccccc")
+    _tab("tab_ph_searchdraw_val.tex", "E-DDQN, outer fold & " + " & ".join(str(k) for k in range(KO)),
+         [["lowest validation cost, candidates with Q"] + [f"{de.loc[k, 'best_cost_with_q']:.3f}" for k in range(KO)],
+          ["lowest validation cost, candidates without Q"] + [f"{de.loc[k, 'best_cost_without_q']:.3f}" for k in range(KO)]],
+         "l" + "c" * KO)
     qb = pd.read_csv(OUT / "q_value_bounds.csv")
     _tab("tab_ph_qbounds.tex", "Model & Outer fold & $\\gamma$ & max $|Q|$ & bound $r_{\\max}/(1-\\gamma)$ & ratio",
          [[r.model, str(r.outer), f"{r.gamma:g}", f"{r.q_abs_max:.2f}", f"{r.bound:.2f}", f"{r.ratio:.2f}"] for r in qb.itertuples()],
@@ -692,6 +732,22 @@ def macros(summ, cis, cc, jk, js, sd):
     put("ECBNoProfileFolds", str(int((~fa[fa.model == "E-CB"].profile).sum())))
     pf = pd.read_csv(RESULTS / "tables" / "metrics_per_outer_fold_D1.csv").set_index(["model", "outer"])
     put("FoldsEDDQNWorseRF", str(sum(pf.loc[("E-DDQN", k), "expected_cost"] > pf.loc[("RF", k), "expected_cost"] for k in range(KO))))
+    dr = pd.read_csv(OUT / "search_draw_featuresets.csv").set_index("model")
+    put("DrawTotalEDDQN", str(int(dr.loc["E-DDQN", "n_candidates"])))
+    for t in MAIN:
+        put("DrawExposure" + KEY[t], str(int(dr.loc[t, "exposure"])))
+        put("DrawQ" + KEY[t], str(int(dr.loc[t, "telemetry+profile"] + dr.loc[t, "exposure+profile"])))
+    dv = pd.read_csv(OUT / "search_draw_validation.csv")
+    de = dv[dv.model == "E-DDQN"]
+    put("DrawFoldsQLowerEDDQN", str(int((de.best_cost_with_q < de.best_cost_without_q).sum())))
+    put("DrawFoldZeroQEDDQN", f"{de[de.outer == 0].best_cost_with_q.iloc[0]:.3f}")
+    put("DrawFoldZeroNoQEDDQN", f"{de[de.outer == 0].best_cost_without_q.iloc[0]:.3f}")
+    for r in sf[sf.comparison == "baseline vs RF"].itertuples():
+        put("Sf" + KEY[r.A] + "vsRFP", f"{r.p_signflip:.3f}")
+    fd = [pf.loc[("E-DDQN", k), "expected_cost"] - pf.loc[("RF", k), "expected_cost"] for k in range(KO)]
+    put("FoldDiffEDDQNRFMin", f"{min(fd):.3f}")
+    put("FoldDiffEDDQNRFMax", f"{max(fd):.3f}")
+    put("FoldsEDDQNRFClose", str(int(sum(abs(x) < 0.01 for x in fd))))
     ss = pd.read_csv(OUT / "search_space_sizes.csv").set_index("model")
     for t in MAIN:
         put("Space" + KEY[t], f"{int(ss.loc[t, 'n_configurations']):,}")

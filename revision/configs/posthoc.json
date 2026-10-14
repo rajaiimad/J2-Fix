@@ -89,8 +89,19 @@
   "review_round_2": {
     "_comment": "Specified on 2026-10-14 after a structured pre-submission review of the manuscript, when all other results were known. Computed only from the saved per-sample predictions and selected configurations; no model is trained or re-tuned and no primary result changes.",
     "within_fold_roc_auc": "ROC-AUC computed within each outer-test fold and averaged over folds (and over seeds for the seed-mean value), reported next to the pooled ROC-AUC, which combines the scores of five fold-specific models",
-    "group_sign_flip_test": "exact two-sided sign-flip permutation test of the pooled D1 cost difference (seed ensembles) with the 21 linkage groups as units: statistic sum_g eps_g D_g / N over all 2^21 sign vectors; E-DDQN vs every other model (Holm over the six primary comparisons) and every model vs always alarming (Holm over the nine models)",
+    "group_sign_flip_test": "exact two-sided sign-flip permutation test of the pooled D1 cost difference (seed ensembles) with the 21 linkage groups as units: statistic sum_g eps_g D_g / N over all 2^21 sign vectors; E-DDQN vs every other model (Holm over the six primary comparisons) and every model vs always alarming (Holm over the nine models); also the exposure-time baselines versus the random forest",
     "feature_set_association": "exploratory: within-fold ROC-AUC (seed mean) of each primary model and outer fold versus whether the selected feature set contains the 11 questionnaire (CSPQ) indicators; deviation from the fold mean over the seven primary models",
-    "search_space_sizes": "number of distinct configurations in each family's search space (configs/protocol.json), to qualify 'same number of configurations'"
+    "search_space_sizes": "number of distinct configurations in each family's search space (configs/protocol.json), to qualify 'same number of configurations'",
+    "search_draw": "feature sets among each family's random-search candidates (results/hpo_results.csv) and, for E-DDQN, the lowest validation cost of candidates with and without the questionnaire indicators per outer fold"
+  },
+  "_later_additions": {
+    "_comment": "Recorded on 2026-10-14 for transparency. The keys 'families', 'multiplicity', 'grouping_sensitivity', 'always_alarm_comparison' and 'cost_curves' were committed before the corresponding analyses were run. The analyses listed here were added afterwards without prior commitment; they are reported as post hoc in the paper (limitation iv; Supplementary Sec. S5).",
+    "while_writing_up": [
+      "paired comparisons of the exposure-time baselines with the primary models (cost and ROC-AUC, group bootstrap)",
+      "Q-value scale relative to r_max/(1-gamma) (diagnostic)",
+      "label-dynamics summary (descriptive statistics of the data)",
+      "seed-ensemble block of the main results table (descriptive)"
+    ],
+    "after_pre_submission_review": "see 'review_round_2'"
   }
 }
