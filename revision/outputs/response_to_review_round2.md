@@ -32,7 +32,7 @@ The consistency check passes **714 / 714** (previously 680). No model was retrai
 | "Every sample is predicted exactly once" | Now "belongs to exactly one outer-test fold and is scored only by models that never saw…". |
 | Supplement S7 said every number comes from `05_make_tables.py` | Now also names `11_posthoc.py` for the post-hoc numbers. |
 | The repository README still said "statistically indistinguishable" and "significantly worse" | Rewritten with the exact values (pooled vs within-fold AUC, both p-values, the pre-registration split). The consistency check verifies that the README quotes the current values. |
-| The cover letter said a clean rerun reproduced "every reported result" | That rerun was of an earlier commit. **A new clean rerun of the final version is running**; the statement will be updated to match its outcome. |
+| The cover letter said a clean rerun reproduced "every reported result" | That rerun was of an earlier commit. **A new clean rerun of the final version (commit `12ab6c3`) was run** from an empty directory: exit 0 in 109 min; 153 artefacts compared, 0 differing; every per-sample prediction, all 479 post-hoc macros and the text of all four PDFs identical; consistency check 714/714 inside the clone. The cover letter and Supplement S7 now state this for the final version. |
 
 ## Not changed, and why
 

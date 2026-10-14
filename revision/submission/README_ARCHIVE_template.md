@@ -26,7 +26,7 @@ Requirements: Python 3.13 and the packages pinned in `revision/requirements.txt`
 
 ```bash
 pip install -r revision/requirements.txt
-bash revision/run_all.sh --fresh --workers 4   # about 2.5 h on 4 CPU cores
+bash revision/run_all.sh --fresh --workers 4   # about 2-2.5 h on 4 CPU cores
 ```
 
 `--fresh` deletes every generated result and rebuilds everything from the raw XML files:

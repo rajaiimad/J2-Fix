@@ -107,7 +107,7 @@
 - [x] Search-draw analysis added (Supplementary S5.10): E-DDQN's 16 random candidates included only 2 exposure-only configurations.
 - [x] Sign-flip tests for the exposure-time baselines vs the random forest; "every outer fold" qualified (marginal in one fold).
 - [x] Fresh overclaim pass of the whole paper; nine further wording fixes.
-- [ ] Clean rerun of the final commit from raw data: running; result recorded in `results/qc/clean_rerun.md` when finished.
+- [x] Clean rerun of the final version (commit `12ab6c3`) from raw data in an empty directory: exit 0 in 109 min on 4 cores; 153 artefacts compared, 0 differing; every per-sample prediction, all result macros (479/479 post-hoc) and the text of all four PDFs identical; consistency check 714/714 inside the clone (`results/qc/clean_rerun.md`).
 
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
