@@ -103,5 +103,94 @@
       "seed-ensemble block of the main results table (descriptive)"
     ],
     "after_pre_submission_review": "see 'review_round_2'"
+  },
+  "search_draw_sensitivity": {
+    "_comment": "Specified on 2026-10-14 after all other results were known, in response to the second-round pre-submission review, and committed BEFORE any of these runs. Question: does E-DDQN's result depend on its single random search draw, which offered only 2 exposure-only configurations (DQN: 6)? Every result is reported whatever it shows; no draw is selected; the primary results are not replaced.",
+    "families_compared": [
+      "E-DDQN",
+      "DQN"
+    ],
+    "protocol": "identical to configs/protocol.json: same splits, inner folds, training seed for the search (hpo_seed 777), budget (16 configurations), selection rule (pooled inner-OOF minimum 5:1 cost, ties PR-AUC), checkpoint rule, cross-fitting, final seeds 1000-1004 and threshold rules. Perturbation variants are not scored.",
+    "variants": [
+      {
+        "name": "E-DDQN-draw2",
+        "base": "E-DDQN",
+        "budget": 16,
+        "config_seed": 9120,
+        "feature_set": null,
+        "note": "second independent random draw of 16 configurations from the full E-DDQN search space"
+      },
+      {
+        "name": "E-DDQN-draw3",
+        "base": "E-DDQN",
+        "budget": 16,
+        "config_seed": 9130,
+        "feature_set": null,
+        "note": "third independent random draw"
+      },
+      {
+        "name": "DQN-draw2",
+        "base": "DQN",
+        "budget": 16,
+        "config_seed": 9122,
+        "feature_set": null,
+        "note": "second independent random draw from the full DQN search space"
+      },
+      {
+        "name": "DQN-draw3",
+        "base": "DQN",
+        "budget": 16,
+        "config_seed": 9132,
+        "feature_set": null,
+        "note": "third independent random draw"
+      },
+      {
+        "name": "E-DDQN-exposure",
+        "base": "E-DDQN",
+        "budget": 16,
+        "config_seed": 9200,
+        "feature_set": "exposure",
+        "note": "16 configurations from the E-DDQN space with the feature set fixed to 'exposure' (no questionnaire indicators)"
+      },
+      {
+        "name": "DQN-exposure",
+        "base": "DQN",
+        "budget": 16,
+        "config_seed": 9202,
+        "feature_set": "exposure",
+        "note": "16 configurations from the DQN space with the feature set fixed to 'exposure'"
+      }
+    ],
+    "pairs": [
+      [
+        "E-DDQN",
+        "DQN",
+        "draw 1 (primary)"
+      ],
+      [
+        "E-DDQN-draw2",
+        "DQN-draw2",
+        "draw 2"
+      ],
+      [
+        "E-DDQN-draw3",
+        "DQN-draw3",
+        "draw 3"
+      ],
+      [
+        "E-DDQN-exposure",
+        "DQN-exposure",
+        "exposure only"
+      ]
+    ],
+    "analysis": [
+      "per variant: seed-mean D1 5:1 cost, seed-mean pooled ROC-AUC, within-fold ROC-AUC (seed mean), seed-ensemble D1 cost, selected feature set and discount factor per outer fold, and the number of exposure-only candidates in the draw",
+      "per pair: seed-ensemble D1 cost difference E-DDQN minus DQN with a 2,000-replicate group bootstrap (95% CI, two-sided p; seed 5) and an exact group sign-flip test; pooled ROC-AUC difference with a group bootstrap (seed 6)"
+    ],
+    "decision_rules": {
+      "R1_headline": "The claim 'E-DDQN does not outperform the standard DQN' is challenged if, in any pair, E-DDQN's seed-ensemble D1 cost is lower than DQN's and the group-bootstrap 95% CI of the difference excludes zero.",
+      "R2_draw_dependence": "E-DDQN's result is called draw-dependent if, across its three full-space draws, its seed-mean D1 cost spans more than 0.05 or its within-fold ROC-AUC spans more than 0.05.",
+      "R3_feature_set": "Under the exposure-only restriction: if E-DDQN's within-fold ROC-AUC is within 0.03 of DQN's, the feature-set/search-draw explanation of Section V-G is supported; if it is more than 0.05 below DQN's, that explanation is insufficient and other components of E-DDQN remain plausible contributors; otherwise inconclusive."
+    }
   }
 }
