@@ -1,0 +1,98 @@
+Second-round review of "Does an Asymmetric-Reward E-DDQN Improve Safety-Prioritized Cybersickness Detection in Virtual Reality? A Leakage-Controlled Comparison with Standard DQN and Cost-Sensitive Baselines" (Manuscript_6.pdf with Supplementary_Material_1.pdf)
+
+Scope and limitations of this review. I read the full manuscript (17 pages) and supplement (14 pages). I checked each concern of the first-round review (review_manuscript4.txt) against the revised text. I recomputed the key new statements from the saved predictions and search logs in the repository, and re-checked two open references with web search; full texts on arxiv.org remain inaccessible from this environment. The uploaded PDFs are byte-identical to the versions produced in the last revision, so the authors made no further edits; in particular, the ten placeholder statements are still unfilled. As before, this is a structured self-review by the assistant that helped prepare the manuscript, not an independent referee report.
+
+1. Summary
+
+The manuscript evaluates E-DDQN, a dueling Double DQN detector whose reward penalizes a missed cybersickness event five times more than a false alarm. It uses a nested, session-grouped protocol on the UFFCSData gameplay data and compares E-DDQN with a standard DQN, a gamma = 0 variant, four cost-weighted supervised models and two exposure-time baselines. The revision adds three analyses of the saved predictions: within-fold ROC-AUC, an exact group-level sign-flip test, and an exploratory association between selected feature sets and test performance. It also reframes the formal contribution as an application of known results, discusses error-triggered episode termination in earlier DQN classifiers, and treats the perturbation study as a sanity check.
+
+2. Strengths
+
+The revision addressed the first-round concerns substantively, not cosmetically. Its most consequential change is honest. The exact sign-flip test weakens the headline comparison with the random forest (Holm-adjusted p = 0.083 against 0.006 by group bootstrap), and the revised abstract, results, discussion and conclusion report both values instead of keeping only the more favourable one.
+
+The diagnosis section is now appropriately cautious. It notes that the E-CB comparison confounds the discount factor with feature set and architecture, and it uses the fixed-configuration ablation, where gamma = 0 changes ROC-AUC only from 0.538 to 0.576, to show that bootstrapping alone is a weak explanation. The new feature-set analysis is clearly labelled exploratory and observational, and its pattern is strong enough to be worth reporting: in 4 of 5 folds every configuration that included the questionnaire indicators ranked below every configuration that did not.
+
+The formal section now states what is known and what is applied. The derivation of how error-triggered termination adds a gamma-dependent penalty is correct under the paper's assumptions and usefully separates E-DDQN from [11] and [12].
+
+The other first-round items are also properly handled:
+- the effective sample size (35 sessions, 21 groups, 26 onsets) is stated;
+- the within-fold ROC-AUC is reported, and the text correctly reports that the random forest edges out Time-LR within folds;
+- the search-space sizes qualify the "matched" budget;
+- the unsupported explanation of the perturbation results has been removed from the results and discussion;
+- the Table VIII caption is corrected;
+- the reproducibility infrastructure was extended so that the new claims are checked automatically.
+
+3. Weaknesses
+
+Most first-round concerns are resolved. The issues below are what remains. Most are wording-level, and two (3.1 and 3.2) matter for integrity or interpretation.
+
+3.1 Supplement S7 makes an incorrect pre-registration statement.
+
+Supplementary Sec. S7 says that the post-hoc analyses of Section S5 are specified in configs/posthoc.json, "which was committed before they were run". That is true for S5.1 to S5.6. It is not true for the three analyses added in this revision (S5.7 to S5.9): their specification was added to the configuration and the analyses were run before the change was committed.
+
+The main text (Section III-G, limitation iv) and the opening of Section S5 describe these analyses correctly, as added after the review. S7 therefore contradicts the paper's own account. Because the paper's credibility rests heavily on its pre-specification claims, this sentence should be corrected to distinguish the two groups of analyses.
+
+3.2 The diagnosis omits a fact that bears directly on it: E-DDQN's random search rarely offered the configuration type that worked best.
+
+The repository's search log shows how often each family drew the exposure feature set without questionnaire indicators among its 16 random configurations: E-DDQN 2 times, E-CB 6, DQN 6. Ten of E-DDQN's 16 candidates included the questionnaire indicators. That exposure-only set is the one most models selected and the one associated with better test ranking (S5.9).
+
+On validation, the questionnaire-based E-DDQN configurations reached a lower minimum cost than the others in every fold (for example 0.424 vs 0.487 in fold 0), so the noisy criterion preferred them.
+
+E-DDQN's under-performance is therefore partly a consequence of which 16 configurations the random draw happened to offer, combined with the noisy criterion. Section V-G does not mention this. It strengthens the paper's own conclusion that the result reflects selection rather than the RL components. It also qualifies the comparison: with a different random draw, E-DDQN might have selected an exposure-only configuration. One or two sentences in V-G and limitation (vi) would make the diagnosis complete.
+
+3.3 Contribution 4 still carries the explanation of the perturbation results that the revision removed elsewhere.
+
+Section V-I, the Discussion and the Conclusion now say, correctly, that unchanged ranking under perturbation is not evidence of robustness. They give two reasons: several selected inputs are averages or cumulative sums of the perturbed channels, and perturbing every test session alike can shift scores without reordering them.
+
+Contribution 4 in the Introduction, however, still says the perturbations barely change any detector's ranking, "consistent with 29 of the 35 selected configurations using exposure features". This sentence implies the explanation that the revision withdrew, and it should be aligned with V-I.
+
+3.4 Two statements remain firmer than the paper's own inference rule allows.
+
+Section III-G now says that p-values between 0.01 and 0.05 are read as approximate.
+
+First, Section V-C nevertheless states without qualification that the random forest has a lower cost than Time-LR (p = 0.021) and that "the additional inputs help the forest at the operating point". Recomputed from the saved predictions, the exact group sign-flip test for this comparison gives p = 0.044. The statement should carry the same caveat as the others.
+
+Second, the abstract, Section V-B, the Discussion and the Conclusion say that E-DDQN has a higher cost than the random forest "in every/all five outer folds". This is true, but in fold 0 the difference is negligible (0.604 vs 0.600; Supplementary S3.4). "In every outer fold, though only marginally in one" would be accurate.
+
+3.5 One sentence still overstates leakage control.
+
+The Related Work gap paragraph says that a safety benefit can be attributed "when the evaluation excludes leakage". Limitation (ii) and Section V-A state that session-linkage groups reduce but cannot exclude leakage across participants. The sentence should say "controls" rather than "excludes".
+
+3.6 Two references need attention.
+
+Reference [31] (Adversarial-VR) was published at IEEE ISMAR-Adjunct 2025 (DOI 10.1109/ISMAR-Adjunct68609.2025.00061, per the IEEE Xplore record found by search) but is cited as an arXiv preprint.
+
+For TruVR [16], a search summary quotes the paper's methodology as dividing the data "into 70% for training and the remaining 30% for testing", which confirms the 70/30 split. The manuscript, however, goes further in two places. Section II-A says TruVR trained on "70 % of the samples", and the following sentence says splitting "samples rather than participants has been used in this literature". The quoted text does not say whether the split was by sample or by participant. The sample-level reading is an inference, plausible given that the dataset is described in samples, but not a stated fact. Safer wording would be "a 70/30 split of the data, with no participant-level separation reported".
+
+Overall, the revision fixed every substantive concern of the first round. What remains is one incorrect pre-specification sentence in the supplement (3.1), one missing fact in the diagnosis (3.2), three consistency or wording issues (3.3 to 3.5), and two reference updates (3.6). All are text-level and can be fixed without new experiments. Apart from these, and the unfilled author statements, I see no remaining reason to delay submission on scientific grounds. The main limitations (one small dataset, a negative result, an undocumented label procedure) are now stated openly. They will shape which venues are receptive, but they are not defects of the analysis.
+
+4. Questions and Suggestions
+
+Questions:
+
+Q1. Do the authors agree that the sentence in Supplementary S7 should distinguish analyses S5.1 to S5.6, which were committed before they were run, from S5.7 to S5.9, which were added and run after the review?
+
+Q2. Should limitation (vi) mention that the random draw of 16 configurations gave E-DDQN only two exposure-only candidates? This makes the dependence of the E-DDQN result on the search budget concrete.
+
+Suggestions, in order of priority:
+
+S1. Correct the pre-registration sentence in Supplementary S7 (Weakness 3.1).
+
+S2. Add the search-draw fact to Section V-G (iii) and to limitation (vi) (Weakness 3.2).
+
+S3. Align Contribution 4 with Section V-I (Weakness 3.3).
+
+S4. Add the approximate-p caveat and the sign-flip value to the random-forest-versus-Time-LR statement. Qualify "every outer fold" where it appears (Weakness 3.4).
+
+S5. Replace "excludes leakage" with "controls leakage" in the gap paragraph (Weakness 3.5).
+
+S6. Update reference [31] to the ISMAR-Adjunct 2025 version, and soften the TruVR wording in Section II-A (Weakness 3.6).
+
+Minor points:
+- In Section V-C, the sentence "Its ROC-AUC does not differ significantly from that of the random forest" now follows the new within-fold sentence, so "Its" no longer clearly refers to Time-LR. Write "Time-LR's pooled ROC-AUC".
+- Supplementary S1.4 says the learned preprocessing parameters were "fitted on the development groups only". That describes the documentation file learned_parameters_by_outer_fold.csv, which is fitted per outer fold. The models themselves use the same procedure fitted on each inner training split (main text, Section III-C). A short clarification would prevent a reader from thinking the models were trained with outer-level preprocessing.
+- The ten author placeholders (Ethics, Author Contributions, Use of Generative AI, data DOI) are still unfilled.
+
+5. References
+
+No external references beyond the manuscript's bibliography are needed for this round. Reference [31] should be updated to its proceedings version, and the TruVR wording concerns reference [16].

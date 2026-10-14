@@ -59,3 +59,9 @@ No source was found that re-evaluates the UFFCSData gameplay data under particip
 - Full texts of the arXiv papers could not be opened.
 - Venue publications of 2025–2026 cybersickness work may be missing.
 - The search for grouped re-evaluations of UFFCSData was limited to two queries.
+
+## 8. Second-round verification (2026-10-14, review of Manuscript_6 / Supplementary_Material_1)
+
+- **Adversarial-VR (manuscript ref. [31]).** Search results quoting the IEEE Xplore record (document 11236148) give: Ahmed, Kundu, Hoque, "Adversarial VR: An Open-Source Testbed for Evaluating Adversarial Robustness of VR Cybersickness Detection and Mitigation," 2025 IEEE ISMAR-Adjunct, DOI 10.1109/ISMAR-Adjunct68609.2025.00061. The ResearchGate listing dates it October 2025. The manuscript still cites arXiv:2512.17029 and should cite the proceedings version; confirm pages on IEEE Xplore.
+- **TruVR split.** A search summary quotes the methodology from the ResearchGate copy: "VR simulation data is divided into 70% for training and the remaining 30% for testing." The 70/30 figure is therefore confirmed. Whether the split was at sample or participant level is **not stated in that quote**, so "samples rather than participants" is an inference from the absence of a reported participant-level split.
+- **Lin et al. [11] termination rule.** Still confirmed only through secondary descriptions and Yang et al.'s explicit rule. No new primary access (arxiv.org remains blocked).
