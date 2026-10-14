@@ -1,0 +1,130 @@
+Review of "Does an Asymmetric-Reward E-DDQN Improve Safety-Prioritized Cybersickness Detection in Virtual Reality? A Leakage-Controlled Comparison with Standard DQN and Cost-Sensitive Baselines" (Manuscript_4.pdf with Supplementary_Material.pdf)
+
+Scope and limitations of this review. I read the full manuscript (16 pages), the supplement (12 pages), all tables and figures, and the bibliography. Related work was checked with web search. Full texts on arxiv.org could not be opened from this environment, so some details of prior work rest on search summaries and catalog records; the notes file records which claims were verified and how. This is a structured self-review, not an independent one: the reviewer is the same assistant that helped re-implement the pipeline and draft the manuscript, and it may share the authors' blind spots. No numeric score is given because no venue rubric was supplied.
+
+1. Summary
+
+The paper asks whether E-DDQN improves safety-prioritized cybersickness detection. E-DDQN is a dueling Double DQN detector whose reward penalizes a missed cybersickness event five times more than a false alarm. The paper evaluates it on the public UFFCSData gameplay dataset (35 sessions, 9,390 one-second samples). It argues formally that, on logged data, detection is a contextual bandit and the 5:1 reward induces the 5:1 cost-sensitive Bayes threshold P(y=1|s) >= 1/6. It then compares E-DDQN with a standard DQN, a gamma = 0 variant, four cost-weighted supervised models and two post-hoc elapsed-time baselines. The comparison uses a nested cross-validation protocol over 21 session-linkage groups that was fixed before testing. It reports that E-DDQN does not outperform the standard DQN, has a higher cost than a cost-weighted random forest (seed ensembles 0.726 vs 0.485, Holm-adjusted p = 0.006), and that no model ranks seconds significantly better than elapsed time alone (ROC-AUC 0.704). It also shows that random row-level splits inflate ROC-AUC on these data from 0.523 to 0.992–0.995, and that bounded telemetry perturbations change ROC-AUC by at most 0.089.
+
+2. Strengths
+
+The evaluation design is unusually careful for this application area. All splits are made at the level of conservative session-linkage groups before any feature is computed. Preprocessing is fitted on inner-training rows only. Hyper-parameters, checkpoints and thresholds are chosen on inner validation folds. The protocol was committed before the evaluation sessions were scored. The analyses added after the primary results were known (exposure-time baselines, Holm adjustment, grouping sensitivity, cost curves) are labelled post hoc throughout. The reproducibility package (per-sample predictions, a single regeneration script, executable consistency checks, a documented clean rerun) goes beyond common practice.
+
+The paper reports a clear negative result without hedging and backs it with the comparisons that make a negative result informative. These include trivial policies, cost-weighted supervised models under the same tuning and threshold rules, and two minimal exposure-time baselines. The elapsed-time result (ROC-AUC 0.704, highest of all models; Table IV, Fig. 2) is the most useful empirical finding. It shows that once sessions are not shared, the learned detectors extract little beyond a population onset curve on this dataset.
+
+The formal treatment in Section III-D is short and correct for the setting the paper studies. The implied-probability map (Eq. 5) and the un-weighting of cost-weighted classifiers (Eq. 7) put Q-learners and supervised models on one score scale, which makes the operating-point comparisons in Tables V, VI and X meaningful. The reward-ratio experiment (Table X) agrees with the theory: changing the regret ratio moves the greedy operating point in the predicted direction, while the validation-tuned costs (0.629 to 0.673) and the ROC-AUCs barely change.
+
+The split-protocol comparison (Table III) gives a concrete, dataset-specific quantification of a known pitfall. This is useful because published work on the same gameplay data reports accuracy above 94 % under sample-level splits. Finally, the reporting is transparent. Both seed means and seed ensembles are given, with an explanation of why they differ (Section IV-C). Exact confusion counts, a leave-one-group-out jackknife and a session-level bootstrap are reported. The implementation pitfalls of the earlier code are listed.
+
+3. Weaknesses
+
+The concerns are ordered by how much they could change the paper's conclusions.
+
+3.1 The diagnosis of why E-DDQN under-performs is stated more strongly than the evidence supports.
+
+Contribution 4 and Section V-G say that bootstrapping and validation-based selection "explain" E-DDQN's under-performance, and that "two diagnostics agree".
+
+The first diagnostic compares E-DDQN with the separately tuned E-CB (ROC-AUC 0.538 vs 0.653), but the two models differ in more than the discount factor. In Supplementary Sec. S2.2, E-CB selected the exposure feature set without questionnaire indicators in four of five folds, with different trunks and dropout. E-DDQN selected exposure+profile in all five folds. The comparison therefore confounds gamma with feature set and architecture.
+
+The only comparison that holds the configuration fixed is the gamma = 0 row of the ablation (Table IX). There, removing bootstrapping moves ROC-AUC from 0.538 to 0.576 and cost from 0.663 to 0.645, a change within one seed standard deviation. The second diagnostic, the selection-optimism gap (+0.288 for E-DDQN vs -0.015 to +0.070 for the others; Table VIII), is consistent with noisy, high-variance validation curves. It does not by itself establish that bootstrapping is the source of that noise.
+
+A competing explanation is not discussed. With only 21 groups, the questionnaire indicators that E-DDQN always selected could let configurations fit group-level label patterns that do not transfer. The fact that E-CB mostly avoided them is at least as consistent with the data as the bootstrapping account.
+
+The theoretical point that bootstrapping cannot improve the optimal policy stands regardless. The empirical attribution should be phrased as "consistent with", and the feature-set alternative should be acknowledged. The authors should either soften the claim or point to an existing comparison that holds the feature set fixed.
+
+3.2 The generalization to prior DQN classifiers needs a qualification, and the novelty of the formal link should be positioned against known results.
+
+Section VI-B says the same reasoning "applies to other DQN-based classifiers trained on fixed datasets [11], [12]". In Lin et al. [11] and Yang et al. [12], however, a training episode ends when the agent misclassifies a minority-class sample. Yang et al. state this rule explicitly, with a terminal flag set at that point. Later descriptions attribute the same rule to [11].
+
+With misclassification-triggered termination, the action does change the future (it ends the reward stream). Those formulations are therefore not pure contextual bandits. With gamma > 0 their effective cost ratio depends on gamma and on the continuation value, not only on the immediate rewards. The sentence is conditional ("unless actions change future observations"), but as written it implies that [11] and [12] fall under the paper's result. The paper should state the difference explicitly. It should also say in Section I or III that E-DDQN, unlike [11] and [12], does not terminate episodes on errors, because "E-DDQN follows this line" otherwise suggests the same formulation.
+
+Separately, the equivalence in Section III-D follows directly from standard results. Elkan's [17] cost-sensitive threshold is one. Another is the well-known fact that a contextual bandit in which the rewards of all actions are revealed is equivalent to cost-sensitive classification (Dudík et al., 2011, who also reduce contextual bandits to cost-sensitive classification). The authors' wording ("we make explicit") is appropriately modest. Even so, contribution 1 would be better positioned by citing this literature and presenting the result as an application of known theory to asymmetric-reward DQN detectors. That application is still useful to the cybersickness community, but it is not new theory.
+
+3.3 The per-second evaluation reports 9,390 seconds as if they were independent, but they come from only 35 sessions and 26 onset events, and the labels have a strong temporal structure.
+
+Labels are close to step functions: 1.1 binary changes per session, non-decreasing in 23 of 35 sessions, and 9 sessions never positive. The evidence therefore comes from 35 sessions, 21 groups and 26 onsets, not from 9,390 independent decisions.
+
+Pooled per-second metrics are dominated by when onset occurs and by which sessions ever become positive. The event-level analysis (Section V-F) is, as the paper notes, degenerate: every model alarms almost everywhere, so detection delay is zero by construction.
+
+In addition, the pooled ROC-AUCs concatenate the scores of five different models, one per outer fold. They therefore mix discrimination with differences in score scale between folds. Per-fold ROC-AUCs in Supplementary Sec. S3.4 range from 0.43 to 0.85, and the pooled value can differ from the mean within-fold value.
+
+None of this invalidates the comparisons. They are paired and share the same samples, and the main E-DDQN-vs-random-forest result holds in every outer fold (S3.4) and in every jackknife replicate. It does limit what the per-second numbers say about safety-relevant detection of onset. The paper would be clearer if it stated that the main per-second results mostly reflect the population onset curve. It should also report the mean within-fold ROC-AUC alongside the pooled value.
+
+3.4 Inference relies on a percentile pairs-cluster bootstrap over 21 groups of unequal size, which can be unreliable with this few clusters.
+
+With roughly 5 to 30 clusters, standard clustered inference is known to over-reject. In simulations, the pairs-cluster bootstrap was less reliable than bootstrap-t variants (Cameron, Gelbach and Miller, 2008).
+
+The central conclusion is robust to this concern. E-DDQN versus the random forest has a Holm-adjusted p of 0.006 and is supported by the session bootstrap, a jackknife with no sign change and all five folds. Several secondary statements sit closer to the boundary and depend on the bootstrap's accuracy:
+- the random forest's advantage over always alarming (difference -0.074, unadjusted p = 0.012, Holm 0.108);
+- the Time-LR versus random-forest cost difference (p = 0.021);
+- the "not significantly different" statements for the exposure-time baselines, which are statements of low power as much as of similarity.
+
+The paper already notes that the intervals are wide. It should also say that the bootstrap intervals condition on the trained models (they do not reflect training variability beyond five seeds), and that with 21 clusters the p-values near 0.01 to 0.05 should be read as approximate.
+
+3.5 The tuning budget is matched in number of configurations, not in coverage of the search space.
+
+Each family receives 16 random configurations (12 for logistic regression). From the search spaces in Supplementary Sec. S2.1, however, E-DDQN's space contains about 3.0 million combinations, the DQN's about 500,000 and E-CB's about 250,000, against 1,728 for gradient boosting, 192 for the random forest and 24 for logistic regression. Sixteen draws therefore cover a vanishing fraction of the RL spaces and a substantial fraction of the random-forest space.
+
+Limitation (vi) acknowledges a modest budget. The paper argues that more search would mostly increase optimism, which Table VIII makes plausible but does not demonstrate. The comparison between E-DDQN and the standard DQN is relatively fair, since both search spaces are very large. The comparison with the random forest partly measures how hard it is to tune a high-dimensional RL search space with 16 draws.
+
+That difficulty is arguably a practical property of the method and is worth stating as such. The word "matched" in the contribution list and in Table I should be qualified accordingly.
+
+A related point: the selection criterion is the minimum achievable 5:1 cost on pooled out-of-fold predictions. Near the always-alarm regime this criterion is almost flat (validation costs of 0.42 to 0.54 against 0.558 for always alarming), so it carries little information about discrimination and is noisy. This may contribute to the selection optimism the paper reports.
+
+3.6 The perturbation study (RQ3) takes considerable space relative to what it can show.
+
+Section III-H, Section V-I, Tables XI and XII, and four supplement pages are devoted to stress tests. The paper's own interpretation is that the detectors are insensitive because they barely use the perturbed channels. E-DDQN is close to chance (ROC-AUC 0.54, group-bootstrap CI 0.38 to 0.69), and robustness of a near-chance detector is weakly informative.
+
+The adaptive adversary chooses among 17 fixed candidates, which the paper correctly calls a lower bound on vulnerability. The stress tests are useful as a sanity check that reinforces the exposure-time finding. They are, however, not a substantive answer to the security motivation in Section I.
+
+The reader would be better served by a shorter presentation, with the full variant table in the supplement as now, and an RQ3 phrased as a sanity check rather than as one of three primary research questions.
+
+Overall, I see the design and the main negative conclusion as sound and well supported. The required revisions concern how strongly the diagnosis is attributed (3.1), the scope of the formal claim relative to prior DQN classifiers and to known theory (3.2), and the statistical interpretation of a small number of independent units (3.3 and 3.4). None of these requires new data collection.
+
+4. Questions and Suggestions
+
+Questions (answers could change the assessment):
+
+Q1. Can the existing runs separate the effect of the discount factor from that of the questionnaire features? For example: how does E-CB perform when restricted to the exposure+profile set, or how does the fixed-configuration gamma = 0 ablation compare with E-CB on the same folds? If no such comparison exists, do the authors agree that Section V-G should present bootstrapping as one of several candidate explanations?
+
+Q2. Do the authors agree that the misclassification-triggered termination used in [11] and [12] makes those formulations action-dependent? If so, how does Eq. (3) change for them, and should Section VI-B be restricted to formulations without early termination?
+
+Q3. How do the model rankings change if ROC-AUC is computed within each outer fold and then averaged, instead of pooling scores from five fold-specific models? In particular, does Time-LR remain the highest-ranking model?
+
+Q4. Have the dataset authors described how discomfort reports were elicited during play (prompted at fixed times or spontaneous)? The paper correctly flags this as undocumented. The answer matters for whether per-second labels can be treated as current-state measurements at all.
+
+Suggestions, in order of priority:
+
+S1. Rephrase contribution 4 and Section V-G to say that the diagnostics are consistent with, rather than explain, the under-performance, and discuss the feature-set alternative (Weakness 3.1).
+
+S2. Qualify Section VI-B with respect to [11] and [12], and state in Section I or III that E-DDQN does not use error-triggered termination. Cite the contextual-bandit and cost-sensitive-classification literature in Section III-D and present the formal link as an application of known results (Weakness 3.2).
+
+S3. Report the mean within-fold ROC-AUC next to the pooled value, and state the effective sample size (35 sessions, 21 groups, 26 onsets) where the per-second results are first presented (Weakness 3.3).
+
+S4. Add one or two sentences on the reliability of cluster-bootstrap inference with 21 clusters. Present the p-values between 0.01 and 0.05 as approximate (Weakness 3.4). A group-level sign-flip permutation test of the main paired differences would be a cheap sensitivity check, but it is optional.
+
+S5. Qualify "matched" as matched in number of configurations, and give the approximate sizes of the search spaces (Weakness 3.5).
+
+S6. Cite the classic exposure-duration literature (e.g., Kennedy, Stanney and Dunlap, 2000) where the elapsed-time baseline is introduced. The finding that elapsed time matches the learned detectors is expected given that duration is a well-documented driver of sickness, and saying so strengthens rather than weakens the result.
+
+S7. Contribution 4 says all detectors rely mainly on exposure time and questionnaire answers. The direct evidence for this (SHAP, Fig. 4) concerns only E-DDQN, a near-chance model. The random forest, gradient boosting and CS-MLP selected telemetry feature sets in some folds (S2.2). Either support the claim for those models, for example with permutation importance on existing predictions, or restrict it to E-DDQN and the models that selected exposure sets.
+
+S8. Shorten the perturbation sections (Weakness 3.6).
+
+Minor points:
+- Table VIII reports an outer-test cost of 0.754 for E-DDQN, while Table IV reports 0.663. The difference appears to come from averaging per-fold costs rather than pooling; one sentence in the caption would prevent confusion.
+- The confusion-matrix panels in Supplementary Sec. S3.8 are too small to read.
+- Reference [30] (Adversarial-VR) may now have a proceedings version (ISMAR-Adjunct 2025, per one search result); the authors should check and update.
+- The TruVR description in Section II-A (70 % / 30 % of the samples) agrees with search summaries of that paper. The authors should confirm against the original text that the split was at sample level.
+- The Ethics, Author Contributions and Use of Generative AI statements and the data DOI still contain placeholders.
+- The results text is dense with numbers. Moving some of them into the existing tables would make Sections V-B to V-D easier to follow.
+
+5. References
+
+Cameron, A. C., Gelbach, J. B., & Miller, D. L. (2008). Bootstrap-based improvements for inference with clustered errors. Review of Economics and Statistics, 90(3), 414–427. doi:10.1162/rest.90.3.414
+
+Dudík, M., Hsu, D., Kale, S., Karampatziakis, N., Langford, J., Reyzin, L., & Zhang, T. (2011). Efficient optimal learning for contextual bandits. In Proceedings of the 27th Conference on Uncertainty in Artificial Intelligence (UAI 2011). arXiv:1106.2369
+
+Kennedy, R. S., Stanney, K. M., & Dunlap, W. P. (2000). Duration and exposure to virtual environments: Sickness curves during and across sessions. Presence: Teleoperators and Virtual Environments, 9(5), 463–472.
+
+(Works already in the manuscript's bibliography are referred to by their reference numbers: Lin et al. [11], Yang et al. [12], Elkan [17].)
