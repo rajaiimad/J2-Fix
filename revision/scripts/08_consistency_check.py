@@ -201,6 +201,53 @@ if PH_JSON.exists():
     for rule, g in hl.groupby("rule"):
         adj = multipletests(g.cost_diff_p_cluster_bootstrap, method="holm")[1]
         check(np.allclose(adj, g.p_holm, atol=1e-12), f"Holm {rule}")
+    # Methods text vs code: feature counts, perturbation variants, seeds
+    from eddqn.attacks import load_attack_config, variants
+    from eddqn.features import EXPOSURE
+    fdict = pd.read_csv(RESULTS / "preprocessing" / "feature_dictionary.csv")
+    n_tele = int((~fdict.feature.str.startswith("prof_")).sum())
+    check(f"the {n_tele} telemetry features" in ptxt, f"paper states the number of telemetry features ({n_tele})")
+    check(f"\\emph{{telemetry+profile}} ({n_tele + n_prof})" in ptxt, "paper states the size of the telemetry+profile set")
+    check(f"\\emph{{exposure}} ({len(EXPOSURE)} " in ptxt and f"\\emph{{exposure+profile}} ({len(EXPOSURE) + n_prof})" in ptxt,
+          "paper states the sizes of the exposure feature sets")
+    var = variants(load_attack_config())
+    n_whole = sum(v["window"] == "whole" for v in var)
+    n_stress = sum(v["role"] == "stress" for v in var)
+    n_hide = sum(v["role"] == "evasion_only" for v in var)
+    check(f"clean + {len(var)} bounded" in ptxt, f"Fig. 1 states {len(var)} perturbation variants")
+    check(f"give {n_stress} variants" in ptxt, f"paper states {n_stress} stress variants")
+    check(f"the {n_whole} whole-session variants ({n_whole - n_hide} stress scenarios and {n_hide} hiding" in ptxt,
+          "paper states the adaptive candidate set")
+    check(int(MAC.get("AttAucNVariants", -1)) == n_whole, "Table of threshold-free robustness: number of whole-session variants")
+    proto = json.loads((REVISION_ROOT / "configs" / "protocol.json").read_text())
+    s0 = proto["split_seed"]
+    check(f"outer seed {s0}; inner seeds {s0 + 1}--{s0 + proto['k_outer']}" in ptxt, "paper states the split seeds")
+    # Results V-B: best primary-model ROC-AUC (HGB, then RF) and PR-AUC (DQN) as stated in the text
+    ms = pd.read_csv(RESULTS / "tables" / "metrics_summary.csv")
+    ms = ms[(ms.rule == "D1_min_cost") & ms.model.isin(list(MKEY))]
+    check(list(ms.sort_values("roc_auc_mean", ascending=False).model[:2]) == ["HGB", "RF"], "best primary ROC-AUC: HGB, then RF")
+    check(ms.loc[ms.pr_auc_mean.idxmax(), "model"] == "DQN", "best primary PR-AUC: DQN")
+    # cost curves: the summary numbers quoted in the text
+    cc = pd.read_csv(RESULTS / "tables" / "posthoc" / "cost_curves.csv")
+    best = cc.loc[cc.relative_cost.idxmin()]
+    check(close(PH["PHCcMinAll"], best.relative_cost, 0.006) and best.model == "RF"
+          and float(PH["PHCcMinAllRatio"]) == best.ratio, "lowest relative cost over all models and ratios")
+    r20 = cc[cc.ratio == cc.ratio.max()].set_index("model").relative_cost
+    check(r20["E-DDQN"] > 1 and r20["DQN"] > 1 and r20["RF"] < 1, "relative costs at the largest ratio (text: E-DDQN, DQN above 1)")
+    # reward ratio 5:1 reproduces the main E-DDQN run (only when the per-job run files are present)
+    rdir = RESULTS / "runs" / "final"
+    if (rdir / "RATIO 5").exists():
+        import pickle
+        same = True
+        for p in sorted((rdir / "RATIO 5").glob("*.pkl")):
+            a, b = (pickle.loads(x.read_bytes()) for x in (p, rdir / "E-DDQN" / p.name))
+            same &= all(np.array_equal(a[k], b[k]) for k in ("val_score", "test_score"))
+        check(same, "ratio-5 runs identical to the main E-DDQN runs")
+    # wording corrected in the deep audit must not come back
+    body = "\n".join(t.read_text() for t in (REVISION_ROOT / "paper").rglob("*.tex") if "generated" not in t.parts)
+    for bad in ("participants are not shared", "sessions and participants are not shared", "calibrated-probability",
+                "21 whole-session", "every curve approaches 1", "exactly as Eq"):
+        check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # every macro used in the new paper and its supplement is defined
     pdef = defined | set(PH)
     for tex in (REVISION_ROOT / "paper").rglob("*.tex"):

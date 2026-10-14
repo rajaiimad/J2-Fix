@@ -500,6 +500,7 @@ def attack_auc_table():
             allchg += list(g[g.kind != "clean"].roc_auc - g[g.kind == "clean"].roc_auc.iloc[0])
     put("AttAucMaxAbsChange", f"{max(abs(x) for x in allchg):.3f}")
     put("AttAucFracSmall", f"{100 * np.mean([abs(x) < 0.03 for x in allchg]):.0f}")
+    put("AttAucNVariants", str(a[a.kind != "clean"].variant.nunique()))   # whole-session variants in the min/max column
     head = " & ".join(h for _, _, h in show)
     (GEN / "tab_attack_auc.tex").write_text(
         "\\begin{tabular}{l" + "c" * (len(show) + 1) + "}\n\\toprule\nModel & " + head + " & min / max $\\Delta$ \\\\\n\\midrule\n" +

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.10.12)  13 OCT 2026 14:37
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2026.10.12)  14 OCT 2026 07:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -703,10 +703,10 @@ Package rerunfilecheck Info: File `supplement.out' has not changed.
 (rerunfilecheck)             Checksum: 9CB0D816F40A1F0331751FA925B8374F;5581.
  ) 
 Here is how much of TeX's memory you used:
- 13250 strings out of 476106
- 199392 string characters out of 5793932
+ 13251 strings out of 476106
+ 199407 string characters out of 5793932
  2078975 words of memory out of 5000000
- 34984 multiletter control sequences out of 15000+600000
+ 34985 multiletter control sequences out of 15000+600000
  575122 words of font info for 78 fonts, out of 8000000 for 9000
  59 hyphenation exceptions out of 8191
  75i,12n,79p,1010b,600s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -724,7 +724,7 @@ super/sfrm0800.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb><
 ts/type1/public/cm-super/sfrm1728.pfb></usr/share/texmf/fonts/type1/public/cm-s
 uper/sfti1000.pfb></usr/share/texmf/fonts/type1/public/cm-super/sftt1000.pfb></
 usr/share/texmf/fonts/type1/public/cm-super/sftt1200.pfb>
-Output written on supplement.pdf (10 pages, 348019 bytes).
+Output written on supplement.pdf (10 pages, 348094 bytes).
 PDF statistics:
  371 PDF objects out of 1000 (max. 8388607)
  274 compressed objects within 3 object streams

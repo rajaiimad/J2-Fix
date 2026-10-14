@@ -1,6 +1,6 @@
 # Submission checklist (new-submission version)
 
-`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passed all 523 checks.
+`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passes all 621 checks (0 failures).
 
 ## Done
 - [x] Elapsed-time baselines (Time-LR, Time+game HGB), added post hoc under the same protocol (`configs/posthoc.json`, committed before they were run).
@@ -71,6 +71,23 @@
 - [x] The earlier version's 96.88% is mentioned once in the paper (Introduction), with the technical detail in Setup IV-D and Supplement S6.
 - [x] The Conclusion states the main answer first.
 - [x] The cover letter and highlights use the same framing.
+
+## Deep audit and Methods rewrite (done)
+- [x] Full audit of the paper, supplement, tables, captions and equations against the code and the saved outputs; details in `reports/08_deep_audit.md`.
+- [x] 14 confirmed issues fixed. None changes a result; they correct wording and reporting:
+  - the cost-curve sentence (E-DDQN and DQN rise above 1 at large R);
+  - the robustness-table caption (17 whole-session variants, not 21);
+  - two phrases that implied participant independence;
+  - ROC-AUC compared with the prevalence instead of 0.5;
+  - "calibrated" implied probability;
+  - "exactly as predicts";
+  - a causal claim about bootstrapping;
+  - the runtime (about 2.5 h, not 3 h);
+  - the SHAP model description;
+  - minor consistency items.
+- [x] Section III rewritten as nine numbered steps with a notation table; every equation is numbered and defined, and every implementation detail matches the code.
+- [x] The consistency check now covers the Methods counts, perturbation counts, split seeds, cost-curve summary numbers and the corrected phrasings (621 checks, 0 failures).
+- [ ] The paper is now 16 pages (previously 15) because of the clearer Methods; trim later if the chosen journal has a page limit.
 
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.

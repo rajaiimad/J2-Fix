@@ -25,11 +25,11 @@ def build_datasets() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     * evaluation set: the dataset authors' curated release (35 Dec-2019
       seated sessions; the same samples as ``dataset.csv`` used by the
       original manuscript), parsed from XML.
-    * development set: the 35 Oct-2019 standing-posture raw sessions, used
+    * development set: the 37 Oct-2019 standing-posture raw sessions, used
       ONLY to debug code and to calibrate search-space ranges / training
       budgets before the frozen protocol is run on the evaluation set.
       Models fitted on it are never evaluated on the evaluation set.
-    * The 4 Dec-2019 raw sessions that the dataset authors left out of the
+    * The 2 Dec-2019 raw sessions that the dataset authors left out of the
       curated release are not used at all.
     """
     raw = load_raw_sessions()

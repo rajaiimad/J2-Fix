@@ -1,5 +1,5 @@
 {
- "checks": 593,
+ "checks": 621,
  "failures": [],
  "pending_author_inputs": [
   "paper/main.tex: DOI to be added on deposit",
@@ -13,7 +13,7 @@
   "paper/main.tex: version and period of use",
   "paper/main.tex: Confirm that this describes your use, and adapt it to the target journal's policy."
  ],
- "macros_defined": 1820,
+ "macros_defined": 1821,
  "macros_used_in_text": 119,
  "stale_number_occurrences": {
   "main.pdf": 7,

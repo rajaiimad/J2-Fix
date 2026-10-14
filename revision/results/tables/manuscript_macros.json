@@ -1785,6 +1785,7 @@
  "RFAttAucMaxRise": "0.037",
  "AttAucMaxAbsChange": "0.089",
  "AttAucFracSmall": "87",
+ "AttAucNVariants": "17",
  "EDDQNOptGap": "+0.288",
  "EDDQNOptInner": "0.467",
  "ECBOptGap": "+0.070",

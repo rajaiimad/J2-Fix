@@ -537,6 +537,10 @@ def macros(summ, cis, cc, jk, js, sd):
     low = cc[cc.ratio.isin([1.5, 2]) & (cc.model != "E-DDQN")].relative_cost
     put("CcLowRMin", f"{low.min():.2f}")
     put("CcLowRMax", f"{low.max():.2f}")
+    best = cc.loc[cc.relative_cost.idxmin()]               # lowest relative cost over all models and ratios
+    put("CcMinAll", f"{best.relative_cost:.2f}")
+    put("CcMinAllReduction", f"{100 * (1 - best.relative_cost):.0f}")
+    put("CcMinAllRatio", f"{best.ratio:g}")
     gc = pd.read_csv(RESULTS / "preprocessing" / "counts_eval_by_game.csv").set_index("game")
     for game in ("Flight", "Race"):
         put("Grade" + game + "Severe", f"{int(gc.loc[game, 'grade2'] + gc.loc[game, 'grade3']):,}")
