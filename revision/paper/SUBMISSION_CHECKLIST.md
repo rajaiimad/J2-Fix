@@ -109,6 +109,14 @@
 - [x] Fresh overclaim pass of the whole paper; nine further wording fixes.
 - [x] Clean rerun of the final version (commit `12ab6c3`) from raw data in an empty directory: exit 0 in 109 min on 4 cores; 153 artefacts compared, 0 differing; every per-sample prediction, all result macros (479/479 post-hoc) and the text of all four PDFs identical; consistency check 714/714 inside the clone (`results/qc/clean_rerun.md`).
 
+## Third round: result wording and the search-draw experiment (done)
+- [x] Point-by-point response: `outputs/response_to_review_round3.md`.
+- [x] Results wording: every comparison now states its evidence (V-B always alarm as a point estimate, not significant; V-C both baselines with the Time+game p marked approximate; V-H "ranks seconds only weakly"; untested rankings marked as point estimates). The consistency check enforces the approximate / not-significant caveat for every quoted bootstrap p between 0.01 and 0.05.
+- [x] Search-draw experiment specified, with decision rules R1–R3, and committed (`b15fa6e`) before any of its models was trained; run under the full protocol (61 min); reported in Section V-G (iv) and Supplementary S5.11.
+- [x] **Outcome, which changes the paper's framing of E-DDQN:** R1 not challenged (no draw gives E-DDQN a significantly lower cost than the DQN); R2 draw-dependent (E-DDQN within-fold ROC-AUC 0.539–0.714); R3 supported (exposure-only gap 0.026). In ranking, the DQN is better with draw 1 and E-DDQN with draw 2. Abstract, contributions, Results, Discussion, limitations and Conclusion now say that E-DDQN's last place reflects its primary draw.
+- [x] Determinism: five search and final jobs retrained from scratch reproduced bit for bit; every new number recomputed independently by the consistency check.
+- [ ] Clean rerun of the final version including the new stage (about 3–3.5 h); update `results/qc/clean_rerun.md`, Supplement S7 and the cover letter when it finishes.
+
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
 - [ ] **Title.** Confirm it (one line in `paper/main.tex`).

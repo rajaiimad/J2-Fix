@@ -236,12 +236,12 @@ def write_tables_and_macros(vs, pr, dec):
                     f"{r.within_fold_roc_auc:.3f} & {r.selected_gamma.replace(';', ', ')} \\\\")
     body += ["\\bottomrule", "\\end{tabular}"]
     (OUT / "tab_sd_variants.tex").write_text("\n".join(body) + "\n")
-    body = ["\\begin{tabular}{lcccccc}", "\\toprule",
-            "Draw & $\\Delta$Cost (E-DDQN$-$DQN) & 95\\,\\% CI & $p_{\\text{boot}}$ & $p_{\\text{sign-flip}}$ & $\\Delta$ROC-AUC & 95\\,\\% CI \\\\",
+    body = ["\\begin{tabular}{lcccccccc}", "\\toprule",
+            "Draw & $\\Delta$Cost (E-DDQN$-$DQN) & 95\\,\\% CI & $p_{\\text{boot}}$ & $p_{\\text{sign-flip}}$ & $\\Delta$ROC-AUC & 95\\,\\% CI & $p_{\\text{boot}}$ \\\\",
             "\\midrule"]
     for r in pr.itertuples():
         body.append(f"{r.pair} & {f3(r.cost_A_minus_B)} & [{f3(r.ci_low)}, {f3(r.ci_high)}] & {pv(r.p_boot)} & {pv(r.p_signflip)} & "
-                    f"{f3(r.auc_A_minus_B)} & [{f3(r.auc_ci_low)}, {f3(r.auc_ci_high)}] \\\\")
+                    f"{f3(r.auc_A_minus_B)} & [{f3(r.auc_ci_low)}, {f3(r.auc_ci_high)}] & {pv(r.auc_p)} \\\\")
     body += ["\\bottomrule", "\\end{tabular}"]
     (OUT / "tab_sd_pairs.tex").write_text("\n".join(body) + "\n")
     M = {}
@@ -265,6 +265,9 @@ def write_tables_and_macros(vs, pr, dec):
         put(k + "P", pv(r.p_boot))
         put(k + "SfP", pv(r.p_signflip))
         put(k + "AucDiff", f3(r.auc_A_minus_B))
+        put(k + "AucLow", f3(r.auc_ci_low))
+        put(k + "AucHigh", f3(r.auc_ci_high))
+        put(k + "AucP", pv(r.auc_p))
     v = vs.set_index("variant")
     ed = v.loc[["E-DDQN", "E-DDQN-draw2", "E-DDQN-draw3"]]
     dq = v.loc[["DQN", "DQN-draw2", "DQN-draw3"]]
@@ -276,6 +279,10 @@ def write_tables_and_macros(vs, pr, dec):
     put("DQNCostMax", f"{dq.cost_seed_mean.max():.3f}")
     put("DQNWfMin", f"{dq.within_fold_roc_auc.min():.3f}")
     put("DQNWfMax", f"{dq.within_fold_roc_auc.max():.3f}")
+    put("EDDQNDrawTwoStrongGammaFolds", str(v.loc["E-DDQN-draw2", "selected_gamma"].split(";").count("0.99")))
+    put("CostDiffMin", f3(pr.cost_A_minus_B.min()))
+    put("CostDiffMax", f3(pr.cost_A_minus_B.max()))
+    put("CostPMin", pv(pr.p_boot.min()))
     put("CostSpan", f"{dec['R2_cost_span']:.3f}")
     put("WfSpan", f"{dec['R2_within_fold_auc_span']:.3f}")
     put("ExposureGap", f"{dec['R3_exposure_gap_dqn_minus_eddqn']:.3f}")

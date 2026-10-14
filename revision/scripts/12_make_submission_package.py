@@ -55,6 +55,7 @@ def macros() -> dict:
     m = {}
     m.update(json.loads((RESULTS / "tables" / "manuscript_macros.json").read_text()))
     m.update(json.loads((RESULTS / "tables" / "posthoc" / "posthoc_macros.json").read_text()))
+    m.update(json.loads((RESULTS / "tables" / "search_draw" / "sd_macros.json").read_text()))
     title = re.search(r"\\title\{(.*?)\}\n", (PAPER / "main.tex").read_text(), re.S).group(1)
     m["Title"] = re.sub(r"\s+", " ", title)
     return {k: str(v).replace("$-$", "-") for k, v in m.items()}

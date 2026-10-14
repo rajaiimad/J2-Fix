@@ -9,9 +9,9 @@ This archive regenerates every number, table and figure of the paper and its sup
 | Path | Content |
 |---|---|
 | `revision/src/eddqn/` | Raw-data parser, session-linkage grouping, causal features, E-DDQN and baseline models, metrics and statistics |
-| `revision/scripts/` | Pipeline steps `00_`–`11_` (see below); `08_consistency_check.py` recomputes the reported numbers with independent library implementations |
+| `revision/scripts/` | Pipeline steps `00_`–`13_` (see below); `08_consistency_check.py` recomputes the reported numbers with independent library implementations |
 | `revision/configs/protocol.json` | Evaluation protocol, committed before any model was trained on the evaluation sessions |
-| `revision/configs/posthoc.json` | Specification of the post-hoc analyses; the exposure-time baselines, Holm adjustment, always-alarm comparison, grouping sensitivity and cost curves were committed before they were run, and later additions are recorded under `review_round_2` and `_later_additions` |
+| `revision/configs/posthoc.json` | Specification of the post-hoc analyses; the exposure-time baselines, Holm adjustment, always-alarm comparison, grouping sensitivity and cost curves were committed before they were run, later additions are recorded under `review_round_2` and `_later_additions`, and the search-draw sensitivity analysis (`search_draw_sensitivity`) was specified with its decision rules and committed before it was run |
 | `revision/configs/attacks.json` | Telemetry-perturbation scenarios |
 | `revision/data/processed/` | Outer and inner split tables (session-linkage groups) |
 | `revision/results/` | Per-sample predictions (`predictions/*.csv.gz`), metric tables, figures, audits, QC reports |
@@ -26,7 +26,7 @@ Requirements: Python 3.13 and the packages pinned in `revision/requirements.txt`
 
 ```bash
 pip install -r revision/requirements.txt
-bash revision/run_all.sh --fresh --workers 4   # about 2-2.5 h on 4 CPU cores
+bash revision/run_all.sh --fresh --workers 4   # about 3-3.5 h on 4 CPU cores
 ```
 
 `--fresh` deletes every generated result and rebuilds everything from the raw XML files:
@@ -34,7 +34,7 @@ bash revision/run_all.sh --fresh --workers 4   # about 2-2.5 h on 4 CPU cores
 2. Preprocessing and splits.
 3. Hyper-parameter search, selection, final evaluation, ablation and reward-ratio runs.
 4. Aggregation and SHAP.
-5. Post-hoc baselines and analyses.
+5. Post-hoc baselines and analyses, including the search-draw sensitivity analysis.
 6. Paper and supplement build.
 7. Consistency check.
 

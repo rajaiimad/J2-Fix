@@ -324,12 +324,14 @@ if PH_JSON.exists():
                 "no information can pass", "samples rather than participants", "using exposure features (Section",
                 "which was committed before they were run, and are produced", "committed before those analyses were run",
                 "explains the inflated results", "predicted exactly once",
-                "higher than always alarming)", "close to chance", "ranks much better", "ranks last of"):
+                "higher than always alarming)", "close to chance", "ranks much better", "ranks last of",
+                "E-DDQN's under-performance is more consistent", "Why E-DDQN Under-Performs: Exploratory",
+                "does not outperform the standard DQN, with its primary search draw", "confirmed that E-DDQN does not outperform"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # bootstrap p-values between 0.01 and 0.05 are read as approximate (Section III-G): a main-text
     # paragraph that quotes one must say so or report the comparison as not significant
-    pv = {**MAC, **PH}
-    zone = [k for k, v in pv.items() if re.search(r"(Pboot|P|Holm)$", k) and not k.startswith("PHSf")
+    pv = {**MAC, **PH, **SD}
+    zone = [k for k, v in pv.items() if re.search(r"(Pboot|P|Holm)$", k) and "Sf" not in k
             and re.fullmatch(r"0\.\d+", str(v)) and 0.01 <= float(v) <= 0.05]
     n_zone = 0
     for tex in sorted((REVISION_ROOT / "paper" / "sections").glob("*.tex")):
@@ -424,6 +426,8 @@ if SD:
         ea, eb = sens[a], sens[b]
         check((ea[["session_id", "step"]].values == eb[["session_id", "step"]].values).all(), f"search draw pair {label}: aligned samples")
         check(close(SD[f"SDPair{pkey[label]}Diff"], st[a]["ens"] - st[b]["ens"], 0.0006), f"search draw pair {label}: cost difference")
+        check(close(SD[f"SDPair{pkey[label]}AucDiff"], roc_auc_score(ea.y, ea.score) - roc_auc_score(eb.y, eb.score), 0.0006),
+              f"search draw pair {label}: ROC-AUC difference")
         yv2, gv2 = ea.y.to_numpy(), ea.group_id.to_numpy()
         ca = 5 * ((ea.pred_D1_min_cost.to_numpy() == 0) & (yv2 == 1)) + ((ea.pred_D1_min_cost.to_numpy() == 1) & (yv2 == 0))
         cb = 5 * ((eb.pred_D1_min_cost.to_numpy() == 0) & (yv2 == 1)) + ((eb.pred_D1_min_cost.to_numpy() == 1) & (yv2 == 0))
@@ -433,6 +437,25 @@ if SD:
         p3 = float((np.abs(hs3[:, None] + ts3[None, :]) >= abs(D3.sum()) - 1e-9).mean())
         pm = SD[f"SDPair{pkey[label]}SfP"]
         check((p3 < 0.001) if pm.startswith("$<$") else close(pm, p3, 0.0006), f"search draw pair {label}: exact sign-flip p (independent enumeration)")
+    g2 = [ssel["E-DDQN-draw2"][str(kk)]["config"]["gamma"] for kk in range(5)]
+    check(int(SD["SDEDDQNDrawTwoStrongGammaFolds"]) == sum(abs(g - 0.99) < 1e-12 for g in g2), "E-DDQN draw 2: folds selecting gamma = 0.99")
+    check(max(st[n]["wf"] for n in ("E-DDQN", "E-DDQN-draw2", "E-DDQN-draw3", "E-DDQN-exposure")) == st["E-DDQN-draw2"]["wf"],
+          "E-DDQN draw 2 has the highest within-fold ROC-AUC of the E-DDQN variants (stated in V-G)")
+    check(SD["SDEDDQNWfMin"] == PH["PHWfEDDQNAuc"] and float(SD["SDEDDQNWfMax"]) <= float(PH["PHWfRFAuc"]),
+          "E-DDQN draw range: lowest primary model up to (not above) the random forest")
+    check(float(SD["SDEDDQNCostMin"]) > float(MAC["RFCostCostMean"]), "E-DDQN's cost in every draw stays above the random forest's (stated in VII)")
+    for f, ks in (("abstract.tex", ("SDEDDQNWfMin", "SDEDDQNWfMax")), ("s5_results.tex", ("SDCostPMin", "SDPairTwoAucP", "SDExposureGap")),
+                  ("s6_discussion.tex", ("SDEDDQNWfMax",)), ("s7_conclusion.tex", ("SDEDDQNCostMin",))):
+        t = (REVISION_ROOT / "paper" / "sections" / f).read_text()
+        for kk in ks:
+            check("\\" + kk in t, f"{f} reports the search-draw result (\\{kk})")
+    t = (REVISION_ROOT / "paper" / "supplement" / "sections" / "s_posthoc.tex").read_text()
+    check(all("\\" + kk in t for kk in ("SDROne", "SDRTwo", "SDRThree")) and "%SD-OUTCOME%" not in t, "S5.11 reports R1-R3")
+    readme_sd = (REVISION_ROOT / "README.md").read_text()
+    for kk in ("SDEDDQNWfMin", "SDEDDQNWfMax", "SDEDDQNCostMin", "SDEDDQNCostMax", "SDDQNWfMin", "SDDQNWfMax", "SDDQNCostMin",
+               "SDDQNCostMax", "SDCostPMin", "SDPairOneAucP", "SDPairTwoAucP", "SDExposureGap"):
+        check(SD[kk] in readme_sd, f"README quotes {kk} = {SD[kk]}")
+    check(SD["SDCostDiffMin"].replace("$-$", "\u2212") in readme_sd and SD["SDCostDiffMax"] in readme_sd, "README quotes the cost-difference range")
     # pre-specified decision rules recomputed
     pr = pd.read_csv(RESULTS / "tables" / "search_draw" / "pairs.csv")
     r1 = bool(((pr.cost_A_minus_B < 0) & (pr.ci_high < 0)).any())

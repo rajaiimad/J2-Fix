@@ -4,6 +4,6 @@
 
 - On logged data, an asymmetric-reward DQN equals 5:1 cost-sensitive classification
 - Seven detectors compared under one nested, session-grouped, pre-specified protocol
-- E-DDQN did not beat a standard DQN and cost more than a cost-weighted random forest
-- No model ranked seconds significantly better than elapsed time since session start
+- E-DDQN never cost significantly less than a standard DQN in three random search draws
+- No primary model ranked seconds significantly better than elapsed time in session
 - Random row splits of these 1-Hz data gave ROC-AUC {{LeakRowRocAuc}}; grouped splits gave {{LeakGrpRocAuc}}

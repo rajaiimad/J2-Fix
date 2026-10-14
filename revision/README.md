@@ -22,13 +22,13 @@ Everything produced for the revision lives here.
 | 9 | Final quality-control report | `reports/07_quality_control.md` (+ `results/qc/`) |
 | – | Reference verification | `reports/06_reference_verification.md` |
 | – | **Submission package** (final manuscript, supplement, separate figures, cover letter and highlights drafts, curated code-and-data archive for a DOI) | `python3 scripts/12_make_submission_package.py` → `submission_package/` (not tracked; templates in `submission/`) |
-| – | **New-submission version** (re-framed paper for a new journal; includes post-hoc exposure-time baselines and sensitivity analyses) | `paper/main.pdf`, `paper/supplement/supplement.pdf` (build: `bash paper/build.sh`); checklist `paper/SUBMISSION_CHECKLIST.md`; post-hoc spec `configs/posthoc.json`, code `scripts/11_posthoc.py`, results `results/tables/posthoc/` |
+| – | **New-submission version** (re-framed paper for a new journal; includes post-hoc exposure-time baselines and sensitivity analyses) | `paper/main.pdf`, `paper/supplement/supplement.pdf` (build: `bash paper/build.sh`); checklist `paper/SUBMISSION_CHECKLIST.md`; post-hoc spec `configs/posthoc.json`, code `scripts/11_posthoc.py` and `scripts/13_search_draw_sensitivity.py`, results `results/tables/posthoc/` and `results/tables/search_draw/` |
 
 ## Reproduce
 
 ```bash
 pip install -r revision/requirements.txt         # CPU is sufficient
-bash revision/run_all.sh --fresh --workers 4      # ~2-2.5 h wall time on 4 CPU cores (109 and 154 min in two clean reruns)
+bash revision/run_all.sh --fresh --workers 4      # ~3-3.5 h on 4 CPU cores (109 and 154 min in two clean reruns before the search-draw stage, which adds ~61 min)
 ```
 
 `run_all.sh` runs these steps in order:
@@ -40,7 +40,8 @@ bash revision/run_all.sh --fresh --workers 4      # ~2-2.5 h wall time on 4 CPU 
 5. Development-wave calibration.
 6. Hyper-parameter search, selection, final evaluation, ablation and reward-ratio runs.
 7. Aggregation, SHAP and table/macro generation.
-8. LaTeX build and the consistency check.
+8. Post-hoc analyses (`scripts/11_posthoc.py`) and the search-draw sensitivity analysis (`scripts/13_search_draw_sensitivity.py`).
+9. LaTeX build and the consistency check.
 
 The last step independently recomputes every confusion matrix, metric and McNemar table and compares it with the manuscript.
 
@@ -58,15 +59,17 @@ The last step independently recomputes every confusion matrix, metric and McNema
 All of these were specified after the primary results were known and use the frozen protocol's splits, rules and seeds. They differ in when they were specified:
 
 * **Committed in `configs/posthoc.json` before they were run:** the two exposure-time baselines, the Holm adjustment, the comparison with always alarming, the grouping sensitivity analyses (session bootstrap and leave-one-group-out jackknife) and the cost curves.
-* **Added later without prior commitment:** the paired comparisons of the exposure-time baselines with the primary models, the Q-value-scale diagnostic, and (after a pre-submission review, key `review_round_2`) the within-fold ROC-AUC, the exact group sign-flip tests and the feature-set and search-draw analyses.
+* **Added later without prior commitment:** the paired comparisons of the exposure-time baselines with the primary models, the Q-value-scale diagnostic, and (after a pre-submission review, key `review_round_2`) the within-fold ROC-AUC, the exact group sign-flip tests and the feature-set and search-draw tallies.
+* **Specified, with decision rules, and committed before it was run (key `search_draw_sensitivity`, commit `b15fa6e`):** the search-draw sensitivity experiment, which re-tunes E-DDQN and the standard DQN with two further random search draws and one exposure-only draw.
 
 Main post-hoc results:
 
-* **Elapsed-time baseline (Time-LR).** A logistic regression on elapsed time alone reaches pooled ROC-AUC 0.704, the highest pooled value of all models; within folds the random forest is slightly higher (0.715 vs 0.709). No model ranks seconds significantly better than Time-LR, but equivalence is not established either. At the 5:1 operating point the random forest has a lower cost (group bootstrap p = 0.021, exact sign-flip p = 0.044; approximate with 21 groups).
-* **E-DDQN vs the random forest.** E-DDQN's cost is higher in every outer fold (marginally in one). The difference is significant under the group bootstrap after Holm adjustment (p = 0.006), but not under the more conservative exact sign-flip test (Holm-adjusted p = 0.083).
+* **Elapsed-time baseline (Time-LR).** A logistic regression on elapsed time alone reaches pooled ROC-AUC 0.704, the highest pooled value of all models; within folds the random forest is slightly higher (0.715 vs 0.709). No primary model ranks seconds significantly better than Time-LR, but equivalence is not established either. At the 5:1 operating point the random forest has a lower cost (group bootstrap p = 0.021, exact sign-flip p = 0.044; approximate with 21 groups).
+* **E-DDQN vs the random forest (E-DDQN's primary search draw).** E-DDQN's cost is higher in every outer fold (marginally in one). The difference is significant under the group bootstrap after Holm adjustment (p = 0.006), but not under the more conservative exact sign-flip test (Holm-adjusted p = 0.083).
 * **Always-alarm comparison.** No model is shown to beat always-alarm at 5:1 after adjustment.
 * **Grouping sensitivity.** The session-level bootstrap and the leave-one-group-out jackknife give the same direction for every comparison.
+* **Search-draw sensitivity (pre-specified).** In no draw does E-DDQN have a significantly lower cost than the standard DQN (differences −0.135 to +0.190; smallest p = 0.079). But E-DDQN's result depends strongly on its draw: within-fold ROC-AUC 0.539–0.714 and seed-mean cost 0.549–0.663 across three draws (standard DQN: 0.629–0.666 and 0.580–0.634). In ranking, the standard DQN is better with the primary draw (p = 0.021, approximate) and E-DDQN with draw 2 (p = 0.009). Restricted to exposure features, E-DDQN is within 0.026 within-fold ROC-AUC of the DQN, which supports the feature-set explanation (rule R3). E-DDQN's last place in the primary analysis is therefore largely a consequence of its search draw.
 
 ## Headline
 
-Under this protocol E-DDQN does **not** outperform the standard DQN. It has a higher cost than a cost-weighted random forest in every outer fold (significant under the group bootstrap, not after Holm adjustment under the exact sign-flip test), and no model achieves high recall with a controlled false-alarm rate on these data. See `reports/05_results.md`.
+Under this protocol E-DDQN does **not** have a lower 5:1 cost than the standard DQN, with its primary search draw or with two further pre-specified draws; in ranking, each agent is better in one draw. With its primary draw it has a higher cost than a cost-weighted random forest in every outer fold (significant under the group bootstrap, not after Holm adjustment under the exact sign-flip test), but that draw is its weakest of three. No model achieves high recall with a controlled false-alarm rate on these data. See `reports/05_results.md`.

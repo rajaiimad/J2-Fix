@@ -15,15 +15,16 @@ The main findings are:
 
 1. **Formulation.** Applying known results, we show that on logged data the alarm cannot affect future observations. The task is therefore a contextual bandit, and the 5:1 reward induces exactly the decision rule of 5:1 cost-sensitive classification.
 2. **Comparison.** Seven models were compared under a nested, session-grouped protocol fixed before testing.
-   - E-DDQN did not outperform a standard DQN.
-   - It had a higher cost than a cost-weighted random forest in every outer fold, marginally in one (Holm-adjusted p = {{PHHolmRF}} by group bootstrap and {{PHSfRFHolm}} by the more conservative exact sign-flip test).
-   - In a post-hoc baseline, no model ranked seconds significantly better than elapsed time alone (ROC-AUC {{PHTimeLRRocAucMean}}).
+   - E-DDQN did not have a lower 5:1 cost than a standard DQN, with its primary random search draw or with two further draws specified before they were run; in ranking, each agent was better in one draw.
+   - E-DDQN's own result depended strongly on its search draw (within-fold ROC-AUC {{SDEDDQNWfMin}}–{{SDEDDQNWfMax}}), so its weak primary result reflects that draw rather than its reward.
+   - With its primary draw it had a higher cost than a cost-weighted random forest in every outer fold, marginally in one (Holm-adjusted p = {{PHHolmRF}} by group bootstrap and {{PHSfRFHolm}} by the more conservative exact sign-flip test).
+   - In a post-hoc baseline, no primary model ranked seconds significantly better than elapsed time alone (ROC-AUC {{PHTimeLRRocAucMean}}).
    - No model combined high recall with a controlled false-alarm rate.
 3. **Evaluation protocol.** Session grouping is essential on these data. Random row-level splits, with or without oversampling, give ROC-AUC {{LeakRowRocAuc}}–{{LeakOldRocAuc}}, against {{LeakGrpRocAuc}} under session-grouped splits. This quantifies a known pitfall on this dataset; a reconstruction of the protocol of an earlier, unpublished version of this study yields similarly inflated scores.
 
-We believe the work suits *[Journal name]* because [one or two sentences on the journal's scope, e.g. its interest in rigorous evaluation of machine-learning methods for virtual reality and human–computer interaction]. The paper reports a carefully controlled negative result. It gives practical guidance for evaluating cybersickness detectors: participant- or session-grouped splits, trivial and exposure-time baselines, and comparison of RL detectors with cost-weighted supervised models.
+We believe the work suits *[Journal name]* because [one or two sentences on the journal's scope, e.g. its interest in rigorous evaluation of machine-learning methods for virtual reality and human–computer interaction]. The paper reports a carefully controlled negative result. It gives practical guidance for evaluating cybersickness detectors: participant- or session-grouped splits, trivial and exposure-time baselines, and comparison of RL detectors with cost-weighted supervised models over more than one random search draw.
 
-All code, the pre-specified protocol, the per-sample predictions and the scripts that regenerate every number, table and figure from the raw data are archived at [DOI]. A clean rerun of the final version from an empty directory reproduced every reported result exactly.
+All code, the pre-specified protocol, the per-sample predictions and the scripts that regenerate every number, table and figure from the raw data are archived at [DOI]. A clean rerun from an empty directory reproduced every result of the primary and post-hoc analyses exactly, and a sample of the search-draw runs retrained from scratch reproduced bit for bit.
 
 On behalf of all authors, I confirm the following:
 - The manuscript is original. It has not been published and is not under consideration elsewhere. [Confirm. If an earlier version was submitted to another journal, it must have been withdrawn or rejected before this submission.]
