@@ -85,5 +85,12 @@
     "threshold": "for each ratio R, the threshold minimising R*FN+FP on the pooled inner-OOF seed-ensemble scores of each outer fold's development groups (validation only), applied to that outer-test fold",
     "normalisation": "test cost divided by the cost of the better trivial policy at the same R (always alarm or never alarm)"
   },
-  "n_boot": 2000
+  "n_boot": 2000,
+  "review_round_2": {
+    "_comment": "Specified on 2026-10-14 after a structured pre-submission review of the manuscript, when all other results were known. Computed only from the saved per-sample predictions and selected configurations; no model is trained or re-tuned and no primary result changes.",
+    "within_fold_roc_auc": "ROC-AUC computed within each outer-test fold and averaged over folds (and over seeds for the seed-mean value), reported next to the pooled ROC-AUC, which combines the scores of five fold-specific models",
+    "group_sign_flip_test": "exact two-sided sign-flip permutation test of the pooled D1 cost difference (seed ensembles) with the 21 linkage groups as units: statistic sum_g eps_g D_g / N over all 2^21 sign vectors; E-DDQN vs every other model (Holm over the six primary comparisons) and every model vs always alarming (Holm over the nine models)",
+    "feature_set_association": "exploratory: within-fold ROC-AUC (seed mean) of each primary model and outer fold versus whether the selected feature set contains the 11 questionnaire (CSPQ) indicators; deviation from the fold mean over the seven primary models",
+    "search_space_sizes": "number of distinct configurations in each family's search space (configs/protocol.json), to qualify 'same number of configurations'"
+  }
 }

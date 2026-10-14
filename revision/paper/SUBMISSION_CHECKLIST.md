@@ -1,6 +1,6 @@
 # Submission checklist (new-submission version)
 
-`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passes all 621 checks (0 failures).
+`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passes all 680 checks (0 failures).
 
 ## Done
 - [x] Elapsed-time baselines (Time-LR, Time+game HGB), added post hoc under the same protocol (`configs/posthoc.json`, committed before they were run).
@@ -88,6 +88,18 @@
 - [x] Section III rewritten as nine numbered steps with a notation table; every equation is numbered and defined, and every implementation detail matches the code.
 - [x] The consistency check now covers the Methods counts, perturbation counts, split seeds, cost-curve summary numbers and the corrected phrasings (621 checks, 0 failures).
 - [ ] The paper is now 16 pages (previously 15) because of the clearer Methods; trim later if the chosen journal has a page limit.
+
+## Structured review and revision (done)
+- [x] Reviewer-style report: `outputs/review_manuscript4.txt`; related-work notes: `outputs/frontier_rl_cost_sensitive_cybersickness.md`; point-by-point response: `outputs/response_to_review.md`.
+- [x] All six main concerns addressed. Three analyses of the saved predictions were added (configs/posthoc.json, `review_round_2`):
+  - within-fold ROC-AUC;
+  - an exact group sign-flip test;
+  - the selected-feature-set association.
+- [x] Important change: E-DDQN vs random forest is significant under the group bootstrap (Holm 0.006) but not after Holm under the exact sign-flip test (0.083); both are now reported, together with the fact that the direction holds in every fold.
+- [x] Three references added and verified: Dudík et al. 2011 (UAI), Cameron, Gelbach & Miller 2008 (REStat), Kennedy, Stanney & Dunlap 2000 (Presence).
+- [ ] Ahmed et al. (Adversarial-VR, ref. [30]): one source says it appeared at ISMAR-Adjunct 2025. Confirm and update the reference if so.
+- [ ] TruVR: confirm in the original paper that the 70 %/30 % split was a sample-level split (search summaries confirm 70/30).
+- [ ] Length: the paper is now 17 pages; trim to the journal's limit after choosing it.
 
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.

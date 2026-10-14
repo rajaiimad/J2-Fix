@@ -13,10 +13,10 @@ Asymmetric-reward reinforcement-learning (RL) detectors have been proposed for s
 
 The main findings are:
 
-1. **Formulation.** On logged data, the alarm cannot affect future observations. The task is therefore a contextual bandit, and the 5:1 reward induces exactly the decision rule of 5:1 cost-sensitive classification.
+1. **Formulation.** Applying known results, we show that on logged data the alarm cannot affect future observations. The task is therefore a contextual bandit, and the 5:1 reward induces exactly the decision rule of 5:1 cost-sensitive classification.
 2. **Comparison.** Seven models were compared under a nested, session-grouped protocol fixed before testing.
    - E-DDQN did not outperform a standard DQN.
-   - It had a higher cost than a cost-weighted random forest (Holm-adjusted p = {{PHHolmRF}}).
+   - It had a higher cost than a cost-weighted random forest in every outer fold (Holm-adjusted p = {{PHHolmRF}} by group bootstrap and {{PHSfRFHolm}} by the more conservative exact sign-flip test).
    - In a post-hoc baseline, no model ranked seconds significantly better than elapsed time alone (ROC-AUC {{PHTimeLRRocAucMean}}).
    - No model combined high recall with a controlled false-alarm rate.
 3. **Evaluation protocol.** Session grouping is essential on these data. Random row-level splits, with or without oversampling, give ROC-AUC {{LeakRowRocAuc}}–{{LeakOldRocAuc}}, against {{LeakGrpRocAuc}} under session-grouped splits. This quantifies a known pitfall on this dataset and explains the inflated results of an earlier, unpublished version of this study.

@@ -117,6 +117,12 @@ T.~Porcino \emph{et~al.}, ``{UFFCSData}: Raw and selected datasets with user
   tests reporting the level of discomfort during virtual experiments,''
   \url{https://github.com/tmp1986/UFFCSData}, {AGPL}-3.0.
 
+\bibitem{dudik2011efficient}
+M.~Dud\'ik, D.~Hsu, S.~Kale, N.~Karampatziakis, J.~Langford, L.~Reyzin, and
+  T.~Zhang, ``Efficient optimal learning for contextual bandits,'' in
+  \emph{Proc. Conf. Uncertainty in Artificial Intelligence ({UAI})}, 2011,
+  arXiv:1106.2369.
+
 \bibitem{kaufman2012leakage}
 S.~Kaufman, S.~Rosset, C.~Perlich, and O.~Stitelman, ``Leakage in data mining:
   Formulation, detection, and avoidance,'' \emph{ACM Trans. Knowl. Discov.
@@ -243,6 +249,12 @@ L.-J. Lin, ``Self-improving reactive agents based on reinforcement learning,
 F.~Pedregosa \emph{et~al.}, ``Scikit-learn: Machine learning in {P}ython,''
   \emph{J. Machine Learning Research}, vol.~12, pp. 2825--2830, 2011.
 
+\bibitem{kennedy2000duration}
+R.~S. Kennedy, K.~M. Stanney, and W.~P. Dunlap, ``Duration and exposure to
+  virtual environments: Sickness curves during and across sessions,''
+  \emph{Presence: Teleoperators and Virtual Environments}, vol.~9, no.~5, pp.
+  463--472, 2000.
+
 \bibitem{chicco2020mcc}
 D.~Chicco and G.~Jurman, ``The advantages of the {M}atthews correlation
   coefficient ({MCC}) over {F1} score and accuracy in binary classification
@@ -252,6 +264,11 @@ D.~Chicco and G.~Jurman, ``The advantages of the {M}atthews correlation
 T.~Saito and M.~Rehmsmeier, ``The precision-recall plot is more informative
   than the {ROC} plot when evaluating binary classifiers on imbalanced
   datasets,'' \emph{PLoS ONE}, vol.~10, no.~3, p. e0118432, 2015.
+
+\bibitem{cameron2008bootstrap}
+A.~C. Cameron, J.~B. Gelbach, and D.~L. Miller, ``Bootstrap-based improvements
+  for inference with clustered errors,'' \emph{Review of Economics and
+  Statistics}, vol.~90, no.~3, pp. 414--427, 2008.
 
 \bibitem{mcnemar1947}
 Q.~McNemar, ``Note on the sampling error of the difference between correlated

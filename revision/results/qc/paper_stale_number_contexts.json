@@ -15,12 +15,12 @@
   {
    "number": "96.88",
    "named_as_earlier_version": true,
-   "context": "24 0.41 0.30 1.01 2.08 E-DDQN E-DDQN E-DDQN E-DDQN E-DDQN E-CB E-CB E-CB E-CB E-CB DQN DQN DQN DQN DQN S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
+   "context": "E 0.736 T 0.702 E 0.712 T 0.761 E 0.761 E+Q 0.476 E+Q 0.446 E+Q 0.515 T 0.644 E+Q 0.610 E 0.585 T+Q 0.683 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
   },
   {
    "number": "99.53",
    "named_as_earlier_version": true,
-   "context": "8 E-DDQN E-DDQN E-DDQN E-DDQN E-DDQN E-CB E-CB E-CB E-CB E-CB DQN DQN DQN DQN DQN S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
+   "context": "12 T 0.761 E 0.761 E+Q 0.476 E+Q 0.446 E+Q 0.515 T 0.644 E+Q 0.610 E 0.585 T+Q 0.683 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
   },
   {
    "number": "14,680",

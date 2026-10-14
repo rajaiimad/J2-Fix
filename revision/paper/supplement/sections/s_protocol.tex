@@ -5,6 +5,8 @@ The protocol (\texttt{configs/\allowbreak protocol.json}) and the perturbation c
 \subsection{Search spaces}
 {\footnotesize\input{generated/tab_search_space.tex}}
 
+Number of distinct configurations per family: E-DDQN \PHSpaceEDDQN, DQN \PHSpaceDQN, E-CB \PHSpaceECB, CS-MLP \PHSpaceCSMLP, HGB \PHSpaceHGB, random forest \PHSpaceRF, logistic regression \PHSpaceLR. Each family received \HPOBudget{} random configurations (12 for logistic regression), so the budget is matched in number, not in coverage.
+
 \subsection{Selected configuration per outer fold}
 Selection criterion: pooled inner out-of-fold 5:1 expected cost at the cost-minimising threshold (ties: PR-AUC).
 {\footnotesize\input{generated/tab_selected_configs.tex}}

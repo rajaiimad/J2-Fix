@@ -243,10 +243,54 @@ if PH_JSON.exists():
             a, b = (pickle.loads(x.read_bytes()) for x in (p, rdir / "E-DDQN" / p.name))
             same &= all(np.array_equal(a[k], b[k]) for k in ("val_score", "test_score"))
         check(same, "ratio-5 runs identical to the main E-DDQN runs")
+    # review round 2: within-fold ROC-AUC, sign-flip tests, feature-set association, search-space sizes
+    import itertools
+    import json as _json
+    wf = {}
+    for m in list(MKEY) + ["Time-LR", "TimeGame-HGB"]:
+        df = pd.read_csv(RESULTS / "predictions" / f"{m}.csv.gz", dtype={"seed": str})
+        sd_ = df[df.seed != "ens"]
+        wf[m] = np.mean([np.mean([roc_auc_score(h.y, h.score) for _, h in g.groupby("outer")]) for _, g in sd_.groupby("seed")])
+    check(all(close(PH[f"PHWf{k}Auc"], wf[m], 0.0006) for m, k in list(MKEY.items()) + [("Time-LR", "TimeLR"), ("TimeGame-HGB", "TimeHGB")]),
+          "within-fold ROC-AUC macros")
+    order = sorted(wf, key=wf.get, reverse=True)
+    check(order[:3] == ["RF", "Time-LR", "HGB"] and order[-1] == "E-DDQN", "within-fold ROC-AUC ranking stated in V-C")
+    ens = {m: pd.read_csv(RESULTS / "predictions" / f"{m}.csv.gz", dtype={"seed": str}).query("seed == 'ens'")
+           .sort_values(["outer", "session_id", "step"]).reset_index(drop=True) for m in ("E-DDQN", "RF")}
+    yv, gv = ens["E-DDQN"].y.to_numpy(), ens["E-DDQN"].group_id.to_numpy()
+    cvec = {m: 5 * ((e.pred_D1_min_cost.to_numpy() == 0) & (yv == 1)) + ((e.pred_D1_min_cost.to_numpy() == 1) & (yv == 0))
+            for m, e in ens.items()}
+    D = pd.Series(cvec["E-DDQN"] - cvec["RF"]).groupby(gv).sum().to_numpy(float)
+    stats_ = np.array([abs(np.dot(s, D)) for s in itertools.product((1, -1), repeat=len(D))]) if len(D) <= 16 else None
+    if stats_ is None:   # exact enumeration in blocks (2^21 patterns) without the shared helper
+        head, tail = D[:11], D[11:]
+        hs = np.array([np.dot(s, head) for s in itertools.product((1, -1), repeat=len(head))])
+        ts = np.array([np.dot(s, tail) for s in itertools.product((1, -1), repeat=len(tail))])
+        p_sf = float((np.abs(hs[:, None] + ts[None, :]) >= abs(D.sum()) - 1e-9).mean())
+    else:
+        p_sf = float((stats_ >= abs(D.sum()) - 1e-9).mean())
+    check(close(PH["PHSfRFP"], p_sf, 0.0006), "exact sign-flip p (E-DDQN vs RF), independent enumeration")
+    sfl = pd.read_csv(RESULTS / "tables" / "posthoc" / "signflip_tests.csv")
+    oth = sfl[(sfl.comparison == "E-DDQN vs model") & sfl.B.isin(["E-CB", "DQN", "CS-MLP", "LogReg", "HGB"])]
+    check(close(PH["PHSfECBP"], oth.p_signflip.min(), 0.0006), "smallest sign-flip p among the other five comparisons is E-CB's")
+    pfold = pd.read_csv(RESULTS / "tables" / "metrics_per_outer_fold_D1.csv").set_index(["model", "outer"])
+    n_worse = sum(pfold.loc[("E-DDQN", k), "expected_cost"] > pfold.loc[("RF", k), "expected_cost"] for k in range(5))
+    check(n_worse == 5 and PH["PHFoldsEDDQNWorseRF"] == "5", "E-DDQN cost above RF in every outer fold")
+    selj = _json.loads((RESULTS / "selected_configs.json").read_text())
+    fsets = [(m, k, v["config"]["feature_set"]) for m in MKEY for k, v in selj[m].items()]
+    check(int(PH["PHFsTotal"]) == len(fsets) and int(PH["PHFsProfile"]) == sum("profile" in f for _, _, f in fsets)
+          and int(PH["PHFsExposure"]) == sum(f.startswith("exposure") for _, _, f in fsets), "feature-set counts")
+    check(int(PH["PHECBNoProfileFolds"]) == sum("profile" not in v["config"]["feature_set"] for v in selj["E-CB"].values()),
+          "E-CB folds without questionnaire indicators")
+    proto_sp = proto["search_spaces"]
+    n_rf = int(np.prod([len(v) for v in proto_sp["RF"].values()]))
+    n_ed = int(np.prod([len(v) for k, v in {**proto_sp["_neural_common"], **proto_sp["_agent_common"], **proto_sp["E-DDQN"]}.items()]))
+    check(PH["PHSpaceRF"] == f"{n_rf:,}" and PH["PHSpaceEDDQN"] == f"{n_ed:,}", "search-space sizes")
     # wording corrected in the deep audit must not come back
     body = "\n".join(t.read_text() for t in (REVISION_ROOT / "paper").rglob("*.tex") if "generated" not in t.parts)
     for bad in ("participants are not shared", "sessions and participants are not shared", "calibrated-probability",
-                "21 whole-session", "every curve approaches 1", "exactly as Eq"):
+                "21 whole-session", "every curve approaches 1", "exactly as Eq", "explain E-DDQN's under-performance",
+                "because the detectors hardly use those channels", "comparable budgets"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # every macro used in the new paper and its supplement is defined
     pdef = defined | set(PH)

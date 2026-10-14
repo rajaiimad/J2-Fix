@@ -299,9 +299,78 @@ def analyze():
                     "non_decreasing": bool((np.diff(g) >= 0).all())})
     pd.DataFrame(lab).to_csv(OUT / "label_dynamics.csv", index=False)
 
+    # 12. review round 2 (configs/posthoc.json "review_round_2"): saved predictions only
+    review_round_2(preds, E, y, grp, always)
+
     # 11. ROC/PR figure including the post-hoc baselines
     plot_roc_with_time(E)
     macros(summ, cis, cc, jk, js, sd)
+
+
+def _signflip_p(d, grp):
+    """Exact two-sided sign-flip test of sum(d)/N with groups as units (all 2^G sign vectors;
+    the first sign is fixed because flipping every sign leaves |statistic| unchanged)."""
+    import itertools
+    groups = np.unique(grp)
+    D = np.array([d[grp == g].sum() for g in groups], float)
+    signs = np.array(list(itertools.product((1, -1), repeat=len(groups) - 1)), dtype=np.int8)
+    stat = D[0] + signs @ D[1:]
+    return float((np.abs(stat) >= abs(D.sum()) - 1e-9).mean())
+
+
+def _cost_vec(pred, y):
+    return 5 * ((pred == 0) & (y == 1)) + ((pred == 1) & (y == 0))
+
+
+def review_round_2(preds, E, y, grp, always):
+    from sklearn.metrics import roc_auc_score
+    # (a) within-fold ROC-AUC next to the pooled ROC-AUC
+    rows = []
+    for t in MAIN + PH_FAMS:
+        p = preds[t]
+        seeds = p[p.seed != "ens"]
+        wf = [np.mean([roc_auc_score(h.y, h.score) for _, h in g.groupby("outer")]) for _, g in seeds.groupby("seed")]
+        po = [roc_auc_score(g.y, g.score) for _, g in seeds.groupby("seed")]
+        e = p[p.seed == "ens"]
+        rows.append({"model": t, "pooled_seed_mean": np.mean(po), "within_fold_seed_mean": np.mean(wf),
+                     "pooled_ensemble": roc_auc_score(e.y, e.score),
+                     "within_fold_ensemble": np.mean([roc_auc_score(h.y, h.score) for _, h in e.groupby("outer")])})
+    pd.DataFrame(rows).to_csv(OUT / "within_fold_roc_auc.csv", index=False)
+    # (b) exact group sign-flip tests of the D1 cost differences (seed ensembles)
+    rows = []
+    ce = _cost_vec(E["E-DDQN"].pred_D1_min_cost.to_numpy(), y)
+    for b in [m for m in MAIN if m != "E-DDQN"] + PH_FAMS:
+        d = ce - _cost_vec(E[b].pred_D1_min_cost.to_numpy(), y)
+        rows.append({"comparison": "E-DDQN vs model", "A": "E-DDQN", "B": b, "cost_A_minus_B": d.mean(), "p_signflip": _signflip_p(d, grp)})
+    for t in MAIN + PH_FAMS:
+        d = _cost_vec(E[t].pred_D1_min_cost.to_numpy(), y) - _cost_vec(always, y)
+        rows.append({"comparison": "model vs always alarm", "A": t, "B": "Always alarm", "cost_A_minus_B": d.mean(),
+                     "p_signflip": _signflip_p(d, grp)})
+    sf = pd.DataFrame(rows)
+    m1 = (sf.comparison == "E-DDQN vs model") & sf.B.isin(MAIN)
+    sf.loc[m1, "p_holm"] = holm(sf.loc[m1, "p_signflip"].to_numpy())
+    m2 = sf.comparison == "model vs always alarm"
+    sf.loc[m2, "p_holm"] = holm(sf.loc[m2, "p_signflip"].to_numpy())
+    sf.to_csv(OUT / "signflip_tests.csv", index=False)
+    # (c) exploratory: selected feature set (with / without questionnaire indicators) vs within-fold ROC-AUC
+    psel = json.loads((RESULTS / "selected_configs.json").read_text())
+    rows = []
+    for t in MAIN:
+        seeds = preds[t][preds[t].seed != "ens"]
+        for k, h in seeds.groupby("outer"):
+            fs = psel[t][str(k)]["config"]["feature_set"]
+            rows.append({"model": t, "outer": int(k), "feature_set": fs, "profile": "profile" in fs,
+                         "roc_auc_seed_mean": np.mean([roc_auc_score(g.y, g.score) for _, g in h.groupby("seed")])})
+    fa = pd.DataFrame(rows)
+    fa["deviation_from_fold_mean"] = fa.roc_auc_seed_mean - fa.groupby("outer").roc_auc_seed_mean.transform("mean")
+    fa.to_csv(OUT / "featureset_auc.csv", index=False)
+    # (d) search-space sizes of the primary families
+    rows = []
+    for fam in MAIN:
+        space, _ = RP.family_space(fam)
+        rows.append({"model": fam, "n_configurations": int(np.prod([len(v) for v in space.values()])),
+                     "budget": PROTOCOL["hpo_budget"][fam]})
+    pd.DataFrame(rows).to_csv(OUT / "search_space_sizes.csv", index=False)
 
 
 SHORT = {"TimeGame-HGB": "Time+game HGB"}
@@ -447,6 +516,28 @@ def supplement_tables():
             f"lr {r.learning_rate:g}, iter {int(r.max_iter)}, leaves {int(r.max_leaf_nodes)}, min leaf {int(r.min_samples_leaf)}, $\\ell_2$ {r.l2_regularization:g}"
         rows.append([r.model, str(r.outer), r.feature_set, hp, f"{r.pooled_oof_min_cost:.3f}"])
     _tab("tab_ph_selected.tex", "Model & Outer fold & Feature set & Selected hyper-parameters & Inner-OOF cost", rows, "lcllc")
+    wf = pd.read_csv(OUT / "within_fold_roc_auc.csv")
+    _tab("tab_ph_withinfold.tex", "Model & Pooled (seed mean) & Within-fold (seed mean) & Pooled (ensemble) & Within-fold (ensemble)",
+         [[r.model, f"{r.pooled_seed_mean:.3f}", f"{r.within_fold_seed_mean:.3f}", f"{r.pooled_ensemble:.3f}",
+           f"{r.within_fold_ensemble:.3f}"] for r in wf.itertuples()], "lcccc")
+    sf = pd.read_csv(OUT / "signflip_tests.csv")
+    bt = pd.read_csv(OUT / "paired_tests_holm.csv")
+    bt = bt[bt.rule == "D1_min_cost"].set_index("B")
+    rows = []
+    for r in sf[sf.comparison == "E-DDQN vs model"].itertuples():
+        pb, hb = (pv(bt.loc[r.B, "cost_diff_p_cluster_bootstrap"]), pv(bt.loc[r.B, "p_holm"])) if r.B in bt.index else ("--", "--")
+        rows.append(["E-DDQN vs " + r.B, f3(r.cost_A_minus_B), pb, hb, pv(r.p_signflip), "--" if pd.isna(r.p_holm) else pv(r.p_holm)])
+    for r in sf[sf.comparison == "model vs always alarm"].itertuples():
+        rows.append([r.A + " vs always alarm", f3(r.cost_A_minus_B), "", "", pv(r.p_signflip), pv(r.p_holm)])
+    _tab("tab_ph_signflip.tex", "Comparison (D1, seed ensembles) & $\\Delta$Cost & $p_{\\text{boot}}$ & $p_{\\text{boot,Holm}}$ & $p_{\\text{sign-flip}}$ & $p_{\\text{sign-flip,Holm}}$",
+         rows, "lccccc")
+    fa = pd.read_csv(OUT / "featureset_auc.csv")
+    abbr = {"telemetry": "T", "telemetry+profile": "T+Q", "exposure": "E", "exposure+profile": "E+Q"}
+    rows = []
+    for t in MAIN:
+        g = fa[fa.model == t].set_index("outer")
+        rows.append([t] + [f"{abbr[g.loc[k, 'feature_set']]} {g.loc[k, 'roc_auc_seed_mean']:.3f}" for k in range(KO)])
+    _tab("tab_ph_featureset.tex", "Model & " + " & ".join(f"Fold {k}" for k in range(KO)), rows, "l" + "c" * KO)
     qb = pd.read_csv(OUT / "q_value_bounds.csv")
     _tab("tab_ph_qbounds.tex", "Model & Outer fold & $\\gamma$ & max $|Q|$ & bound $r_{\\max}/(1-\\gamma)$ & ratio",
          [[r.model, str(r.outer), f"{r.gamma:g}", f"{r.q_abs_max:.2f}", f"{r.bound:.2f}", f"{r.ratio:.2f}"] for r in qb.itertuples()],
@@ -566,6 +657,45 @@ def macros(summ, cis, cc, jk, js, sd):
         if t != "E-DDQN":
             put("MeanDiff" + KEY[t], sgn(d1all.loc["E-DDQN", "expected_cost_mean"] - r.expected_cost_mean))
             put("EnsDiff" + KEY[t], sgn(d1all.loc["E-DDQN", "ens_expected_cost"] - r.ens_expected_cost))
+    # review round 2
+    wf = pd.read_csv(OUT / "within_fold_roc_auc.csv").set_index("model")
+    for t in MAIN + PH_FAMS:
+        put("Wf" + KEY[t] + "Auc", f"{wf.loc[t, 'within_fold_seed_mean']:.3f}")
+    sf = pd.read_csv(OUT / "signflip_tests.csv")
+    for r in sf[sf.comparison == "E-DDQN vs model"].itertuples():
+        put("Sf" + KEY[r.B] + "P", f"{r.p_signflip:.3f}")
+        if not pd.isna(r.p_holm):
+            put("Sf" + KEY[r.B] + "Holm", f"{r.p_holm:.3f}")
+    for r in sf[sf.comparison == "model vs always alarm"].itertuples():
+        put("SfAlways" + KEY[r.A] + "P", f"{r.p_signflip:.3f}")
+        put("SfAlways" + KEY[r.A] + "Holm", f"{r.p_holm:.3f}")
+    fa = pd.read_csv(OUT / "featureset_auc.csv")
+    psel_all = json.loads((RESULTS / "selected_configs.json").read_text())
+    put("FsTotal", str(len(fa)))
+    put("FsProfile", str(int(fa.profile.sum())))
+    put("FsNoProfile", str(int((~fa.profile).sum())))
+    put("FsDevProfile", sgn(fa[fa.profile].deviation_from_fold_mean.mean()))
+    put("FsDevNoProfile", sgn(fa[~fa.profile].deviation_from_fold_mean.mean()))
+    sep = [k for k, g in fa.groupby("outer") if g.profile.any() and (~g.profile).any()
+           and g[g.profile].roc_auc_seed_mean.max() < g[~g.profile].roc_auc_seed_mean.min()]
+    put("FsFoldsSeparated", str(len(sep)))
+    put("FsExposure", str(int(fa.feature_set.str.startswith("exposure").sum())))
+    put("FsTelemetry", str(int(fa.feature_set.str.startswith("telemetry").sum())))
+    ex = fa[fa.model != "E-DDQN"].copy()
+    ex["dev"] = ex.roc_auc_seed_mean - ex.groupby("outer").roc_auc_seed_mean.transform("mean")
+    put("FsProfileExE", str(int(ex.profile.sum())))
+    put("FsDevProfileExE", sgn(ex[ex.profile].dev.mean()))
+    put("FsDevNoProfileExE", sgn(ex[~ex.profile].dev.mean()))
+    selc = [v["pooled_oof_min_cost"] for t in MAIN for v in psel_all[t].values()]
+    put("SelCostMin", f"{min(selc):.2f}")
+    put("SelCostMax", f"{max(selc):.2f}")
+    put("ECBNoProfileFolds", str(int((~fa[fa.model == "E-CB"].profile).sum())))
+    pf = pd.read_csv(RESULTS / "tables" / "metrics_per_outer_fold_D1.csv").set_index(["model", "outer"])
+    put("FoldsEDDQNWorseRF", str(sum(pf.loc[("E-DDQN", k), "expected_cost"] > pf.loc[("RF", k), "expected_cost"] for k in range(KO))))
+    ss = pd.read_csv(OUT / "search_space_sizes.csv").set_index("model")
+    for t in MAIN:
+        put("Space" + KEY[t], f"{int(ss.loc[t, 'n_configurations']):,}")
+    put("SpaceEDDQNMillion", f"{ss.loc['E-DDQN', 'n_configurations'] / 1e6:.1f}")
     main_table_with_posthoc(summ)
     supplement_tables()
     (OUT / "posthoc_macros.json").write_text(json.dumps(M, indent=1))
