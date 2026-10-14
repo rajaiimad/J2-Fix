@@ -83,6 +83,8 @@ def main(other: Path):
                     [RESULTS / "selected_configs.json", RESULTS / "hpo_results.csv"] +
                     list(posthoc.glob("*.csv")) + list(posthoc.glob("*.json")) + list(posthoc.glob("*.tex")) +
                     [RESULTS / "selected_configs_posthoc.json", RESULTS / "hpo_results_posthoc.csv"] +
+                    list((RESULTS / "tables" / "search_draw").glob("*")) +
+                    [RESULTS / "selected_configs_search_draw.json", RESULTS / "hpo_results_search_draw.csv"] +
                     list((RESULTS / "preprocessing").glob("*")) + list((RESULTS / "audit").glob("*.csv")) +
                     list((RESULTS / "audit").glob("*.json")) + list((REVISION_ROOT / "data" / "processed").glob("*.csv"))):
         rel = p.relative_to(REVISION_ROOT)
@@ -108,6 +110,12 @@ def main(other: Path):
     pb = json.loads(pb_path.read_text()) if pb_path.exists() else {}
     ph_diff = sorted(k for k in set(pa) | set(pb) if pa.get(k) != pb.get(k))
     rows.append(("post-hoc macros", f"{len(pa)} macros; {len(ph_diff)} differ" + (f": {ph_diff[:10]}" if ph_diff else "")))
+    # 3c. search-draw sensitivity macros
+    sa = json.loads((RESULTS / "tables" / "search_draw" / "sd_macros.json").read_text())
+    sb_path = other / "results" / "tables" / "search_draw" / "sd_macros.json"
+    sb = json.loads(sb_path.read_text()) if sb_path.exists() else {}
+    sd_diff = sorted(k for k in set(sa) | set(sb) if sa.get(k) != sb.get(k))
+    rows.append(("search-draw macros", f"{len(sa)} macros; {len(sd_diff)} differ" + (f": {sd_diff[:10]}" if sd_diff else "")))
     # 4. generated LaTeX
     for d in ("manuscript/generated", "supplementary/generated", "paper/generated"):
         for p in sorted((REVISION_ROOT / d).glob("*.tex")):

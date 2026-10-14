@@ -1,6 +1,6 @@
 \section{Post-hoc analyses}
 \label{sec:s-posthoc}
-All analyses in this section were specified after the primary results were known. They use the splits, inner folds, selection objective, checkpoint and threshold rules, cross-fitting recipe and final seeds of the primary protocol, and no primary result was changed. They differ in when they were specified. The exposure-time baselines (S5.1), the Holm adjustment (S5.2), the comparison with always alarming (S5.3), the grouping sensitivity analyses (S5.4) and the cost curves (S5.5) were committed (\texttt{configs/\allowbreak posthoc.json}) before they were run. The paired comparisons of the exposure-time baselines with the primary models (main text, Section~V-C) and the Q-value scale (S5.6) were added while the results were written up, without prior commitment. Sections~S5.7--S5.10 were added after a pre-submission review, when all other results were known (key \texttt{review\_round\_2}); they use only the saved per-sample predictions, selected configurations and search logs. As in the main text (Section~III-G), bootstrap $p$-values between 0.01 and 0.05 in the tables of this section are approximate, and a difference whose confidence interval includes zero is a point estimate only.
+All analyses in this section were specified after the primary results were known. They use the splits, inner folds, selection objective, checkpoint and threshold rules, cross-fitting recipe and final seeds of the primary protocol, and no primary result was changed. They differ in when they were specified. The exposure-time baselines (S5.1), the Holm adjustment (S5.2), the comparison with always alarming (S5.3), the grouping sensitivity analyses (S5.4) and the cost curves (S5.5) were committed (\texttt{configs/\allowbreak posthoc.json}) before they were run. The paired comparisons of the exposure-time baselines with the primary models (main text, Section~V-C) and the Q-value scale (S5.6) were added while the results were written up, without prior commitment. Sections~S5.7--S5.10 were added after a pre-submission review, when all other results were known (key \texttt{review\_round\_2}); they use only the saved per-sample predictions, selected configurations and search logs. Section~S5.11 was prompted by the same review but was specified, with its decision rules, and committed before any of its models was trained; like the exposure-time baselines of S5.1, it trains new models under the full protocol. As in the main text (Section~III-G), bootstrap $p$-values between 0.01 and 0.05 in the tables of this section are approximate, and a difference whose confidence interval includes zero is a point estimate only.
 
 \subsection{Exposure-time baselines: selected configurations}
 Time-LR searched all six values of $C$; Time+game HGB used the HGB search space and budget (16 configurations).
@@ -78,3 +78,21 @@ For E-DDQN, the lowest pooled inner-validation 5:1 cost among candidates with (Q
 \input{generated/tab_ph_searchdraw_val.tex}
 \end{center}
 
+
+\subsection{Search-draw sensitivity (specified before it was run)}
+\label{sec:s-searchdraw}
+Prompted by the dependence of E-DDQN's result on its single random draw (S5.10), this analysis was specified in \texttt{configs/\allowbreak posthoc.json} (key \texttt{search\_draw\_sensitivity}), together with its decision rules, and committed before any of its models was trained. E-DDQN and the standard DQN were each tuned again under the full protocol---same splits, inner folds, search training seed, budget of 16 configurations, selection rule, checkpoint rule, cross-fitting, five final seeds and threshold rules---with two further random draws from the full search space (configuration seeds 9120 and 9130 for E-DDQN, 9122 and 9132 for DQN) and with one draw of 16 configurations restricted to the exposure feature set (9200 and 9202). Perturbation variants were not scored. Draw~1 is the primary analysis and is reproduced exactly. Every variant is reported; none replaces the primary results. The decision rules were: (R1) the statement that E-DDQN does not outperform the standard DQN is challenged if, in any pair, E-DDQN's seed-ensemble cost is lower and the 95\,\% group-bootstrap interval of the difference excludes zero; (R2) E-DDQN's result is called draw-dependent if its seed-mean cost or its within-fold ROC-AUC spans more than 0.05 over its three full-space draws; (R3) under the exposure-only restriction, a within-fold ROC-AUC of E-DDQN within 0.03 of DQN's supports the feature-set explanation of Section~V-G (iii), one more than 0.05 below DQN's means that this explanation is insufficient, and anything in between is inconclusive.
+
+Per variant: number of exposure-only candidates in the draw, number of outer folds whose selected configuration uses the questionnaire indicators (Q folds), 5:1 cost (rule D1; mean $\pm$ SD over seeds), seed-ensemble cost, pooled and within-fold ROC-AUC (seed means), and the discount factor selected in each outer fold.
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_sd_variants.tex}}
+\end{center}
+
+Paired comparisons of E-DDQN with the standard DQN within each draw (seed ensembles, rule D1; 2,000 group-bootstrap replicates; exact sign-flip test over all $2^{21}$ sign patterns; ROC-AUC difference of the seed-ensemble scores).
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_sd_pairs.tex}}
+\end{center}
+
+%SD-OUTCOME%

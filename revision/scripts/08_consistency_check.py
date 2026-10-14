@@ -30,6 +30,8 @@ from eddqn import RESULTS, REVISION_ROOT  # noqa: E402
 QC = RESULTS / "qc"
 QC.mkdir(parents=True, exist_ok=True)
 MAC = json.loads((RESULTS / "tables" / "manuscript_macros.json").read_text())
+SD_JSON = RESULTS / "tables" / "search_draw" / "sd_macros.json"
+SD = json.loads(SD_JSON.read_text()) if SD_JSON.exists() else {}
 MKEY = {"E-DDQN": "EDDQN", "E-CB": "ECB", "DQN": "DQN", "CS-MLP": "CSMLP", "LogReg": "LR", "HGB": "HGB", "RF": "RF"}
 RULES = {"D1_min_cost": "Cost", "D0_bayes_1_6": "Bayes", "recall>=0.95": "Rec"}
 fails, checks = [], 0
@@ -342,12 +344,12 @@ if PH_JSON.exists():
     for k in ("PHTimeLRvsEDDQNAucP", "PHTimeHGBvsEDDQNAucP", "PHAlwEDDQNGrpP", "EDDQNCIRocAucLo"):
         check("\\" + k in res_txt, f"Results quote \\{k} (baselines vs E-DDQN, E-DDQN vs always alarm, E-DDQN ROC-AUC CI)")
     # every macro used in the new paper and its supplement is defined
-    pdef = defined | set(PH)
+    pdef = defined | set(PH) | set(SD)
     for tex in (REVISION_ROOT / "paper").rglob("*.tex"):
         if "generated" in tex.parts:
             continue
         for name in re.findall(r"\\([A-Z][A-Za-z]+)(?![A-Za-z])", tex.read_text()):
-            if re.match(r"^(PH|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
+            if re.match(r"^(PH|SD|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
                 check(name in pdef, f"paper/{tex.name}: macro \\{name} not defined")
     # stale numbers of the earlier version may appear only where that version is named
     for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf"):
@@ -374,6 +376,74 @@ if PH_JSON.exists():
             if not mt.group(0).startswith("\\authorinput}"):
                 pending.append(f"{tex.relative_to(REVISION_ROOT)}: {mt.group(1)}")
     pending = [x for x in pending if not x.endswith(": #1")]
+
+# ------------------------------- 5. search-draw sensitivity (configs/posthoc.json)
+if SD:
+    import itertools
+    spec = json.loads((REVISION_ROOT / "configs" / "posthoc.json").read_text())["search_draw_sensitivity"]
+    skey = {"E-DDQN": "EDDQNDrawOne", "E-DDQN-draw2": "EDDQNDrawTwo", "E-DDQN-draw3": "EDDQNDrawThree",
+            "E-DDQN-exposure": "EDDQNExposure", "DQN": "DQNDrawOne", "DQN-draw2": "DQNDrawTwo",
+            "DQN-draw3": "DQNDrawThree", "DQN-exposure": "DQNExposure"}
+    hs = pd.read_csv(RESULTS / "hpo_results_search_draw.csv")
+    hp = pd.read_csv(RESULTS / "hpo_results.csv")
+    ssel = json.loads((RESULTS / "selected_configs_search_draw.json").read_text())
+    check(sorted(ssel) == sorted(v["name"] for v in spec["variants"]), "search draw: every pre-specified variant was run")
+    st, sens = {}, {}
+    for name, k in skey.items():
+        h = hs[hs.family == name] if name in ssel else hp[hp.family == name]
+        check(h.groupby("outer").config_id.nunique().eq(16).all() and h.outer.nunique() == 5, f"search draw {name}: 16 candidates x 5 folds")
+        check(int(SD[f"SD{k}ExpCand"]) == int((h[h.outer == 0].cfg_feature_set == "exposure").sum()),
+              f"search draw {name}: exposure-only candidates")
+        if name in ssel:
+            v = next(v for v in spec["variants"] if v["name"] == name)
+            if v["feature_set"]:
+                check((h.cfg_feature_set == v["feature_set"]).all(), f"{name}: every candidate uses {v['feature_set']}")
+            for kk, gk in h.groupby("outer"):
+                best = gk.sort_values(["pooled_oof_min_cost", "pooled_oof_pr_auc", "config_id"], ascending=[True, False, True]).iloc[0]
+                check(int(best.config_id) == ssel[name][str(kk)]["config_id"], f"{name} fold {kk}: selection rule reproduced")
+        df = pd.read_csv(RESULTS / "predictions" / f"{name}.csv.gz", dtype={"seed": str})
+        cost, wfa = [], []
+        for _, g in df[df.seed != "ens"].groupby("seed"):
+            tn, fp, fn, tp = confusion_matrix(g.y, g.pred_D1_min_cost, labels=[0, 1]).ravel()
+            cost.append((5 * fn + fp) / len(g))
+            wfa.append(np.mean([roc_auc_score(h2.y, h2.score) for _, h2 in g.groupby("outer")]))
+        e = df[df.seed == "ens"].sort_values(["outer", "session_id", "step"]).reset_index(drop=True)
+        tn, fp, fn, tp = confusion_matrix(e.y, e.pred_D1_min_cost, labels=[0, 1]).ravel()
+        st[name] = {"cost": np.mean(cost), "wf": np.mean(wfa), "ens": (5 * fn + fp) / len(e)}
+        sens[name] = e
+        check(close(SD[f"SD{k}Cost"], st[name]["cost"], 0.0006), f"search draw {name}: seed-mean cost")
+        check(close(SD[f"SD{k}WfAuc"], st[name]["wf"], 0.0006), f"search draw {name}: within-fold ROC-AUC")
+        check(close(SD[f"SD{k}EnsCost"], st[name]["ens"], 0.0006), f"search draw {name}: ensemble cost")
+    # draw 1 is the primary analysis, unchanged
+    check(SD["SDEDDQNDrawOneCost"] == MAC["EDDQNCostCostMean"] and SD["SDDQNDrawOneCost"] == MAC["DQNCostCostMean"]
+          and SD["SDEDDQNDrawOneWfAuc"] == PH["PHWfEDDQNAuc"] and SD["SDDQNDrawOneWfAuc"] == PH["PHWfDQNAuc"]
+          and SD["SDPairOneDiff"] == MAC["PairDOneDQNCostDiff"] and SD["SDPairOneP"] == MAC["PairDOneDQNPboot"],
+          "search draw: draw 1 reproduces the primary E-DDQN and DQN results")
+    pkey = {"draw 1 (primary)": "One", "draw 2": "Two", "draw 3": "Three", "exposure only": "Exposure"}
+    for a, b, label in spec["pairs"]:
+        ea, eb = sens[a], sens[b]
+        check((ea[["session_id", "step"]].values == eb[["session_id", "step"]].values).all(), f"search draw pair {label}: aligned samples")
+        check(close(SD[f"SDPair{pkey[label]}Diff"], st[a]["ens"] - st[b]["ens"], 0.0006), f"search draw pair {label}: cost difference")
+        yv2, gv2 = ea.y.to_numpy(), ea.group_id.to_numpy()
+        ca = 5 * ((ea.pred_D1_min_cost.to_numpy() == 0) & (yv2 == 1)) + ((ea.pred_D1_min_cost.to_numpy() == 1) & (yv2 == 0))
+        cb = 5 * ((eb.pred_D1_min_cost.to_numpy() == 0) & (yv2 == 1)) + ((eb.pred_D1_min_cost.to_numpy() == 1) & (yv2 == 0))
+        D3 = pd.Series(ca - cb).groupby(gv2).sum().to_numpy(float)
+        hs3 = np.array([np.dot(s, D3[:11]) for s in itertools.product((1, -1), repeat=11)])
+        ts3 = np.array([np.dot(s, D3[11:]) for s in itertools.product((1, -1), repeat=len(D3) - 11)])
+        p3 = float((np.abs(hs3[:, None] + ts3[None, :]) >= abs(D3.sum()) - 1e-9).mean())
+        pm = SD[f"SDPair{pkey[label]}SfP"]
+        check((p3 < 0.001) if pm.startswith("$<$") else close(pm, p3, 0.0006), f"search draw pair {label}: exact sign-flip p (independent enumeration)")
+    # pre-specified decision rules recomputed
+    pr = pd.read_csv(RESULTS / "tables" / "search_draw" / "pairs.csv")
+    r1 = bool(((pr.cost_A_minus_B < 0) & (pr.ci_high < 0)).any())
+    eds = ["E-DDQN", "E-DDQN-draw2", "E-DDQN-draw3"]
+    span_c = max(st[n]["cost"] for n in eds) - min(st[n]["cost"] for n in eds)
+    span_w = max(st[n]["wf"] for n in eds) - min(st[n]["wf"] for n in eds)
+    gap = st["DQN-exposure"]["wf"] - st["E-DDQN-exposure"]["wf"]
+    r3 = "supported" if gap <= 0.03 else ("insufficient" if gap > 0.05 else "inconclusive")
+    check(SD["SDROne"] == ("yes" if r1 else "no"), "search draw: rule R1 recomputed")
+    check(SD["SDRTwo"] == ("yes" if (span_c > 0.05 or span_w > 0.05) else "no"), "search draw: rule R2 recomputed")
+    check(SD["SDRThree"] == r3 and close(SD["SDExposureGap"], gap, 0.0006), "search draw: rule R3 recomputed")
 
 report = {"checks": checks, "failures": fails,
           "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),
