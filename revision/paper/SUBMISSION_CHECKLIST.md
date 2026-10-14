@@ -1,6 +1,6 @@
 # Submission checklist (new-submission version)
 
-`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passes all 680 checks (0 failures).
+`paper/main.pdf` is the paper and `paper/supplement/supplement.pdf` is its supplement. Both are built by `bash paper/build.sh`. Every number in them comes from the analysis scripts; the consistency check (`scripts/08_consistency_check.py`) passes all 714 checks (0 failures).
 
 ## Done
 - [x] Elapsed-time baselines (Time-LR, Time+game HGB), added post hoc under the same protocol (`configs/posthoc.json`, committed before they were run).
@@ -97,9 +97,17 @@
   - the selected-feature-set association.
 - [x] Important change: E-DDQN vs random forest is significant under the group bootstrap (Holm 0.006) but not after Holm under the exact sign-flip test (0.083); both are now reported, together with the fact that the direction holds in every fold.
 - [x] Three references added and verified: Dudík et al. 2011 (UAI), Cameron, Gelbach & Miller 2008 (REStat), Kennedy, Stanney & Dunlap 2000 (Presence).
-- [ ] Ahmed et al. (Adversarial-VR, ref. [30]): one source says it appeared at ISMAR-Adjunct 2025. Confirm and update the reference if so.
-- [ ] TruVR: confirm in the original paper that the 70 %/30 % split was a sample-level split (search summaries confirm 70/30).
+- [x] Ahmed et al. (Adversarial VR, ref. [31]): confirmed as IEEE ISMAR-Adjunct 2025 (DOI 10.1109/ISMAR-Adjunct68609.2025.00061); reference updated. Add page numbers from IEEE Xplore if the journal style requires them.
+- [x] TruVR: the 70/30 split is confirmed. The text now says only what is verified: "a 70/30 split of the data for which no participant- or session-level separation is reported".
 - [ ] Length: the paper is now 17 pages; trim to the journal's limit after choosing it.
+
+## Second-round review and fixes (done)
+- [x] Second-round review: `outputs/review_manuscript6.txt`; point-by-point response: `outputs/response_to_review_round2.md`.
+- [x] Pre-registration statements corrected against the commit history. Only S5.1–S5.5 were committed before they were run; the later additions are labelled everywhere (paper, supplement, README, archive template) and recorded in `configs/posthoc.json` under `_later_additions`.
+- [x] Search-draw analysis added (Supplementary S5.10): E-DDQN's 16 random candidates included only 2 exposure-only configurations.
+- [x] Sign-flip tests for the exposure-time baselines vs the random forest; "every outer fold" qualified (marginal in one fold).
+- [x] Fresh overclaim pass of the whole paper; nine further wording fixes.
+- [ ] Clean rerun of the final commit from raw data: running; result recorded in `results/qc/clean_rerun.md` when finished.
 
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
@@ -109,7 +117,6 @@
 - [ ] **Code archive.** Deposit the code and results (e.g. on Zenodo) and replace `[DOI to be added on deposit]` in the Data and Code Availability section.
 - [ ] **Remaining references to check:**
   - VR-LENS (ref. "kundu2023vrlens") is cited as arXiv 2302.01985. Check whether a peer-reviewed version exists.
-  - Ahmed et al. (Adversarial-VR): one source says it appeared at ISMAR-Adjunct 2025, but this could not be confirmed. It is cited as arXiv.
 - [ ] **UFFCSData access date.** Add the date you downloaded the dataset if the journal style needs one.
 - [ ] **Similarity check.** Run a similarity check (e.g. Turnitin) before submission.
 - [ ] **English.** Proofread, or have the paper proofread.
