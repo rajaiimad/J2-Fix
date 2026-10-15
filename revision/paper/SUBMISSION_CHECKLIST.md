@@ -87,7 +87,7 @@
   - minor consistency items.
 - [x] Section III rewritten as nine numbered steps with a notation table; every equation is numbered and defined, and every implementation detail matches the code.
 - [x] The consistency check now covers the Methods counts, perturbation counts, split seeds, cost-curve summary numbers and the corrected phrasings (621 checks, 0 failures).
-- [ ] The paper is now 16 pages (previously 15) because of the clearer Methods; trim later if the chosen journal has a page limit.
+- [x] (Superseded: page count tracked under *Length* below.)
 
 ## Structured review and revision (done)
 - [x] Reviewer-style report: `outputs/review_manuscript4.txt`; related-work notes: `outputs/frontier_rl_cost_sensitive_cybersickness.md`; point-by-point response: `outputs/response_to_review.md`.
@@ -99,7 +99,7 @@
 - [x] Three references added and verified: Dudík et al. 2011 (UAI), Cameron, Gelbach & Miller 2008 (REStat), Kennedy, Stanney & Dunlap 2000 (Presence).
 - [x] Ahmed et al. (Adversarial VR, ref. [31]): confirmed as IEEE ISMAR-Adjunct 2025 (DOI 10.1109/ISMAR-Adjunct68609.2025.00061); reference updated. Add page numbers from IEEE Xplore if the journal style requires them.
 - [x] TruVR: the 70/30 split is confirmed. The text now says only what is verified: "a 70/30 split of the data for which no participant- or session-level separation is reported".
-- [ ] Length: the paper is now 17 pages; trim to the journal's limit after choosing it.
+- [ ] Length: the paper is now 18 pages and the supplement 15 (after the search-draw results); trim to the journal's limit after choosing it.
 
 ## Second-round review and fixes (done)
 - [x] Second-round review: `outputs/review_manuscript6.txt`; point-by-point response: `outputs/response_to_review_round2.md`.
