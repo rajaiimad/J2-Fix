@@ -38,6 +38,7 @@ python3 scripts/11_posthoc.py analyze                    # post-hoc statistics, 
 python3 scripts/13_search_draw_sensitivity.py run --workers "$WORKERS"  # search-draw sensitivity (pre-specified, configs/posthoc.json)
 python3 scripts/13_search_draw_sensitivity.py analyze    # its statistics, decision rules, tables, macros
 python3 scripts/14_score_scale.py                        # score scale of rule D0 (descriptive, no training)
+python3 scripts/15_pipeline_verification.py              # split, preprocessing, selection and replay checks on the real folds
 bash    paper/build.sh                                   # new-submission paper + supplement
 python3 scripts/08_consistency_check.py                  # every number in the PDFs traced to results
 python3 scripts/09_render_docs.py                        # reviewer response, results and QC reports from templates

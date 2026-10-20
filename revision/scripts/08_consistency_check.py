@@ -545,6 +545,37 @@ if SS:
         for v in (SS["SSSensMaxChanged"], SS["SSSensMaxCostDelta"], SS["SSSensMaxAucDelta"]):
             check(v in readme_ss, f"README quotes the rescaling sensitivity value {v}")
 
+# ---- review round 4: verification on the real folds, primary/sensitivity inference, causal wording
+pv_json = QC / "pipeline_verification.json"
+check(pv_json.exists(), "pipeline verification (scripts/15_pipeline_verification.py) has been run")
+if pv_json.exists():
+    pv = json.loads(pv_json.read_text())
+    PV = dict(re.findall(r"\\newcommand\{\\(PV\w+)\}\{([^}]*)\}",
+                         (RESULTS / "tables" / "pipeline_verification" / "pv_macros.tex").read_text()))
+    n_ok = sum(c["pass"] for c in pv["checks"])
+    check(n_ok == len(pv["checks"]) and PV["PVChecksPass"] == str(n_ok) and PV["PVChecks"] == str(len(pv["checks"])),
+          "pipeline verification: every check passes and the quoted counts match")
+    check(PV["PVTransitions"].replace(",", "") == str(sum(r["transitions_checked"] for r in pv["info"]["replay"])),
+          "pipeline verification: quoted number of replay transitions")
+    t_m = (REVISION_ROOT / "paper" / "sections" / "s3_method.tex").read_text()
+    t_s = (REVISION_ROOT / "paper" / "supplement" / "sections" / "s_verify.tex").read_text()
+    check("\\PVTransitions" in t_m and "Supplementary Sec.~S8" in t_m and "\\PVNNTestMin" in t_s,
+          "pipeline verification quoted in III-B/III-E and Supplementary S8")
+    check("not participant independence" in t_m.replace("\n", " ") and "participant-independent" in t_s,
+          "verification text states that participant independence is not established")
+_all_paper = "".join(f.read_text() for f in (REVISION_ROOT / "paper" / "sections").glob("*.tex"))
+for phrase in ("largely a consequence", "the answer is no", "reflects its search draw", "reflects that draw"):
+    check(phrase not in _all_paper and phrase not in (REVISION_ROOT / "README.md").read_text()
+          and phrase not in (REVISION_ROOT / "submission" / "cover_letter_template.md").read_text(),
+          f"no causal overstatement: '{phrase}'")
+_abs = (REVISION_ROOT / "paper" / "sections" / "abstract.tex").read_text()
+check("\\PHEnsEDDQNCost" in _abs and "\\PHEnsRFCost" in _abs and "mean over seeds" in _abs and "sensitivity test" in _abs,
+      "abstract labels seed-mean and seed-ensemble costs and names the sensitivity test")
+check("sensitivity analysis of these $p$-values" in t_m if pv_json.exists() else False,
+      "methods name the primary inferential procedure and the sensitivity analysis")
+_words = len(re.sub(r"\\[A-Za-z]+(\{\})?", "X", _abs.split("\\begin{abstract}")[1].split("\\end{abstract}")[0]).split())
+check(_words <= 252, f"abstract length ({_words} tokens, IEEE Access limit 250 words)")
+
 report = {"checks": checks, "failures": fails,
           "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),
           "stale_number_occurrences": {k: len(v) for k, v in pdf_hits.items()},

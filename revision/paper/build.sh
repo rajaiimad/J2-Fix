@@ -2,8 +2,9 @@
 # Assemble a self-contained copy of the generated inputs (macros, tables,
 # figures) next to the paper source, then compile it.  Every number comes from
 # scripts/05_make_tables.py (primary analysis), scripts/11_posthoc.py (post-hoc
-# analyses), scripts/13_search_draw_sensitivity.py (search-draw sensitivity) or
-# scripts/14_score_scale.py (score scale of rule D0);
+# analyses), scripts/13_search_draw_sensitivity.py (search-draw sensitivity),
+# scripts/14_score_scale.py (score scale of rule D0) or scripts/15_pipeline_verification.py
+# (verification of the evaluation boundaries and the replay buffer);
 # nothing in paper/generated or paper/figs is edited by hand.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -14,6 +15,7 @@ cp "$R"/results/tables/posthoc/posthoc_macros.tex generated/
 cp "$R"/results/tables/posthoc/tab_main_D1_with_posthoc.tex generated/
 cp "$R"/results/tables/search_draw/sd_macros.tex generated/
 cp "$R"/results/tables/score_scale/ss_macros.tex generated/
+cp "$R"/results/tables/pipeline_verification/pv_macros.tex generated/
 sed -i -e 's/(submitted protocol)/(earlier protocol)/' -e 's/E-DDQN (submitted code)/E-DDQN (earlier code)/' \
        -e 's/Submitted script, submitted protocol (proxy)/Earlier script, earlier protocol (proxy)/' \
        -e 's/Submitted script, grouped split (proxy)/Earlier script, grouped split (proxy)/' generated/tab_leakage.tex

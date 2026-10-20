@@ -145,6 +145,13 @@
 - [ ] **English.** Proofread, or have the paper proofread.
 - [ ] **Forms.** Collect ORCID iDs and the copyright and declaration forms the journal asks for.
 
+## Review round 4 (done; `outputs/response_to_review_round4.md`)
+- [x] Code verification on the real folds: `scripts/15_pipeline_verification.py`, 169/169 checks (splits, duplicated rows, train-only fitting, selection, thresholds, checkpoints, replay transitions); new Supplementary S8.
+- [x] Every cost labelled as seed mean or seed ensemble; the group bootstrap stated as the primary procedure and the sign-flip test as the sensitivity analysis; E-DDQN vs random forest reported as not firmly established.
+- [x] Causal wording on the search draw softened ("suggests ... contributes"); the asymmetric reward is stated not to be supported by the ablation.
+- [x] Perturbation experiment labelled a secondary feature-space stress test, not an attack evaluation. Title kept (it makes no adversarial claim); change it if you prefer a shorter one.
+- [ ] Decide whether you accept the bootstrap as the primary procedure (it was in the frozen analysis code); the alternative, making the sign-flip test primary, would have to be disclosed as chosen after the results were known.
+
 ## Not done (and why)
 - **No second dataset.** This would strengthen generality the most, but needs a new data source and is a larger project.
 - **No sensitivity analysis for severe discomfort (grade >= 2).** The Flight game has only 41 such samples, so it is stated as a limitation instead.
