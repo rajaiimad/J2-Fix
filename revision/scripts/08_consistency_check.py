@@ -335,7 +335,11 @@ if PH_JSON.exists():
                 "untuned Bayes cut-off", "its implied cut-off is $1/(1+R)$", "implementation are guarded against by the unit tests",
                 "Holm-adjusted over models.", "the highest pooled values of all models", "both $p$-values are approximate",
                 "verify the 5:1 regret ratio and bounded Q-values", "lists the same parameters fitted",
-                "because here no model significantly outperformed", "PyTorch 2.14.1 (CPU)"):
+                "because here no model significantly outperformed", "PyTorch 2.14.1 (CPU)",
+                "ranking metrics do not depend on the scale", "all ranking metrics are unaffected", "whose rewards span 0.6",
+                "rule D1 and all ranking metrics do not", "with the additivity check enabled;", "each agent was significantly better in one draw",
+                "part of this difference reflects the class mix", "spike and frame-drop thresholds fitted",
+                "In this and the following tables the name of the proposed model"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # bootstrap p-values between 0.01 and 0.05 are read as approximate (Section III-G): a main-text
     # paragraph that quotes one must say so or report the comparison as not significant
@@ -517,6 +521,17 @@ if SS:
     for kk in ("SSShiftCutMin", "SSShiftCutMax", "SSDQNHuberCut"):
         check(SS[kk].lstrip("0") in readme_ss or SS[kk] in readme_ss, f"README quotes {kk} = {SS[kk]}")
     check(PH["PHAlwRFSesP"] in readme_ss and PH["PHAlwRFSesHolm"] in readme_ss, "README quotes the session-level always-alarm result")
+    sens_path = RESULTS / "tables" / "score_scale" / "rescaling_sensitivity.csv"
+    check(sens_path.exists(), "rescaling sensitivity computed")
+    if sens_path.exists():
+        sv = pd.read_csv(sens_path).set_index("family")
+        for fam, key in (("E-DDQN", "EDDQN"), ("E-CB", "ECB"), ("CS-MLP", "CSMLP")):
+            check(close(MAC[f"{key}CostCostMean"], sv.loc[fam, "cost_pipeline"], 0.0006) and close(MAC[f"{key}CostRocAucMean"], sv.loc[fam, "pooled_auc_pipeline"], 0.0006)
+                  and close(PH[f"PHWf{key}Auc"], sv.loc[fam, "within_fold_auc_pipeline"], 0.0006), f"rescaling sensitivity: unchanged pipeline reproduces the published {fam} results")
+        check(close(SS["SSSensMaxChanged"], 100 * sv.decisions_changed.max(), 0.06) and close(SS["SSSensMaxCostDelta"], (sv.cost_rescaled - sv.cost_pipeline).abs().max(), 0.0006)
+              and close(SS["SSSensMaxAucDelta"], (sv.pooled_auc_rescaled - sv.pooled_auc_pipeline).abs().max(), 0.0006), "rescaling sensitivity macros")
+        for v in (SS["SSSensMaxChanged"], SS["SSSensMaxCostDelta"], SS["SSSensMaxAucDelta"]):
+            check(v in readme_ss, f"README quotes the rescaling sensitivity value {v}")
 
 report = {"checks": checks, "failures": fails,
           "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),

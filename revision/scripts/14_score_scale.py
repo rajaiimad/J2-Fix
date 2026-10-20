@@ -25,6 +25,18 @@ It also records the observed frame-rate range of each game after the first
 second (the logger writes 0 fps at start-up), which the paper uses to state
 where the frame-rate caps of the perturbation scenarios lie.
 
+Sensitivity (sensitivity()): rule D1 and the ranking metrics do not use the
+nominal cut-off, but they are not strictly invariant to the shift, because k
+differs between the three inner models whose validation scores are pooled (D1)
+and whose test scores are averaged, and between folds.  For E-DDQN, E-CB and the
+CS-MLP, every inner model's validation and test scores are mapped to the scale of
+P(y=1|s) with its own k (odds divided by k; a C1 linear continuation outside
+(eps, 1-eps) keeps the map monotone for implied probabilities outside (0,1)),
+D1 is re-derived exactly as in scripts/04_aggregate.py, and decisions, cost and
+ROC-AUC are compared with the unchanged pipeline, which is first reproduced
+exactly from the saved runs.  Requires results/runs/final (written by the
+protocol run).
+
 Usage: python scripts/14_score_scale.py
 """
 
@@ -86,7 +98,10 @@ def main():
                 cut = [1 / 6] * len(pis)
             rows.append({"family": fam, "outer": k, "regime": regime, "rho": rho,
                          "gamma": c.get("gamma"), "train_prevalence_mean": float(np.mean(pis)),
+                         "train_prevalence_min": float(np.min(pis)), "train_prevalence_max": float(np.max(pis)),
                          "k_mean": float(np.mean(ks)) if ks is not None else np.nan,
+                         "k_min": float(np.min(ks)) if ks is not None else np.nan,
+                         "k_max": float(np.max(ks)) if ks is not None else np.nan,
                          "effective_cutoff_mean": float(np.mean(cut)) if not np.isnan(cut).all() else np.nan,
                          "effective_cutoff_min": float(np.min(cut)) if not np.isnan(cut).all() else np.nan,
                          "effective_cutoff_max": float(np.max(cut)) if not np.isnan(cut).all() else np.nan})
@@ -95,11 +110,85 @@ def main():
     fps = {g: (int(d[d.step > 0].GameFps.min()), int(d[d.step > 0].GameFps.max())) for g, d in long.groupby("game")}
     pd.DataFrame([{"game": g, "fps_min_after_first_second": a, "fps_max": b} for g, (a, b) in fps.items()]).to_csv(
         OUT / "frame_rate_range.csv", index=False)
-    write_tables_and_macros(df, p_huber, fps)
+    summ = sensitivity(long, tables, df)
+    write_tables_and_macros(df, p_huber, fps, summ)
     print(df.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
 
 
-def write_tables_and_macros(df, p_huber, fps):
+def _to_p_scale(p, k, eps=1e-3):
+    """Map a score whose odds are k times those of P(y=1|s) to the P scale (odds / k),
+    monotone on the whole real line (C1 linear continuation outside (eps, 1-eps))."""
+    p = np.asarray(p, float)
+    lk = np.log(k)
+    f = lambda x: 1 / (1 + np.exp(-(np.log(x / (1 - x)) - lk)))
+    fp = lambda x: f(x) * (1 - f(x)) / (x * (1 - x))
+    out = np.empty_like(p)
+    lo, hi = p < eps, p > 1 - eps
+    mid = ~(lo | hi)
+    out[mid] = f(p[mid])
+    out[lo] = f(eps) + (p[lo] - eps) * fp(eps)
+    out[hi] = f(1 - eps) + (p[hi] - 1 + eps) * fp(1 - eps)
+    return out
+
+
+def sensitivity(long, tables, df):
+    """Effect on rule D1 and ranking metrics of rescaling every inner model to P(y=1|s)."""
+    import pickle
+    from sklearn.metrics import roc_auc_score
+    from eddqn.metrics import threshold_min_cost
+    runs = RESULTS / "runs" / "final"
+    if not runs.exists():
+        print("results/runs/final not found: sensitivity skipped")
+        return None
+    seeds = PROTOCOL["final_seeds"]
+    yv = {(k, j): fold_frames(long, tables, k, j)[1]["y"].to_numpy() for k in range(5) for j in range(3)}
+    yt = {k: fold_frames(long, tables, k)[1]["y"].to_numpy() for k in range(5)}
+    kk = {}
+    for k in range(5):
+        for j in range(3):
+            pi = float(fold_frames(long, tables, k, j)[0]["y"].mean())
+            for fam in ("E-DDQN", "E-CB", "CS-MLP"):
+                c = json.loads((RESULTS / "selected_configs.json").read_text())[fam][str(k)]["config"]
+                if fam == "CS-MLP":
+                    kk[(fam, k, j)] = (1 - pi) / pi if c.get("sampling") == "balanced" else 1.0
+                else:
+                    kk[(fam, k, j)] = ((1 - float(c["rho"])) / float(c["rho"])) * ((1 - pi) / pi)
+    rows = []
+    for fam in ("E-DDQN", "E-CB", "CS-MLP"):
+        saved = pd.read_csv(RESULTS / "predictions" / f"{fam}.csv.gz", dtype={"seed": str})
+        for s in seeds:
+            Y, A0, A1, S0, S1, W0, W1 = [], [], [], [], [], [], []
+            for k in range(5):
+                parts = [pickle.load(open(runs / fam / f"o{k}_s{s}_i{j}.pkl", "rb")) for j in range(3)]
+                y_oof = np.concatenate([yv[(k, j)] for j in range(3)])
+                # unchanged pipeline (as scripts/04_aggregate.py: pooled OOF threshold, mean test score)
+                oof0 = pd.Series(np.concatenate([p["val_score"] for p in parts])).to_numpy()
+                t0 = np.mean([p["test_score"] for p in parts], axis=0)
+                a0 = (t0 >= threshold_min_cost(oof0, y_oof)).astype(int)
+                ref = saved[(saved.seed == str(s)) & (saved.outer == k)].pred_D1_min_cost.to_numpy()
+                assert np.array_equal(a0, ref), f"pipeline not reproduced: {fam} seed {s} fold {k}"
+                # every inner model rescaled to P(y=1|s) with its own k
+                oof1 = np.concatenate([_to_p_scale(p["val_score"], kk[(fam, k, j)]) for j, p in enumerate(parts)])
+                t1 = np.mean([_to_p_scale(p["test_score"], kk[(fam, k, j)]) for j, p in enumerate(parts)], axis=0)
+                a1 = (t1 >= threshold_min_cost(oof1, y_oof)).astype(int)
+                Y.append(yt[k]); A0.append(a0); A1.append(a1); S0.append(t0); S1.append(t1)
+                W0.append(roc_auc_score(yt[k], t0)); W1.append(roc_auc_score(yt[k], t1))
+            y = np.concatenate(Y); a0, a1 = np.concatenate(A0), np.concatenate(A1)
+            cost = lambda a: (5 * ((a == 0) & (y == 1)).sum() + ((a == 1) & (y == 0)).sum()) / len(y)
+            rows.append({"family": fam, "seed": s, "decisions_changed": float((a0 != a1).mean()),
+                         "cost_pipeline": cost(a0), "cost_rescaled": cost(a1),
+                         "pooled_auc_pipeline": roc_auc_score(y, np.concatenate(S0)),
+                         "pooled_auc_rescaled": roc_auc_score(y, np.concatenate(S1)),
+                         "within_fold_auc_pipeline": float(np.mean(W0)), "within_fold_auc_rescaled": float(np.mean(W1))})
+    sens = pd.DataFrame(rows)
+    sens.to_csv(OUT / "rescaling_sensitivity_per_seed.csv", index=False)
+    summ = sens.groupby("family", sort=False).mean(numeric_only=True).drop(columns="seed").reset_index()
+    summ.to_csv(OUT / "rescaling_sensitivity.csv", index=False)
+    print(summ.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+    return summ
+
+
+def write_tables_and_macros(df, p_huber, fps, summ=None):
     def f3(x):
         return "--" if pd.isna(x) else f"{x:.3f}"
     name = {"E-DDQN": "E-DDQN", "E-CB": "E-CB", "DQN": "DQN", "CS-MLP": "CS-MLP"}
@@ -124,8 +213,8 @@ def write_tables_and_macros(df, p_huber, fps):
         d = df[df.family == fam]
         put(key + "CutMin", f"{d.effective_cutoff_min.min():.3f}")
         put(key + "CutMax", f"{d.effective_cutoff_max.max():.3f}")
-        put(key + "KMin", f"{d.k_mean.min():.2f}")
-        put(key + "KMax", f"{d.k_mean.max():.2f}")
+        put(key + "KMin", f"{d.k_min.min():.2f}")      # over all inner models of the selected configurations
+        put(key + "KMax", f"{d.k_max.max():.2f}")
     d = df[(df.family == "CS-MLP") & df.k_mean.notna()]
     put("CSMLPBalancedFolds", str(len(d)))
     put("CSMLPCutMin", f"{d.effective_cutoff_min.min():.3f}")
@@ -138,8 +227,21 @@ def write_tables_and_macros(df, p_huber, fps):
     for g, (a, b) in fps.items():
         put(f"Fps{g}Min", str(a))
         put(f"Fps{g}Max", str(b))
-    put("PrevMin", f"{df.train_prevalence_mean.min():.2f}")
-    put("PrevMax", f"{df.train_prevalence_mean.max():.2f}")
+    put("PrevMin", f"{df.train_prevalence_min.min():.3f}")   # over all inner training splits
+    put("PrevMax", f"{df.train_prevalence_max.max():.3f}")
+    if summ is not None:
+        put("SensMaxChanged", f"{100 * summ.decisions_changed.max():.1f}")
+        put("SensMaxCostDelta", f"{(summ.cost_rescaled - summ.cost_pipeline).abs().max():.3f}")
+        put("SensMaxAucDelta", f"{(summ.pooled_auc_rescaled - summ.pooled_auc_pipeline).abs().max():.3f}")
+        put("SensMaxWfDelta", f"{(summ.within_fold_auc_rescaled - summ.within_fold_auc_pipeline).abs().max():.3f}")
+        body = ["\\begin{tabular}{lccccccc}", "\\toprule",
+                "Model & D1 decisions changed (\\%) & \\multicolumn{2}{c}{Cost$_{5:1}$} & \\multicolumn{2}{c}{Pooled ROC-AUC} & \\multicolumn{2}{c}{Within-fold ROC-AUC} \\\\",
+                " & & pipeline & rescaled & pipeline & rescaled & pipeline & rescaled \\\\", "\\midrule"]
+        for r in summ.itertuples():
+            body.append(f"{r.family} & {100 * r.decisions_changed:.2f} & {r.cost_pipeline:.3f} & {r.cost_rescaled:.3f} & "
+                        f"{r.pooled_auc_pipeline:.3f} & {r.pooled_auc_rescaled:.3f} & {r.within_fold_auc_pipeline:.3f} & {r.within_fold_auc_rescaled:.3f} \\\\")
+        body += ["\\bottomrule", "\\end{tabular}"]
+        (OUT / "tab_ss_sensitivity.tex").write_text("\n".join(body) + "\n")
     (OUT / "ss_macros.json").write_text(json.dumps(M, indent=1))
     (OUT / "ss_macros.tex").write_text("% generated by scripts/14_score_scale.py -- do not edit\n" +
                                        "\n".join(f"\\newcommand{{\\{k}}}{{{v}}}" for k, v in sorted(M.items())) + "\n")

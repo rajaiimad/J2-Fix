@@ -2,12 +2,12 @@
 \label{sec:s-results}
 
 \subsection{Full metric panel (primary rule D1)}
-Mean $\pm$ SD over five seeds (\%, except MCC and cost); TP/TN/FP/FN are the exact confusion-matrix counts of the seed-ensemble predictions on all \nSamplesEval{} outer-test samples. FPR $=1-$specificity and FNR $=1-$recall. In this and the following tables the name of the proposed model is set in bold.
+Mean $\pm$ SD over five seeds (\%, except MCC and cost); TP/TN/FP/FN are the exact confusion-matrix counts of the seed-ensemble predictions on all \nSamplesEval{} outer-test samples. FPR $=1-$specificity and FNR $=1-$recall.
 
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_full_metrics.tex}}
 
 \subsection{Secondary operating rules}
-Mean $\pm$ SD over five seeds; FN and FP are the exact counts of the seed ensemble, as in the main text. Rule D0 (untuned cut-off $\hat p\ge 1/6$, the nominal 5:1 Bayes cut-off; for the asymmetric agents the greedy policy; its effective position on $P(y=1\mid s)$ for each model is given in Section~S5.12):
+Mean $\pm$ SD over five seeds; FN and FP are the exact counts of the seed ensemble, as in the main text. In the two tables below, the name of the proposed model and the lowest cost among the primary models are set in bold. Rule D0 (untuned cut-off $\hat p\ge 1/6$, the nominal 5:1 Bayes cut-off; for the asymmetric agents the greedy policy; its effective position on $P(y=1\mid s)$ for each model is given in Section~S5.12):
 
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_main_D0.tex}}
 
@@ -42,7 +42,7 @@ Validation recall $\ge$ 0.95:
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_paired_R95.tex}}
 
 \subsection{Value-estimation diagnostics}
-Mean Q-value of the greedy action on the inner-validation groups compared with the discounted return actually obtained by the greedy policy on those sessions (rewards of every action are known offline). For E-DDQN and E-CB, part of the difference reflects the class mix of the class-balanced replay, which differs from that of the validation data (Section~S5.12).
+Mean Q-value of the greedy action on the inner-validation groups compared with the discounted return actually obtained by the greedy policy on those sessions (rewards of every action are known offline). For E-DDQN and E-CB, the comparison is also affected by the class mix of the class-balanced replay, which differs from that of the validation data (Section~S5.12).
 
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_overestimation.tex}}
 

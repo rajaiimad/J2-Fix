@@ -2,7 +2,7 @@
 
 (Elsevier-style highlights: 3–5 bullet points, at most 85 characters each, including spaces. Generated from the paper's numbers by `scripts/12_make_submission_package.py`.)
 
-- On logged data, E-DDQN's 5:1 reward induces the 5:1 cost-sensitive Bayes rule
+- On logged data, a 5:1 reward encodes a 5:1 cost-sensitive operating point
 - Seven detectors compared under one nested, session-grouped, pre-specified protocol
 - E-DDQN never cost significantly less than a standard DQN in three random search draws
 - Post hoc, no primary model ranked seconds significantly better than elapsed time

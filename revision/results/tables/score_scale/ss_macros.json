@@ -1,12 +1,12 @@
 {
  "SSEDDQNCutMin": "0.084",
  "SSEDDQNCutMax": "0.157",
- "SSEDDQNKMin": "1.31",
- "SSEDDQNKMax": "1.95",
+ "SSEDDQNKMin": "1.07",
+ "SSEDDQNKMax": "2.18",
  "SSECBCutMin": "0.120",
  "SSECBCutMax": "0.208",
- "SSECBKMin": "0.83",
- "SSECBKMax": "1.31",
+ "SSECBKMin": "0.76",
+ "SSECBKMax": "1.47",
  "SSCSMLPBalancedFolds": "3",
  "SSCSMLPCutMin": "0.121",
  "SSCSMLPCutMax": "0.149",
@@ -18,6 +18,10 @@
  "SSFpsFlightMax": "94",
  "SSFpsRaceMin": "36",
  "SSFpsRaceMax": "92",
- "SSPrevMin": "0.44",
- "SSPrevMax": "0.46"
+ "SSPrevMin": "0.405",
+ "SSPrevMax": "0.483",
+ "SSSensMaxChanged": "0.8",
+ "SSSensMaxCostDelta": "0.007",
+ "SSSensMaxAucDelta": "0.003",
+ "SSSensMaxWfDelta": "0.003"
 }
