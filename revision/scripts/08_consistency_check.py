@@ -339,7 +339,8 @@ if PH_JSON.exists():
                 "ranking metrics do not depend on the scale", "all ranking metrics are unaffected", "whose rewards span 0.6",
                 "rule D1 and all ranking metrics do not", "with the additivity check enabled;", "each agent was significantly better in one draw",
                 "part of this difference reflects the class mix", "spike and frame-drop thresholds fitted",
-                "In this and the following tables the name of the proposed model"):
+                "In this and the following tables the name of the proposed model",
+                "which differs from this version only in these reproducibility statements"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # bootstrap p-values between 0.01 and 0.05 are read as approximate (Section III-G): a main-text
     # paragraph that quotes one must say so or report the comparison as not significant

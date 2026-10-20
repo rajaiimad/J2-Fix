@@ -117,6 +117,13 @@
 - [x] Determinism: five search and final jobs retrained from scratch reproduced bit for bit; every new number recomputed independently by the consistency check.
 - [x] Clean rerun of the final version (commit `2e49e93`) from raw data in an empty directory, including the search-draw stage: exit 0, about 2 h 46 min of computing; interrupted once by a container restart and resumed from its saved per-job outputs (recorded in `results/qc/clean_rerun.md`); 170 artefacts compared, 0 differing; every per-sample prediction (including the six search-draw variants), all 479 post-hoc and 102 search-draw macros and the text of all four PDFs identical; consistency check 921/921 inside the clone.
 
+## Final cross-check of both documents (done)
+- [x] Six independent audits (numbers, cross-document consistency, methods vs code, claims and references, re-read after fixes, score-scale mathematics); every finding verified before fixing. Report: `outputs/crosscheck_report.md`.
+- [x] Main correction: rule D0 is the 5:1 Bayes cut-off only nominally for models trained on class-balanced batches and for the DQN's Huber loss with ±1 rewards (Section III-D, Supplementary S5.12); D1 and ranking metrics change only marginally (≤ 0.8 % of decisions when rescaled).
+- [x] Provenance of the always-alarm Holm adjustment corrected; session-level result reported; qualifiers, captions, references fixed.
+- [x] Final version re-verified against the clean rerun (`results/qc/final_version_verification.md`); consistency check 1,022/1,022 (1,021/1,021 inside the clean clone before the last guard was added).
+- [ ] Length: the paper is now 19 pages and the supplement 16; trim to the journal's limit after choosing it.
+
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
 - [ ] **Title.** Confirm it (one line in `paper/main.tex`).
