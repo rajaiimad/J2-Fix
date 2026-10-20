@@ -32,6 +32,8 @@ QC.mkdir(parents=True, exist_ok=True)
 MAC = json.loads((RESULTS / "tables" / "manuscript_macros.json").read_text())
 SD_JSON = RESULTS / "tables" / "search_draw" / "sd_macros.json"
 SD = json.loads(SD_JSON.read_text()) if SD_JSON.exists() else {}
+SS_JSON = RESULTS / "tables" / "score_scale" / "ss_macros.json"
+SS = json.loads(SS_JSON.read_text()) if SS_JSON.exists() else {}
 MKEY = {"E-DDQN": "EDDQN", "E-CB": "ECB", "DQN": "DQN", "CS-MLP": "CSMLP", "LogReg": "LR", "HGB": "HGB", "RF": "RF"}
 RULES = {"D1_min_cost": "Cost", "D0_bayes_1_6": "Bayes", "recall>=0.95": "Rec"}
 fails, checks = [], 0
@@ -326,7 +328,14 @@ if PH_JSON.exists():
                 "explains the inflated results", "predicted exactly once",
                 "higher than always alarming)", "close to chance", "ranks much better", "ranks last of",
                 "E-DDQN's under-performance is more consistent", "Why E-DDQN Under-Performs: Exploratory",
-                "does not outperform the standard DQN, with its primary search draw", "confirmed that E-DDQN does not outperform"):
+                "does not outperform the standard DQN, with its primary search draw", "confirmed that E-DDQN does not outperform",
+                "every model's score estimates", "the Bayes cut-off is $1/6$ for every model", "all clipped to the ranges observed",
+                "barely change any detector", "does not have a lower 5:1 cost", "each agent was better in one draw",
+                "each agent ranked seconds better in one draw", "Rendering manipulations that induce sickness are documented",
+                "untuned Bayes cut-off", "its implied cut-off is $1/(1+R)$", "implementation are guarded against by the unit tests",
+                "Holm-adjusted over models.", "the highest pooled values of all models", "both $p$-values are approximate",
+                "verify the 5:1 regret ratio and bounded Q-values", "lists the same parameters fitted",
+                "because here no model significantly outperformed", "PyTorch 2.14.1 (CPU)"):
         check(bad not in body, f"paper contains corrected wording: '{bad}'")
     # bootstrap p-values between 0.01 and 0.05 are read as approximate (Section III-G): a main-text
     # paragraph that quotes one must say so or report the comparison as not significant
@@ -346,12 +355,12 @@ if PH_JSON.exists():
     for k in ("PHTimeLRvsEDDQNAucP", "PHTimeHGBvsEDDQNAucP", "PHAlwEDDQNGrpP", "EDDQNCIRocAucLo"):
         check("\\" + k in res_txt, f"Results quote \\{k} (baselines vs E-DDQN, E-DDQN vs always alarm, E-DDQN ROC-AUC CI)")
     # every macro used in the new paper and its supplement is defined
-    pdef = defined | set(PH) | set(SD)
+    pdef = defined | set(PH) | set(SD) | set(SS)
     for tex in (REVISION_ROOT / "paper").rglob("*.tex"):
         if "generated" in tex.parts:
             continue
         for name in re.findall(r"\\([A-Z][A-Za-z]+)(?![A-Za-z])", tex.read_text()):
-            if re.match(r"^(PH|SD|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
+            if re.match(r"^(PH|SD|SS|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
                 check(name in pdef, f"paper/{tex.name}: macro \\{name} not defined")
     # stale numbers of the earlier version may appear only where that version is named
     for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf"):
@@ -463,10 +472,51 @@ if SD:
     span_c = max(st[n]["cost"] for n in eds) - min(st[n]["cost"] for n in eds)
     span_w = max(st[n]["wf"] for n in eds) - min(st[n]["wf"] for n in eds)
     gap = st["DQN-exposure"]["wf"] - st["E-DDQN-exposure"]["wf"]
-    r3 = "supported" if gap <= 0.03 else ("insufficient" if gap > 0.05 else "inconclusive")
+    r3 = "supported" if abs(gap) <= 0.03 else ("insufficient" if gap > 0.05 else "inconclusive")   # spec: "within 0.03 of DQN's"
     check(SD["SDROne"] == ("yes" if r1 else "no"), "search draw: rule R1 recomputed")
     check(SD["SDRTwo"] == ("yes" if (span_c > 0.05 or span_w > 0.05) else "no"), "search draw: rule R2 recomputed")
     check(SD["SDRThree"] == r3 and close(SD["SDExposureGap"], gap, 0.0006), "search draw: rule R3 recomputed")
+
+# ------------------------------- 6. score scale of rule D0 (scripts/14_score_scale.py)
+if SS:
+    from eddqn.data import build_datasets as _bd, fold_frames as _ff, split_tables as _st
+    _proto = json.loads((REVISION_ROOT / "configs" / "protocol.json").read_text())
+    _long, _, _ = _bd()
+    _tabs = _st(_long, _proto)
+    _sel = json.loads((RESULTS / "selected_configs.json").read_text())
+    cuts = {"E-DDQN": [], "E-CB": [], "CS-MLP": []}
+    for kk in range(5):
+        for j in range(3):
+            pi = float(_ff(_long, _tabs, kk, j)[0]["y"].mean())
+            for fam in ("E-DDQN", "E-CB"):
+                rho = float(_sel[fam][str(kk)]["config"]["rho"])   # share of non-events per minibatch
+                cuts[fam].append(rho * pi / (rho * pi + 5 * (1 - rho) * (1 - pi)))   # = 1 / (1 + 5k)
+            if _sel["CS-MLP"][str(kk)]["config"].get("sampling") == "balanced":
+                cuts["CS-MLP"].append(0.5 * pi / (0.5 * pi + 5 * 0.5 * (1 - pi)))
+    for fam, key in (("E-DDQN", "EDDQN"), ("E-CB", "ECB"), ("CS-MLP", "CSMLP")):
+        check(close(SS[f"SS{key}CutMin"], min(cuts[fam]), 0.0006) and close(SS[f"SS{key}CutMax"], max(cuts[fam]), 0.0006),
+              f"score scale: effective D0 cut-off range for {fam} (independent formula)")
+    allc = cuts["E-DDQN"] + cuts["E-CB"] + cuts["CS-MLP"]
+    check(close(SS["SSShiftCutMin"], min(allc), 0.006) and close(SS["SSShiftCutMax"], max(allc), 0.006), "score scale: overall shifted range")
+    check(SS["SSDQNHuberCut"] == "0.25", "score scale: Huber +-1 cut-off is exactly 1/4 at gamma = 0 (analytic)")
+    check(int(SS["SSDQNGammaZeroFolds"]) == sum(float(_sel["DQN"][str(kk)]["config"]["gamma"]) == 0 for kk in range(5)), "score scale: DQN folds with gamma = 0")
+    for g, d in _long.groupby("game"):
+        d1 = d[d.step > 0]
+        check(int(SS[f"SSFps{g}Min"]) == int(d1.GameFps.min()) and int(SS[f"SSFps{g}Max"]) == int(d1.GameFps.max()), f"frame-rate range {g}")
+    check(int(SS["SSFpsFlightMin"]) > 60, "the 60- and 45-fps caps lie below every Flight frame rate (stated in III-H and S4.1)")
+    check(sum(_sel["E-DDQN"][str(kk)]["config"]["warmup"] == 0 for kk in range(5)) == 4, "E-DDQN selected no warm-up in four folds (stated in V-H)")
+    for f, ks in (("paper/sections/s3_method.tex", ("SSEDDQNCutMin", "SSDQNHuberCut", "SSFpsFlightMin")),
+                  ("paper/sections/s5_results.tex", ("SSEDDQNCutMin", "PHAlwRFSesHolm")),
+                  ("paper/sections/s5c_ratio.tex", ("SSEDDQNKMin",)),
+                  ("paper/supplement/sections/s_posthoc.tex", ("SSDQNHuberCut", "PHAlwRFSesHolm")),
+                  ("paper/supplement/sections/s_attacks.tex", ("SSFpsFlightMin",))):
+        t = (REVISION_ROOT / f).read_text()
+        for kk in ks:
+            check("\\" + kk in t, f"{f} quotes \\{kk}")
+    readme_ss = (REVISION_ROOT / "README.md").read_text()
+    for kk in ("SSShiftCutMin", "SSShiftCutMax", "SSDQNHuberCut"):
+        check(SS[kk].lstrip("0") in readme_ss or SS[kk] in readme_ss, f"README quotes {kk} = {SS[kk]}")
+    check(PH["PHAlwRFSesP"] in readme_ss and PH["PHAlwRFSesHolm"] in readme_ss, "README quotes the session-level always-alarm result")
 
 report = {"checks": checks, "failures": fails,
           "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),

@@ -100,9 +100,14 @@
       "paired comparisons of the exposure-time baselines with the primary models (cost and ROC-AUC, group bootstrap)",
       "Q-value scale relative to r_max/(1-gamma) (diagnostic)",
       "label-dynamics summary (descriptive statistics of the data)",
-      "seed-ensemble block of the main results table (descriptive)"
+      "seed-ensemble block of the main results table (descriptive)",
+      "Holm adjustment over the nine models of the always-alarm comparison (the committed 'always_alarm_comparison' has no adjustment, and 'multiplicity' covers only the six comparisons with E-DDQN); added when the comparison was run"
     ],
-    "after_pre_submission_review": "see 'review_round_2'"
+    "after_pre_submission_review": "see 'review_round_2'",
+    "final_pre_submission_check": [
+      "score scale of rule D0: where the untuned cut-off p_hat >= 1/6 lies on P(y=1|s) given each selected configuration's training class mix and loss (descriptive, no training; scripts/14_score_scale.py; Supplementary S5.12)",
+      "decision rule R3 of 'search_draw_sensitivity' implemented as |gap| <= 0.03, as specified ('within 0.03 of DQN's'); the first implementation tested gap <= 0.03 only. The outcome ('supported', gap 0.026) is unchanged."
+    ]
   },
   "search_draw_sensitivity": {
     "_comment": "Specified on 2026-10-14 after all other results were known, in response to the second-round pre-submission review, and committed BEFORE any of these runs. Question: does E-DDQN's result depend on its single random search draw, which offered only 2 exposure-only configurations (DQN: 6)? Every result is reported whatever it shows; no draw is selected; the primary results are not replaced.",

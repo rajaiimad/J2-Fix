@@ -8,7 +8,7 @@ An earlier, unpublished version of this study reported 96.88\,\% accuracy and 99
 Under this protocol \LeakDupPos{} of the \LeakTestPos{} positive test rows (\LeakDupPct\,\%) have an exact duplicate in the training split, and all sessions occur in both splits.
 
 \subsection*{Implementation pitfalls found in the earlier code}
-The following defects of the earlier E-DDQN implementation are guarded against by the unit tests of the present code (Section~\ref{sec:s-repro}); they are listed because they are easy to make whenever a classifier is trained as a Q-learner.
+The following defects of the earlier E-DDQN implementation are listed because they are easy to make whenever a classifier is trained as a Q-learner. Items 1--3 are guarded against by the unit tests of the present code (Section~\ref{sec:s-repro}); items 4--6 are avoided by design (the Double-DQN arg-max is computed in evaluation mode, the outer-test data are scored only once after training, and SHAP explains the decision margin with the additivity check enabled; main text, Sections~III-E, III-G and III-I).
 \begin{enumerate}
 \item The next state was the next row of a shuffled chunk, with no terminal flags, so $\gamma=0.99$ bootstrapped across unrelated samples.
 \item The true label was stored as the action together with the reward of the random action actually taken (a form of teacher forcing).

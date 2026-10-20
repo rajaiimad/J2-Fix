@@ -76,7 +76,7 @@ M.~Yalcin, A.~Halbig, M.~Fischbach, and M.~E. Latoschik, ``Automatic
 \bibitem{jeong2024precyse}
 D.~Jeong and K.~Han, ``{PRECYSE}: Predicting cybersickness using transformer
   for multimodal time-series sensor data,'' \emph{Proc. ACM Interact. Mob.
-  Wearable Ubiquitous Technol.}, 2024.
+  Wearable Ubiquitous Technol.}, vol.~8, no.~2, pp. 42:1--42:24, 2024.
 
 \bibitem{lin2020imbalanced}
 E.~Lin, Q.~Chen, and X.~Qi, ``Deep reinforcement learning for imbalanced
@@ -115,7 +115,7 @@ C.~Elkan, ``The foundations of cost-sensitive learning,'' in \emph{Proc. Int.
 \bibitem{porcino2019uffcsdata}
 T.~Porcino \emph{et~al.}, ``{UFFCSData}: Raw and selected datasets with user
   tests reporting the level of discomfort during virtual experiments,''
-  \url{https://github.com/tmp1986/UFFCSData}, {AGPL}-3.0.
+  \url{https://github.com/tmp1986/UFFCSData}, 2019, {AGPL}-3.0.
 
 \bibitem{dudik2011efficient}
 M.~Dud\'ik, D.~Hsu, S.~Kale, N.~Karampatziakis, J.~Langford, L.~Reyzin, and
@@ -143,7 +143,8 @@ R.~K. Kundu, R.~Islam, J.~Quarles, and K.~A. Hoque, ``{LiteVR}: Interpretable
 \bibitem{kundu2023vrlens}
 R.~K. Kundu, O.~Y. Elsaid, P.~Calyam, and K.~A. Hoque, ``{VR-LENS}: Super
   learning-based cybersickness detection and explainable {AI}-guided deployment
-  in virtual reality,'' 2023, arXiv:2302.01985.
+  in virtual reality,'' in \emph{Proc. 28th Int. Conf. Intelligent User
+  Interfaces ({IUI})}, 2023, pp. 819--834.
 
 \bibitem{yang2022mlreview}
 A.~H.~X. Yang, N.~Kasabov, and Y.~O. Cakmak, ``Machine learning methods for the
@@ -153,7 +154,8 @@ A.~H.~X. Yang, N.~Kasabov, and Y.~O. Cakmak, ``Machine learning methods for the
 \bibitem{porcino2021methodology}
 T.~Porcino, D.~Trevisan, and E.~Clua, ``An experimental methodology to capture
   user and gameplay data tied to cybersickness,'' in \emph{Proc. Workshop on
-  Extended Reality in Games ({XR} in Games), SBGames}, 2021.
+  Extended Reality in Games ({XR} in Games), held with the {ACM} Int. Conf.
+  Interactive Media Experiences ({IMX})}, 2021.
 
 \bibitem{porcino2022identifying}
 T.~Porcino, E.~O. Rodrigues, F.~Bernardini, D.~Trevisan, and E.~Clua,
@@ -222,6 +224,10 @@ S.~Ioffe and C.~Szegedy, ``Batch normalization: Accelerating deep network
 N.~Srivastava, G.~Hinton, A.~Krizhevsky, I.~Sutskever, and R.~Salakhutdinov,
   ``Dropout: A simple way to prevent neural networks from overfitting,''
   \emph{J. Machine Learning Research}, vol.~15, pp. 1929--1958, 2014.
+
+\bibitem{huber1964robust}
+P.~J. Huber, ``Robust estimation of a location parameter,'' \emph{Ann. Math.
+  Statist.}, vol.~35, no.~1, pp. 73--101, 1964.
 
 \bibitem{girshick2015fast}
 R.~Girshick, ``Fast {R-CNN},'' in \emph{Proc. IEEE Int. Conf. Computer Vision

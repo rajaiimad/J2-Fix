@@ -210,7 +210,7 @@ def analyze():
     wf_span = float(ed.within_fold_roc_auc.max() - ed.within_fold_roc_auc.min())
     r2 = cost_span > 0.05 or wf_span > 0.05
     gap = float(v.loc["DQN-exposure", "within_fold_roc_auc"] - v.loc["E-DDQN-exposure", "within_fold_roc_auc"])
-    r3 = "supported" if gap <= 0.03 else ("insufficient" if gap > 0.05 else "inconclusive")
+    r3 = "supported" if abs(gap) <= 0.03 else ("insufficient" if gap > 0.05 else "inconclusive")   # spec: "within 0.03 of DQN's"
     dec = {"R1_headline_challenged": r1, "R2_draw_dependent": r2, "R2_cost_span": cost_span,
            "R2_within_fold_auc_span": wf_span, "R3_exposure_gap_dqn_minus_eddqn": gap, "R3_outcome": r3}
     (OUT / "decisions.json").write_text(json.dumps(dec, indent=1))

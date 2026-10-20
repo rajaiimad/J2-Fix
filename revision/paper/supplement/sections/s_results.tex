@@ -2,12 +2,12 @@
 \label{sec:s-results}
 
 \subsection{Full metric panel (primary rule D1)}
-Mean $\pm$ SD over five seeds (\%, except MCC and cost); TP/TN/FP/FN are the exact confusion-matrix counts of the seed-ensemble predictions on all \nSamplesEval{} outer-test samples. FPR $=1-$specificity and FNR $=1-$recall.
+Mean $\pm$ SD over five seeds (\%, except MCC and cost); TP/TN/FP/FN are the exact confusion-matrix counts of the seed-ensemble predictions on all \nSamplesEval{} outer-test samples. FPR $=1-$specificity and FNR $=1-$recall. In this and the following tables the name of the proposed model is set in bold.
 
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_full_metrics.tex}}
 
 \subsection{Secondary operating rules}
-Rule D0 (untuned Bayes cut-off $\hat p\ge 1/6$; for the asymmetric agents this is the greedy policy):
+Mean $\pm$ SD over five seeds; FN and FP are the exact counts of the seed ensemble, as in the main text. Rule D0 (untuned cut-off $\hat p\ge 1/6$, the nominal 5:1 Bayes cut-off; for the asymmetric agents the greedy policy; its effective position on $P(y=1\mid s)$ for each model is given in Section~S5.12):
 
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_main_D0.tex}}
 
@@ -27,6 +27,8 @@ Expected 5:1 cost / ROC-AUC of the seed ensemble in each outer fold (rule D1). F
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_per_fold.tex}}
 
 \subsection{Event-level behavior}
+Seed ensembles at rule D1. Alarm percentages are the fraction of seconds with an alarm in each session, averaged over sessions (before onset: the \nEventSessions{} sessions with an event; event-free: the \nEventFreeSessions{} sessions without one).
+
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_event.tex}}
 
 \subsection{Paired tests under the secondary rules}
@@ -40,11 +42,12 @@ Validation recall $\ge$ 0.95:
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_paired_R95.tex}}
 
 \subsection{Value-estimation diagnostics}
-Mean Q-value of the greedy action on the inner-validation groups compared with the discounted return actually obtained by the greedy policy on those sessions (rewards of every action are known offline).
+Mean Q-value of the greedy action on the inner-validation groups compared with the discounted return actually obtained by the greedy policy on those sessions (rewards of every action are known offline). For E-DDQN and E-CB, part of the difference reflects the class mix of the class-balanced replay, which differs from that of the validation data (Section~S5.12).
 
 \noindent\resizebox{\textwidth}{!}{\input{generated/tab_overestimation.tex}}
 
 \subsection{ROC and precision--recall curves (primary models)}
+Seed-ensemble scores pooled over the five outer-test folds; AP in the legend is the average precision, i.e.\ the PR-AUC of the tables.
 \begin{center}
 \includegraphics[width=\textwidth]{figs/roc_pr_main.pdf}
 \end{center}

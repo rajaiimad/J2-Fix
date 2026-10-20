@@ -13,11 +13,11 @@ Asymmetric-reward reinforcement-learning (RL) detectors have been proposed for s
 
 The main findings are:
 
-1. **Formulation.** Applying known results, we show that on logged data the alarm cannot affect future observations. The task is therefore a contextual bandit, and the 5:1 reward induces exactly the decision rule of 5:1 cost-sensitive classification.
+1. **Formulation.** Applying known results, we show that on logged data the alarm cannot affect future observations. The task is therefore a contextual bandit, and the 5:1 reward induces exactly the decision rule of 5:1 cost-sensitive classification; in practice, class-balanced replay shifts the operating point actually learned.
 2. **Comparison.** Seven models were compared under a nested, session-grouped protocol fixed before testing.
-   - E-DDQN did not have a lower 5:1 cost than a standard DQN, with its primary random search draw or with two further draws specified before they were run; in ranking, each agent was better in one draw.
+   - E-DDQN did not have a significantly lower 5:1 cost than a standard DQN, with its primary random search draw or with two further draws specified before they were run; in ranking, each agent was significantly better in one draw.
    - E-DDQN's own result depended strongly on its search draw (within-fold ROC-AUC {{SDEDDQNWfMin}}–{{SDEDDQNWfMax}}), so its weak primary result reflects that draw rather than its reward.
-   - With its primary draw it had a higher cost than a cost-weighted random forest in every outer fold, marginally in one (Holm-adjusted p = {{PHHolmRF}} by group bootstrap and {{PHSfRFHolm}} by the more conservative exact sign-flip test).
+   - With its primary draw its seed-ensemble cost was higher than that of a cost-weighted random forest in every outer fold, marginally in one (Holm-adjusted p = {{PHHolmRF}} by group bootstrap and {{PHSfRFHolm}} by the more conservative exact sign-flip test).
    - In a post-hoc baseline, no primary model ranked seconds significantly better than elapsed time alone (ROC-AUC {{PHTimeLRRocAucMean}}).
    - No model combined high recall with a controlled false-alarm rate.
 3. **Evaluation protocol.** Session grouping is essential on these data. Random row-level splits, with or without oversampling, give ROC-AUC {{LeakRowRocAuc}}–{{LeakOldRocAuc}}, against {{LeakGrpRocAuc}} under session-grouped splits. This quantifies a known pitfall on this dataset; a reconstruction of the protocol of an earlier, unpublished version of this study yields similarly inflated scores.

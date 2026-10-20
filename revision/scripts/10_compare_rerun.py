@@ -84,6 +84,7 @@ def main(other: Path, note: str = ""):
                     list(posthoc.glob("*.csv")) + list(posthoc.glob("*.json")) + list(posthoc.glob("*.tex")) +
                     [RESULTS / "selected_configs_posthoc.json", RESULTS / "hpo_results_posthoc.csv"] +
                     list((RESULTS / "tables" / "search_draw").glob("*")) +
+                    list((RESULTS / "tables" / "score_scale").glob("*")) +
                     [RESULTS / "selected_configs_search_draw.json", RESULTS / "hpo_results_search_draw.csv"] +
                     list((RESULTS / "preprocessing").glob("*")) + list((RESULTS / "audit").glob("*.csv")) +
                     list((RESULTS / "audit").glob("*.json")) + list((REVISION_ROOT / "data" / "processed").glob("*.csv"))):
