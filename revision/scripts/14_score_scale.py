@@ -104,12 +104,13 @@ def write_tables_and_macros(df, p_huber, fps):
         return "--" if pd.isna(x) else f"{x:.3f}"
     name = {"E-DDQN": "E-DDQN", "E-CB": "E-CB", "DQN": "DQN", "CS-MLP": "CS-MLP"}
     body = ["\\begin{tabular}{llccccc}", "\\toprule",
-            "Model & Training class mix (selected) & Fold & $\\rho$ & $\\pi$ & $k$ & Cut-off on $P(y=1\\mid s)$ \\\\", "\\midrule"]
+            "Model & Training class mix (selected) & Fold & $\\rho$ & $\\pi$ & $k$ & Cut-off on $P(y=1\\mid s)$: mean (range) \\\\", "\\midrule"]
     for fam in ("E-DDQN", "E-CB", "CS-MLP", "DQN"):
         for r in df[df.family == fam].itertuples():
             regime = r.regime if fam != "DQN" else f"$\\pm1$ reward, Huber loss ($\\gamma={r.gamma}$)"
             body.append(f"{name[fam]} & {regime} & {r.outer} & {f3(r.rho) if r.rho is not None and not pd.isna(r.rho) else '--'} & "
-                        f"{r.train_prevalence_mean:.3f} & {f3(r.k_mean)} & {f3(r.effective_cutoff_mean)} \\\\")
+                        f"{r.train_prevalence_mean:.3f} & {f3(r.k_mean)} & {f3(r.effective_cutoff_mean)}"
+                        + (f" ({r.effective_cutoff_min:.3f}--{r.effective_cutoff_max:.3f})" if not pd.isna(r.k_mean) else "") + " \\\\")
         body.append("\\midrule")
     body[-1] = "\\bottomrule"
     body.append("\\end{tabular}")

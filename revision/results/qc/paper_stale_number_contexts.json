@@ -15,12 +15,12 @@
   {
    "number": "96.88",
    "named_as_earlier_version": true,
-   "context": "436 \u2013 \u2013 \u2013 \u2013 \u2013 0.250 \u2013 \u2013 \u2013 0.250 Model Training class mix (selected) E-DDQN E-DDQN E-DDQN E-DDQN E-DDQN S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
+   "context": "rd, Huber loss (\u03b3 = 0.0) 0 1 2 3 4 \u2013 \u2013 \u2013 \u2013 \u2013 0.457 0.439 0.437 0.446 0.436 \u2013 \u2013 \u2013 \u2013 \u2013 0.250 \u2013 \u2013 \u2013 0.250 S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
   },
   {
    "number": "99.53",
    "named_as_earlier_version": true,
-   "context": " \u2013 \u2013 0.250 Model Training class mix (selected) E-DDQN E-DDQN E-DDQN E-DDQN E-DDQN S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
+   "context": ".0) 0 1 2 3 4 \u2013 \u2013 \u2013 \u2013 \u2013 0.457 0.439 0.437 0.446 0.436 \u2013 \u2013 \u2013 \u2013 \u2013 0.250 \u2013 \u2013 \u2013 0.250 S6 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
   },
   {
    "number": "14,680",
