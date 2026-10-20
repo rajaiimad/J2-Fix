@@ -23,6 +23,21 @@ cp "$R"/results/figures/shap_margin.pdf figs/
 latexmk -pdf -interaction=nonstopmode -quiet main.tex >/dev/null 2>&1 || true
 grep -E "^!|Overfull|undefined" main.log || echo "main.pdf: no errors, no overfull boxes, no undefined references"
 
+# Fig. 1 as a standalone PDF (single TikZ source in figs_src/pipeline_tikz.tex)
+pdflatex -interaction=nonstopmode -output-directory=figs figs_src/fig1_standalone.tex >/dev/null 2>&1 || true
+mv -f figs/fig1_standalone.pdf figs/fig1_pipeline.pdf
+rm -f figs/fig1_standalone.aux figs/fig1_standalone.log
+test -s figs/fig1_pipeline.pdf
+
+# IEEE Access version (same sections; class files in access_template/)
+TEXINPUTS=./access_template//: latexmk -pdf -interaction=nonstopmode -quiet main_access.tex >/dev/null 2>&1 || true
+# The class itself produces two harmless kinds of overfull-box warning: its header/footer
+# boxes ("while \output is active") and empty boxes built by its \maketitle; both are
+# filtered, so anything printed below is a real problem.
+MT=$(grep -n '^\\maketitle' main_access.tex | cut -d: -f1); MT1=$((MT + 1))   # the title box is flushed on the next line
+grep -E "^!|Overfull|undefined" main_access.log | grep -v -e "Font shape" -e 'while \\output is active' -e "at lines ${MT}--${MT}\$" -e "at lines ${MT1}--${MT1}\$" \
+  || echo "main_access.pdf: no errors, no content overfull boxes, no undefined references"
+
 # supplement
 mkdir -p supplement/generated supplement/figs
 cp "$R"/supplementary/generated/*.tex supplement/generated/

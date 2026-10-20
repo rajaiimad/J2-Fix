@@ -1,0 +1,14 @@
+% Standalone rendering of Fig. 1 (compiled by build.sh from the paper directory):
+% figs/fig1_pipeline.pdf is used by main_access.tex and exported by
+% scripts/12_make_submission_package.py.  Times, as in the IEEEtran paper.
+\documentclass[border=4pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{mathptmx}
+\hyphenpenalty=10000 \tolerance=9999 \emergencystretch=2em
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+\input{generated/numbers.tex}
+\begin{document}
+\input{figs_src/pipeline_tikz}
+\end{document}

@@ -124,6 +124,14 @@
 - [x] Final version re-verified against the clean rerun (`results/qc/final_version_verification.md`); consistency check 1,022/1,022 (1,021/1,021 inside the clean clone before the last guard was added).
 - [ ] Length: the paper is now 19 pages and the supplement 16; trim to the journal's limit after choosing it.
 
+## IEEE Access version (done)
+- [x] `paper/main_access.tex` → `main_access.pdf` (21 pages: about 18 of text, 2 of references, 1 of biographies). It uses exactly the same section files, numbers, figures and references as `main.tex`; the consistency check verifies that both input the same sections. Fig. 1 is included as a PDF rendered from the same TikZ source (`figs_src/`), because TikZ does not work with the IEEE Access class.
+- [x] Restored the index terms (keywords), which had been dropped from `abstract.tex` in an earlier edit; now guarded by the consistency check.
+- [ ] **Official template.** `access_template/` holds a 2019 copy of `ieeeaccess.cls` from a third-party GitHub repository (the IEEE template selector was blocked from the build environment). Download the current official IEEE Access template and replace the files in `access_template/`; nothing else changes.
+- [ ] **Biographies and photographs** of all five authors (about 100 words each; red placeholders at the end of `main_access.tex`).
+- [ ] Optional: IEEE membership grades in the author line; the history line and DOI are filled in by IEEE.
+- [ ] Check the current IEEE Access author instructions for any further items (e.g. a graphical abstract) and the APC.
+
 ## Your decisions and actions
 - [ ] **Journal.** Choose it, then upload its template and author guidelines. I will then convert the paper (LaTeX to Word if needed), apply the reference style, check length limits and redraw figures if required.
 - [ ] **Title.** Confirm it (one line in `paper/main.tex`).

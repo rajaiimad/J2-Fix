@@ -127,7 +127,7 @@ def main(other: Path, note: str = ""):
                 rows.append((f"{d}/{p.name}", "identical" if sha(p) == sha(q) else content_equal(p, q)))
     # 5. text of the compiled PDFs (PDF bytes differ by build timestamps, so compare extracted text)
     import subprocess
-    for d in ("paper/main.pdf", "paper/supplement/supplement.pdf", "manuscript/main.pdf", "supplementary/supplement.pdf"):
+    for d in ("paper/main.pdf", "paper/main_access.pdf", "paper/supplement/supplement.pdf", "manuscript/main.pdf", "supplementary/supplement.pdf"):
         a, b = REVISION_ROOT / d, other / d
         if not b.exists():
             rows.append((d, "MISSING in rerun"))

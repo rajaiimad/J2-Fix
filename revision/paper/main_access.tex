@@ -1,0 +1,100 @@
+% IEEE Access version of the paper.  It uses exactly the same section files,
+% generated numbers (generated/*.tex), figures and references as main.tex
+% (neutral IEEEtran working format); only the front matter differs.
+% Class files: access_template/ (provisional copy, see access_template/README.md;
+% replace with the current official IEEE Access template before submission).
+% Build: ./build.sh (compiles main.tex, main_access.tex and the supplement).
+\documentclass{ieeeaccess}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+% TikZ does not work with this class; Fig. 1 is included as the PDF that build.sh
+% renders from the same TikZ source (figs_src/pipeline_tikz.tex).
+\def\UsePipelinePDF{}
+\usepackage{url}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{./}{access_template/}}
+
+\input{generated/numbers.tex}
+\input{generated/posthoc_macros.tex}
+\input{generated/sd_macros.tex}
+\input{generated/ss_macros.tex}
+\newcommand{\pct}[1]{#1\,\%}
+\newcounter{biography}  % expected by the class's biography environment
+% Text in \authorinput{...} is printed in red and must be completed or confirmed
+% by the authors before submission (scripts/08_consistency_check.py lists them).
+\newcommand{\authorinput}[1]{\textcolor{red}{[#1]}}
+
+\begin{document}
+\newlength{\xfigwd}\setlength{\xfigwd}{\columnwidth}  % used by the class's caption code
+\history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
+\doi{10.1109/ACCESS.0000.DOI}
+
+\title{Does an Asymmetric-Reward E-DDQN Improve Safety-Prioritized Cybersickness Detection in Virtual Reality? A Leakage-Controlled Comparison with Standard DQN and Cost-Sensitive Baselines}
+
+\author{\uppercase{Rajai Darabee}\authorrefmark{1},
+\uppercase{Manoranjitham Muniandy}\authorrefmark{1},
+\uppercase{Omar Shindi}\authorrefmark{2},
+\uppercase{Cheng Wai Khuen}\authorrefmark{1}, and
+\uppercase{Ebrahim Hamid Sumiea}\authorrefmark{1}}
+
+\address[1]{Faculty of Science, Management \& Computing, Universiti Teknologi PETRONAS, 32610 Seri Iskandar, Perak, Malaysia}
+\address[2]{School of Information Technology, Crown Institute of Higher Education, Sydney, Australia}
+
+\markboth
+{R. Darabee \headeretal: Asymmetric-Reward E-DDQN for Cybersickness Detection: A Leakage-Controlled Comparison}
+{R. Darabee \headeretal: Asymmetric-Reward E-DDQN for Cybersickness Detection: A Leakage-Controlled Comparison}
+
+\corresp{Corresponding author: Rajai Darabee (e-mail: rajai\_24006920@utp.edu.my).}
+
+\input{sections/abstract}
+
+\titlepgskip=-15pt
+
+\maketitle
+
+\input{sections/s1_introduction}
+\input{sections/s2_related}
+\input{sections/s3_method}
+\input{sections/s4_setup}
+\input{sections/s5_results}
+\input{sections/s6_discussion}
+\input{sections/s7_conclusion}
+
+\input{sections/backmatter}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+% IEEE Access asks for a short biography and a photograph of every author
+% (replace the placeholder box with \includegraphics of the photograph).
+\begin{IEEEbiography}{Rajai Darabee}
+\authorinput{Biography of about 100 words and a photograph, to be supplied by the author.}
+\end{IEEEbiography}
+
+\begin{IEEEbiography}{Manoranjitham Muniandy}
+\authorinput{Biography of about 100 words and a photograph, to be supplied by the author.}
+\end{IEEEbiography}
+
+\begin{IEEEbiography}{Omar Shindi}
+\authorinput{Biography of about 100 words and a photograph, to be supplied by the author.}
+\end{IEEEbiography}
+
+\begin{IEEEbiography}{Cheng Wai Khuen}
+\authorinput{Biography of about 100 words and a photograph, to be supplied by the author.}
+\end{IEEEbiography}
+
+\begin{IEEEbiography}{Ebrahim Hamid Sumiea}
+\authorinput{Biography of about 100 words and a photograph, to be supplied by the author.}
+\end{IEEEbiography}
+
+\EOD
+
+\end{document}

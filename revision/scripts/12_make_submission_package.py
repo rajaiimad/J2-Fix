@@ -80,21 +80,8 @@ def copy_tree(src: Path, dst: Path, skip=(".aux", ".log", ".fls", ".fdb_latexmk"
 
 
 def figure1(dst: Path):
-    """Standalone export of the TikZ pipeline figure (Fig. 1)."""
-    tex = (PAPER / "sections" / "s3_method.tex").read_text()
-    tikz = tex[tex.index("\\begin{tikzpicture}"): tex.index("\\end{tikzpicture}") + len("\\end{tikzpicture}")]
-    work = OUT / "_fig1"
-    work.mkdir(parents=True, exist_ok=True)
-    shutil.copy(PAPER / "generated" / "numbers.tex", work / "numbers.tex")
-    (work / "fig1.tex").write_text(
-        "\\documentclass[border=4pt]{standalone}\n\\usepackage[T1]{fontenc}\n\\usepackage{amsmath,amssymb}\n"
-        "\\usepackage{mathptmx}\n"   # Times, as in the IEEEtran paper (keeps the paper's line breaks)
-        "\\hyphenpenalty=10000 \\tolerance=9999 \\emergencystretch=2em\n"
-        "\\usepackage{tikz}\n\\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}\n"
-        "\\input{numbers.tex}\n\\begin{document}\n" + tikz + "\n\\end{document}\n")
-    subprocess.run(["pdflatex", "-interaction=nonstopmode", "fig1.tex"], cwd=work, check=True, capture_output=True)
-    shutil.copy(work / "fig1.pdf", dst / "Fig1_pipeline.pdf")
-    shutil.rmtree(work)
+    """Fig. 1 (TikZ pipeline) as rendered by paper/build.sh from paper/figs_src/."""
+    shutil.copy(PAPER / "figs" / "fig1_pipeline.pdf", dst / "Fig1_pipeline.pdf")
 
 
 def figures(dst: Path):
@@ -152,7 +139,7 @@ if __name__ == "__main__":
     pend = pending_inputs()
     readme = [f"# Submission package: {mac['Title']}", "",
               "| Item | Content |", "|---|---|",
-              "| `01_manuscript/` | Final manuscript: `main.pdf` and its self-contained LaTeX source (`main.tex`, `sections/`, `refs.bib`, `main.bbl`, `generated/`, `figs/`) |",
+              "| `01_manuscript/` | Final manuscript in two layouts from the same sources: `main_access.pdf` (IEEE Access template; `main_access.tex`, class files in `access_template/`) and `main.pdf` (neutral IEEEtran working format); LaTeX sources `sections/`, `refs.bib`, `generated/`, `figs/`, `figs_src/` |",
               "| `02_supplementary_material/` | Supplementary material: `supplement.pdf` and its LaTeX source |",
               "| `03_figures/` | Figures 1–4 as separate PDF (vector) and 600-dpi PNG files, for journals that require separate figure uploads |",
               "| `04_cover_letter_draft.md` | Draft cover letter; complete the [bracketed] parts |",

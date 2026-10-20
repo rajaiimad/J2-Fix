@@ -218,7 +218,8 @@ if PH_JSON.exists():
     n_whole = sum(v["window"] == "whole" for v in var)
     n_stress = sum(v["role"] == "stress" for v in var)
     n_hide = sum(v["role"] == "evasion_only" for v in var)
-    check(f"clean + {len(var)} bounded" in ptxt, f"Fig. 1 states {len(var)} perturbation variants")
+    fig1 = (REVISION_ROOT / "paper" / "figs_src" / "pipeline_tikz.tex").read_text()   # Fig. 1 source (shared by both layouts)
+    check(f"clean + {len(var)} bounded" in fig1, f"Fig. 1 states {len(var)} perturbation variants")
     check(f"give {n_stress} variants" in ptxt, f"paper states {n_stress} stress variants")
     check(f"the {n_whole} whole-session variants ({n_whole - n_hide} stress scenarios and {n_hide} hiding" in ptxt,
           "paper states the adaptive candidate set")
@@ -356,6 +357,16 @@ if PH_JSON.exists():
                     check(re.search(r"approximate|not significant|suggestive", para) is not None,
                           f"{tex.name}: p = {pv[k]} (\\{k}) quoted without the approximate / not-significant caveat")
     check(n_zone >= 3, f"approximate-zone p-values found in the main text: {n_zone}")
+    # the IEEE Access version must use exactly the same section files as the working version
+    _inp = lambda t: re.findall(r"\\input\{(sections/[^}]+)\}", t)
+    _m, _a = (REVISION_ROOT / "paper" / "main.tex").read_text(), (REVISION_ROOT / "paper" / "main_access.tex")
+    if _a.exists():
+        check(_inp(_m) == _inp(_a.read_text()), f"main_access.tex inputs the same section files as main.tex ({_inp(_m)} vs {_inp(_a.read_text())})")
+        _ma = (REVISION_ROOT / "paper" / "main_access.pdf")
+        check(_ma.exists() and _ma.stat().st_mtime >= max(t.stat().st_mtime for t in (REVISION_ROOT / "paper" / "sections").glob("*.tex")),
+              "main_access.pdf is newer than every section file")
+    abs_txt = (REVISION_ROOT / "paper" / "sections" / "abstract.tex").read_text()
+    check("\\begin{IEEEkeywords}" in abs_txt and "Cybersickness, virtual reality" in abs_txt, "abstract.tex contains the index terms (keywords)")
     res_txt = (REVISION_ROOT / "paper" / "sections" / "s5_results.tex").read_text()
     for k in ("PHTimeLRvsEDDQNAucP", "PHTimeHGBvsEDDQNAucP", "PHAlwEDDQNGrpP", "EDDQNCIRocAucLo"):
         check("\\" + k in res_txt, f"Results quote \\{k} (baselines vs E-DDQN, E-DDQN vs always alarm, E-DDQN ROC-AUC CI)")
@@ -368,7 +379,7 @@ if PH_JSON.exists():
             if re.match(r"^(PH|SD|SS|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
                 check(name in pdef, f"paper/{tex.name}: macro \\{name} not defined")
     # stale numbers of the earlier version may appear only where that version is named
-    for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf"):
+    for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "main_access.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf"):
         if not pdf.exists():
             continue
         txt = re.sub(r"\s+", " ", subprocess.run(["pdftotext", str(pdf), "-"], capture_output=True, text=True).stdout)

@@ -11,6 +11,18 @@
    "context": "rt grade to the size of grade 0 (5,243 samples) before a random 70/15/15 row-level split, the protocol of the earlier, unpublished version of this study (it reproduces that version\u2019s partition sizes, 14,680 / 3,146 / 3,146, exactly); (ii) a row-l"
   }
  ],
+ "main_access.pdf": [
+  {
+   "number": "96.88",
+   "named_as_earlier_version": true,
+   "context": "lay dataset used here were obtained with a 70/30 split of the data for which no participant- or sessionlevel separation is reported [16]. An earlier, unpublished version of the present study reported 96.88 % accuracy for E-DDQN under an oversamp"
+  },
+  {
+   "number": "14,680",
+   "named_as_earlier_version": true,
+   "context": "rt grade to the size of grade 0 (5,243 samples) before a random 70/15/15 row-level split, the protocol of the earlier, unpublished version of this study (it reproduces that version\u2019s partition sizes, 14,680 / 3,146 / 3,146, exactly); (ii) a rowle"
+  }
+ ],
  "supplement.pdf": [
   {
    "number": "96.88",
