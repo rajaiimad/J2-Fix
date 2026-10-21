@@ -583,8 +583,19 @@ if V2.exists():
     v2 = {f.name: f.read_text() for f in V2.glob("*.tex")}
     v2all = "".join(v2.values())
     _flat = lambda t: re.sub(r"\s+", " ", t)
-    check(v2["abstract.tex"] == (REVISION_ROOT / "paper" / "sections" / "abstract.tex").read_text(),
+    _absonly = lambda t: t.split("\\end{abstract}")[0]
+    check(_absonly(v2["abstract.tex"]) == _absonly((REVISION_ROOT / "paper" / "sections" / "abstract.tex").read_text()),
           "v2 abstract is identical to the full-length abstract")
+    _kw = v2["abstract.tex"].split("\\begin{IEEEkeywords}")[1].split("\\end{IEEEkeywords}")[0].strip().rstrip(".")
+    _kwl = [k.strip() for k in _kw.split(",")]
+    check(_kwl == sorted(_kwl, key=str.lower) and len(_kwl) >= 4, f"v2 index terms in alphabetical order ({len(_kwl)} terms)")
+    _intro = _flat(v2["s1_introduction.tex"])
+    for ab, full in (("E-DDQN", "enhanced Double Deep Q-Network (E-DDQN)"), ("E-CB", "(E-CB)"), ("CS-MLP", "CS-MLP;"),
+                     ("HGB", "histogram gradient boosting, HGB"), ("ROC-AUC", "(ROC-AUC)"), ("RL", "(RL)"), ("DQN", "(DQNs)")):
+        check(full in _intro, f"v2 defines {ab} in the Introduction")
+    _m = _flat(v2["s3_method.tex"])
+    for full in ("(PR-AUC)", "(MCC)", "(CIs)", "(SHapley Additive exPlanations)", "(SD)"):
+        check(full in _m, f"v2 defines {full} at first use in Methods")
     for phrase in ("largely a consequence", "the answer is no", "reflects its search draw", "reflects that draw",
                    "participant-independent evaluation", "robust to attack", "outperforms the baselines"):
         check(phrase not in v2all, f"v2: no overstatement '{phrase}'")

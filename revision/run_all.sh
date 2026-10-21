@@ -41,5 +41,6 @@ python3 scripts/14_score_scale.py                        # score scale of rule D
 python3 scripts/15_pipeline_verification.py              # split, preprocessing, selection and replay checks on the real folds
 python3 scripts/16_threshold_scale.py                    # threshold-scale sensitivity of rule D1 (post hoc, no training)
 bash    paper/build.sh                                   # new-submission paper + supplement
+python3 scripts/17_ieee_access_bundle.py               # single-file IEEE Access upload bundle, verified against the PDF
 python3 scripts/08_consistency_check.py                  # every number in the PDFs traced to results
 python3 scripts/09_render_docs.py                        # reviewer response, results and QC reports from templates

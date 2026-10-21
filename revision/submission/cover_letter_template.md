@@ -24,7 +24,7 @@ The main findings are:
 
 We believe the work suits *[Journal name]* because [one or two sentences on the journal's scope, e.g. its interest in rigorous evaluation of machine-learning methods for virtual reality and human–computer interaction]. The paper reports a carefully controlled negative result. It gives practical guidance for evaluating cybersickness detectors: participant- or session-grouped splits, trivial and exposure-time baselines, and comparison of RL detectors with cost-weighted supervised models over more than one random search draw.
 
-All code, the pre-specified protocol, the per-sample predictions and the scripts that regenerate every number, table and figure from the raw data are archived at [DOI]. A clean rerun of the final version from an empty directory reproduced every reported result exactly.
+All code, the pre-specified protocol, the per-sample predictions and the scripts that regenerate every number, table and figure from the raw data are archived at [DOI]. A clean rerun from an empty directory reproduced every per-sample prediction and every result reported at that time exactly; the checks added later are computed from those saved predictions and model outputs.
 
 On behalf of all authors, I confirm the following:
 - The manuscript is original. It has not been published and is not under consideration elsewhere. [Confirm. If an earlier version was submitted to another journal, it must have been withdrawn or rejected before this submission.]
