@@ -197,5 +197,22 @@
       "R2_draw_dependence": "E-DDQN's result is called draw-dependent if, across its three full-space draws, its seed-mean D1 cost spans more than 0.05 or its within-fold ROC-AUC spans more than 0.05.",
       "R3_feature_set": "Under the exposure-only restriction: if E-DDQN's within-fold ROC-AUC is within 0.03 of DQN's, the feature-set/search-draw explanation of Section V-G is supported; if it is more than 0.05 below DQN's, that explanation is insufficient and other components of E-DDQN remain plausible contributors; otherwise inconclusive."
     }
+  },
+  "threshold_scale_sensitivity": {
+    "_comment": "Specified on 2026-10-21 after all other results were known, in response to an internal pre-submission review that noted the scale mismatch below; committed BEFORE the computation was run. Computed only from the saved per-inner-model validation and test scores of the final runs; no model is trained or re-tuned, no threshold is re-chosen, and no primary result is replaced. Every result is reported whatever it shows.",
+    "question": "The D1 threshold of each (family, outer fold, seed) is chosen on pooled OOF scores, each produced by ONE inner model, but applied to the outer-test score, which is the MEAN of the 3 inner models' scores. How much do the reported D1 results depend on this scale difference?",
+    "primary_models": [
+      "E-DDQN",
+      "E-CB",
+      "DQN",
+      "CS-MLP",
+      "LogReg",
+      "HGB",
+      "RF"
+    ],
+    "variant_single_model": "apply the unchanged D1 threshold of each (family, fold, seed) to each inner model's own test score separately (the scale on which the threshold was chosen); 5:1 cost, recall and false-positive rate pooled over the 5 outer folds per (seed, inner model), then averaged over the 3 inner models and the 5 seeds; compared with the reported seed-mean D1 results (pipeline recomputed from the same files as a check)",
+    "spread_diagnostic": "per (family, fold, seed): SD of the averaged test score divided by the mean SD of the single-model test scores (values below 1 = shrinkage by averaging); summarized by median and range per family",
+    "reporting": "descriptive, no test; the change in cost, recall and false-positive rate per family, and the spread ratio; stated in the limitation on threshold transfer and in the supplement (shortened version)",
+    "script": "scripts/16_threshold_scale.py"
   }
 }
