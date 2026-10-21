@@ -1,0 +1,18 @@
+\section{Telemetry-perturbation stress tests}
+\label{sec:s-attacks}
+
+\subsection{Design (frozen before evaluation; \texttt{configs/\allowbreak attacks.json})}
+Perturbations act on the raw per-second channels of the outer-test sessions; causal features are then recomputed with the training-fitted featurizer and scaler of each inner model. Cybersickness labels are never modified; the indicator $z$ marks perturbed seconds. Stress scenarios (each over the whole session or one random 60-s window): frame-rate cap at 72, 60 or 45\,fps (Type~I); uniform orientation jitter of up to $\pm$0.02, 0.05 or 0.10 per rotation component (Type~II); speed up-scaling by 10, 25 or 50\,\% with acceleration recomputed as the per-second speed difference (the logged acceleration equals this difference in every session; Type~II); speed raised by 10, 20 or 40 units for one second every 20\,s (Type~II). Together: 4 kinds $\times$ 3 strengths $\times$ 2 windows = 24 stress variants. Evasion-only candidates (whole session): speed down-scaling by 25 or 50\,\%, orientation smoothing with $\lambda=0.5$ or 0.25, frame-rate restoration to 90\,fps (5 variants; 29 variants in total, 17 of them whole-session). Speed is clipped to each game's observed range and orientation components to their valid range $[-1,1]$. The frame-rate caps are applied as caps: the 60- and 45-fps caps lie below every frame rate observed in Flight sessions after the first second (\SSFpsFlightMin--\SSFpsFlightMax\,fps), whereas the Race sessions range from \SSFpsRaceMin{} to \SSFpsRaceMax\,fps, so these scenarios are outside the data range for Flight. Field-of-view manipulation is not evaluated because the field of view never varies within a game in the data.
+
+\subsection{Interpretation limits}
+The tests measure how bounded manipulation of the logged channels moves the detectors' scores and decisions. They do not show that a manipulation would cause or hide cybersickness in a person, because no physiological effect was measured. The adaptive worst cases give the adversary the labels and choose the most damaging candidate per session and model.
+
+\subsection{Operating points and adaptive worst cases}
+Recall/false-positive rate (\%) of the seed ensembles on perturbed seconds at the D1 operating point for representative whole-session variants, and per-session adaptive worst cases (evasion: minimum recall; false-alarm induction: maximum FPR) over all \AttAucNVariants{} whole-session candidates.
+
+{\footnotesize\input{generated/tab_attack.tex}}
+
+\subsection{All variants}
+Recall and false-positive rate on perturbed seconds (\%) and 5:1 cost on those seconds, clean vs.\ perturbed, seed ensembles at the D1 operating point.
+
+{\scriptsize\setlength{\tabcolsep}{2.5pt}\input{generated/tab_attack_full.tex}}

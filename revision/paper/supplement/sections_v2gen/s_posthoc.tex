@@ -1,0 +1,110 @@
+\section{Post-hoc analyses}
+\label{sec:s-posthoc}
+All analyses in this section were specified after the primary results were known. They use the splits, inner folds, selection objective, checkpoint and threshold rules, cross-fitting recipe and final seeds of the primary protocol, and no primary result was changed. They differ in when they were specified. The exposure-time baselines (S5.1), the Holm adjustment of the comparisons with E-DDQN (S5.2), the comparison with always alarming (S5.3), the grouping sensitivity analyses (S5.4) and the cost curves (S5.5) were committed (\texttt{configs/\allowbreak posthoc.json}) before they were run. The paired comparisons of the exposure-time baselines with the primary models (main text, Section~IV-B), the Holm adjustment over the nine models of the comparison with always alarming (S5.3) and the Q-value scale (S5.6) were added while the results were produced and written up, without prior commitment, as were two descriptive additions: the label-dynamics summary (S1.2) and the seed-ensemble block of the main results table. Sections~S5.7--S5.10 were added after a pre-submission review, when all other results were known (key \texttt{review\_round\_2}); they use only the saved per-sample predictions, selected configurations and search logs. Section~S5.11 was prompted by the same review but was specified, with its decision rules, and committed before any of its models was trained; like the exposure-time baselines of S5.1, it trains new models under the full protocol. Section~S5.12, a descriptive calculation that trains no model, was added in the final pre-submission check. As in the main text (Section~III-G), bootstrap $p$-values between 0.01 and 0.05 in the tables of this section are approximate, and a difference whose confidence interval includes zero is a point estimate only.
+
+\subsection{Exposure-time baselines: selected configurations}
+Time-LR searched all six values of $C$; Time+game HGB used the HGB search space and budget (16 configurations).
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_selected.tex}
+\end{center}
+
+\subsection{Holm adjustment of the paired comparisons}
+Group-bootstrap comparisons of E-DDQN with the six other primary models under each operating rule, with Holm's step-down adjustment over the six comparisons of each rule.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_holm.tex}
+\end{center}
+
+\subsection{Comparison with always alarming}
+Paired bootstrap of each model's D1 cost (seed ensemble) minus the cost of always alarming; Holm adjustment over the nine models (group units; the adjustment was added without prior commitment). With sessions instead of linkage groups as resampling units, which ignores possible dependence between linked sessions, the random forest's difference has $p=$\,\PHAlwRFSesP{} and Holm-adjusted $p=$\,\PHAlwRFSesHolm{} (approximate); all session-level values are in \texttt{results/\allowbreak tables/\allowbreak posthoc/\allowbreak vs\_always\_alarm.csv}.
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_always.tex}}
+\end{center}
+
+\subsection{Grouping sensitivity}
+Paired bootstrap resampling sessions instead of linkage groups (Holm over the six primary comparisons), and the range of the cost difference in a leave-one-group-out jackknife over the \nGroupsEval{} groups.
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_sensitivity.tex}}
+\end{center}
+
+\subsection{Validation-chosen cost curves}
+Test cost of the seed ensemble divided by the cost of the better trivial policy, for each false-negative to false-positive ratio $R$ (threshold chosen on inner-validation predictions at each $R$). At $R=5$ the values reproduce the D1 seed-ensemble costs exactly (checked programmatically).
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_costcurves.tex}}
+\end{center}
+
+\subsection{Q-value scale}
+Largest absolute Q-value over the final runs of each outer fold relative to the return bound $r_{\max}/(1-\gamma)$ of the selected discount ($r_{\max}=0.5$ for the asymmetric reward, 1 for the symmetric reward).
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_qbounds.tex}
+\end{center}
+
+\subsection{Within-fold ROC-AUC}
+Pooled ROC-AUC combines the test scores of five fold-specific models and therefore mixes discrimination with differences in score scale between folds. Within-fold ROC-AUC is computed in each outer-test fold and averaged over folds (seed mean: also averaged over the five seeds).
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_withinfold.tex}
+\end{center}
+
+\subsection{Exact group sign-flip tests}
+Two-sided sign-flip permutation test of the pooled D1 cost difference of the seed ensembles, with the \nGroupsEval{} linkage groups as units and all $2^{21}$ sign patterns enumerated. Holm adjustment over the six primary comparisons with E-DDQN and over the nine comparisons with always alarming. The group-bootstrap $p$-values of Section~S5.2 (rule D1) are shown for comparison.
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ph_signflip.tex}}
+\end{center}
+
+\subsection{Selected feature sets and within-fold ROC-AUC}
+Exploratory. Feature set selected on validation data for each primary model and outer fold (T: telemetry; T+Q: telemetry and questionnaire indicators; E: exposure; E+Q: exposure and questionnaire indicators) and the within-fold ROC-AUC of that model on the fold's test groups (mean over seeds). Feature sets were selected, not assigned, so the association does not establish a cause.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_featureset.tex}
+\end{center}
+
+\subsection{Search draw}
+Feature sets among each family's random-search candidates (T: telemetry; T+Q: telemetry and questionnaire indicators; E: exposure; E+Q: exposure and questionnaire indicators). The candidates were drawn once per family with a fixed seed and reused in every outer fold.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_searchdraw.tex}
+\end{center}
+
+For E-DDQN, the lowest pooled inner-validation 5:1 cost among candidates with (Q) and without the questionnaire indicators in each outer fold; the selection rule picks the lower value.
+
+\begin{center}\footnotesize
+\input{generated/tab_ph_searchdraw_val.tex}
+\end{center}
+
+
+\subsection{Search-draw sensitivity (specified before it was run)}
+\label{sec:s-searchdraw}
+Prompted by the dependence of E-DDQN's result on its single random draw (S5.10), this analysis was specified in \texttt{configs/\allowbreak posthoc.json} (key \texttt{search\_draw\_sensitivity}), together with its decision rules, and committed before any of its models was trained. E-DDQN and the standard DQN were each tuned again under the full protocol---same splits, inner folds, search training seed, budget of 16 configurations, selection rule, checkpoint rule, cross-fitting, five final seeds and threshold rules---with two further random draws from the full search space (configuration seeds 9120 and 9130 for E-DDQN, 9122 and 9132 for DQN) and with one draw of 16 configurations restricted to the exposure feature set (9200 and 9202). Perturbation variants were not scored. Draw~1 is the primary analysis and is reproduced exactly. Every variant is reported; none replaces the primary results. The decision rules were: (R1) the statement that E-DDQN does not outperform the standard DQN is challenged if, in any pair, E-DDQN's seed-ensemble cost is lower and the 95\,\% group-bootstrap interval of the difference excludes zero; (R2) E-DDQN's result is called draw-dependent if its seed-mean cost or its within-fold ROC-AUC spans more than 0.05 over its three full-space draws; (R3) under the exposure-only restriction, a within-fold ROC-AUC of E-DDQN within 0.03 of DQN's supports the feature-set explanation of Section~IV-E, one more than 0.05 below DQN's means that this explanation is insufficient, and anything in between is inconclusive.
+
+Per variant: number of exposure-only candidates in the draw, number of outer folds whose selected configuration uses the questionnaire indicators (Q folds), 5:1 cost (rule D1; mean $\pm$ SD over seeds), seed-ensemble cost, pooled and within-fold ROC-AUC (seed means), and the discount factor selected in each outer fold.
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_sd_variants.tex}}
+\end{center}
+
+Paired comparisons of E-DDQN with the standard DQN within each draw (seed ensembles, rule D1; 2,000 group-bootstrap replicates; exact sign-flip test over all $2^{21}$ sign patterns; ROC-AUC difference of the seed-ensemble scores).
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_sd_pairs.tex}}
+\end{center}
+
+\emph{Outcome under the pre-specified rules.} R1 (headline challenged): \SDROne{}; no pair gave E-DDQN a significantly lower cost (differences \SDCostDiffMin{} to \SDCostDiffMax; smallest group-bootstrap $p=$\,\SDCostPMin). R2 (draw-dependent): \SDRTwo{}; over its three full-space draws E-DDQN's seed-mean cost spans \SDCostSpan{} (\SDEDDQNCostMin--\SDEDDQNCostMax) and its within-fold ROC-AUC \SDWfSpan{} (\SDEDDQNWfMin--\SDEDDQNWfMax), against \SDDQNCostMin--\SDDQNCostMax{} and \SDDQNWfMin--\SDDQNWfMax{} for the standard DQN. R3 (feature-set explanation): \SDRThree; with the exposure features only, the standard DQN's within-fold ROC-AUC exceeds E-DDQN's by \SDExposureGap. Beyond the rules, the ROC-AUC differences show that the ranking of the two agents reverses between draws: the standard DQN ranks seconds better in draw~1 ($p=$\,\SDPairOneAucP, approximate) and E-DDQN in draw~2 ($p=$\,\SDPairTwoAucP). The variants were not compared with the other models by any test. The clean rerun of the final version reproduced every variant's per-sample predictions exactly (Section~S7).
+
+\subsection{Score scale of the untuned rule D0}
+\label{sec:s-scorescale}
+Descriptive; added in the final pre-submission check; no model is trained (\texttt{scripts/\allowbreak 14\_score\_scale.py}). The implied probability $\hat p$ (main text, Eqs.~5 and~7) is on the scale of $P(y=1\mid s)$ only for a model trained on the natural class mix with a squared or logistic loss. Class-balanced replay (E-DDQN, E-CB: a fraction $\rho$ of non-events in every minibatch) and the class-balanced minibatches of the CS-MLP (50/50) train on a different class mix; the scores then estimate the posterior under that mix, whose odds are $k=\frac{1-\rho}{\rho}\cdot\frac{1-\pi}{\pi}$ times those of $P(y=1\mid s)$ ($k=\frac{1-\pi}{\pi}$ for 50/50 minibatches), where $\pi$ is the event prevalence of the inner training split. The cut-off $\hat p\ge 1/6$ of rule D0 is then $P(y=1\mid s)\ge 1/(1+5k)$. This is exact when the scores are conditional means, as for E-CB ($\gamma=0$, where the Huber loss is quadratic because the two rewards of each action differ by only 0.6) and for the CS-MLP; for E-DDQN ($\gamma=0.9$--0.99) it is approximate, because some bootstrapped residuals exceed the threshold of the Huber loss. For the standard DQN, the Huber loss (threshold 1) with the $\pm1$ reward makes $\hat p$ a nonlinear function of $P(y=1\mid s)$; at $\gamma=0$ the minimiser of the expected loss is $Q(s,1)=-Q(s,0)=(2p-1)/\max(p,1-p)$, so $\hat p=1/6$ at $P(y=1\mid s)=\SSDQNHuberCut$ (no closed form for $\gamma>0$, marked --). Logistic regression, gradient boosting, the random forest and the CS-MLP with uniform minibatches are trained on the natural class mix and keep the nominal cut-off $1/6$ (up to calibration). The first table gives, for each selected configuration, $\rho$, the mean training prevalence $\pi$ and $k$ over the three inner splits, and the effective cut-off on $P(y=1\mid s)$ (mean and range over the three inner models; the main text quotes the range over all folds). Rule D0 and the greedy policies of the reward-ratio analysis depend directly on this scale. Rule D1 and the ranking metrics do not use the nominal cut-off, but they are not strictly invariant, because $k$ differs between the three inner models whose validation scores are pooled for D1 and whose test scores are averaged, and between folds. The second table rescales every inner model of E-DDQN, E-CB and the CS-MLP to $P(y=1\mid s)$ with its own $k$ (odds divided by $k$, extended monotonically to scores outside $(0,1)$), re-derives D1 exactly as in the main analysis (whose saved decisions are first reproduced exactly) and compares the outcomes (means over the five seeds).
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ss_cutoffs.tex}}
+\end{center}
+
+\begin{center}\footnotesize
+\resizebox{\textwidth}{!}{\input{generated/tab_ss_sensitivity.tex}}
+\end{center}

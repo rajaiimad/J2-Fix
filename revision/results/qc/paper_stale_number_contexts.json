@@ -44,5 +44,34 @@
    "named_as_earlier_version": true,
    "context": "eprocessing code and trained models were not available, so the following is a reconstruction of its protocol, not an exact reproduction. The earlier version\u2019s partition sizes (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples per gr"
   }
+ ],
+ "main_access_v2.pdf": [
+  {
+   "number": "96.88",
+   "named_as_earlier_version": true,
+   "context": "on of the session [15]; published results on the dataset used here come from a 70/30 split for which no session separation is reported [16], and an earlier, unpublished version of this study reported 96.88 % accuracy for E-DDQN after oversamplin"
+  }
+ ],
+ "supplement_v2.pdf": [
+  {
+   "number": "96.88",
+   "named_as_earlier_version": true,
+   "context": "663 0.575 0.557 0.538 0.653 0.644 0.539 0.658 0.666 0.656 0.574 0.556 0.535 0.653 0.643 0.536 0.657 0.666 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQ"
+  },
+  {
+   "number": "99.53",
+   "named_as_earlier_version": true,
+   "context": " 0.653 0.644 0.539 0.658 0.666 0.656 0.574 0.556 0.535 0.653 0.643 0.536 0.657 0.666 Reconstruction of the earlier protocol An earlier, unpublished version of this study reported 96.88 % accuracy and 99.53 % recall for E-DDQN. Its 41feature inpu"
+  },
+  {
+   "number": "14,680",
+   "named_as_earlier_version": true,
+   "context": "1feature input files, preprocessing code and trained models were not available, so the following is a reconstruction of its protocol, not an exact reproduction. The earlier version\u2019s partition sizes (14,680 / 3,146 / 3,146; 20,972 in total; 3,670"
+  },
+  {
+   "number": "20,972",
+   "named_as_earlier_version": true,
+   "context": "eprocessing code and trained models were not available, so the following is a reconstruction of its protocol, not an exact reproduction. The earlier version\u2019s partition sizes (14,680 / 3,146 / 3,146; 20,972 in total; 3,670 training samples per gr"
+  }
  ]
 }

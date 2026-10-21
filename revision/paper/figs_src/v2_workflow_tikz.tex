@@ -1,0 +1,47 @@
+% Fig. 1 of main_access_v2: implemented workflow (stages 1-10).
+\begin{tikzpicture}[
+  node distance=3.5mm and 4mm,
+  stage/.style={draw, rounded corners=2pt, align=left, font=\scriptsize, inner sep=2.2pt,
+                minimum height=15mm, text width=37mm, fill=#1},
+  stage/.default=white,
+  arr/.style={-{Stealth[length=1.8mm]}, thick},
+  held/.style={-{Stealth[length=1.8mm]}, thick, dashed, red!60!black},
+  lane/.style={font=\scriptsize\bfseries, anchor=south west, text=black!75, inner sep=1pt}]
+% ---- lane A: data construction
+\node[stage=blue!6] (s1) {\textbf{1 Dataset acquisition}\\UFFCSData XML exports; curated release: \nSessionsEval{} sessions, \nSamplesEval{} s at 1\,Hz; $y_t=1$ if discomfort $\ge1$};
+\node[stage=blue!6, right=of s1] (s2) {\textbf{2 Cleaning}\\rebuilt from raw XML; constant and position columns removed; no oversampling};
+\node[stage=blue!6, right=of s2] (s3) {\textbf{3 Session-linkage groups}\\identical 9-field profile, or restart within 180\,s of an aborted session: \nGroupsEval{} groups (no participant ids)};
+\node[stage=blue!6, right=of s3] (s4) {\textbf{4 Nested grouped split}\\outer: \nOuter{} folds of groups (test)\\inner: \nInner{} folds of the development groups (validation)};
+\node[lane] (la) at ($(s1.north west)+(0,1.2mm)$) {A. Data construction (no statistic is learned)};
+% ---- lane B: development (inner folds only)
+\node[stage=orange!10, below=12mm of s1] (s5) {\textbf{5 Causal features + scaling}\\39 telemetry + 11 questionnaire indicators; spike threshold, imputation, robust scaler fitted on inner-training rows only};
+\node[stage=orange!10, right=of s5, minimum height=6.5mm, yshift=4.25mm] (s6) {\textbf{6 E-DDQN} (Fig.~2)};
+\node[stage=orange!10, below=2mm of s6, minimum height=6.5mm] (s7) {\textbf{7 Baselines}: DQN, E-CB, CS-MLP, LogReg, HGB, RF};
+\node[stage=orange!10, right=of s6, yshift=-4.25mm] (s8) {\textbf{8 Validation-based choices}\\random search (16 configs; 12 LogReg), checkpoint, threshold D1 from pooled inner-OOF scores};
+\node[stage=orange!10, right=of s8] (s8b) {\textbf{Final training}\\selected configuration $\times$ 5 seeds $\times$ \nInner{} cross-fitted models; thresholds frozen};
+\node[lane, anchor=south east] (lb) at ($(s8b.north east)+(0,1.2mm)$) {B. Development: inner-training and inner-validation groups only};
+% ---- lane C: held-out evaluation
+\node[stage=green!10, below=12mm of s8] (s9) {\textbf{9 Held-out evaluation}\\each outer-test fold scored once: clean telemetry and bounded perturbations};
+\node[stage=green!10, right=of s9] (s10) {\textbf{10 Statistics, explainability}\\metrics, group-bootstrap CIs, paired tests (Holm), sign-flip sensitivity; SHAP on $\Delta Q$};
+\node[lane] (lc) at ($(s9.north west)+(0,1.2mm)$) {C. Final evaluation: outer-test groups, once per fold};
+\node[draw=red!60!black, dashed, rounded corners=2pt, font=\scriptsize, align=left, text width=78mm, inner sep=3pt,
+      anchor=north west] (fw) at ($(s5.south west)+(0,-6mm)$)
+  {\textbf{Firewall.} Features, scaler, configuration, checkpoint and threshold of every model are fixed in A--B before its outer-test fold is scored; the outer-test groups enter only stages 9--10 (dashed path).};
+% lanes
+\begin{scope}[on background layer]
+\node[fit=(la)(s1)(s4), inner sep=2.2mm, fill=blue!2, draw=blue!30, rounded corners=3pt] (LA) {};
+\node[fit=(lb)(s5)(s8b)(s7), inner sep=2.2mm, fill=orange!3, draw=orange!40, rounded corners=3pt] (LB) {};
+\node[fit=(lc)(s9)(s10), inner sep=2.2mm, fill=green!3, draw=green!40, rounded corners=3pt] (LC) {};
+\end{scope}
+% flow
+\draw[arr] (s1) -- (s2); \draw[arr] (s2) -- (s3); \draw[arr] (s3) -- (s4);
+\draw[arr] (s4.south) -- ($(s4.south)+(0,-2mm)$) -| node[pos=0.2, above, font=\scriptsize, fill=white, inner sep=0.5pt] {development groups} ($(s5.north)+(10mm,4.5mm)$) -- ($(s5.north)+(10mm,0)$);
+\draw[arr] (s5.east) -- ++(1.5mm,0) |- (s6.west);
+\draw[arr] (s5.east) -- ++(1.5mm,0) |- (s7.west);
+\draw[arr] (s6.east) -- ++(1.5mm,0) |- (s8.west);
+\draw[arr] (s7.east) -- ++(1.5mm,0) |- (s8.west);
+\draw[arr] (s8) -- (s8b);
+\draw[arr] (s8b.south) -- ++(0,-4mm) -| node[pos=0.25, above, font=\scriptsize] {frozen models and thresholds} (s9.north);
+\draw[arr] (s9) -- (s10);
+\draw[held] (s4.east) -- ++(3mm,0) |- node[pos=0.25, right, font=\scriptsize, align=left, text width=13mm] {outer-test groups (held out)} (s10.east);
+\end{tikzpicture}

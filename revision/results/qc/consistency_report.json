@@ -1,5 +1,5 @@
 {
- "checks": 1053,
+ "checks": 1443,
  "failures": [],
  "pending_author_inputs": [
   "paper/main_access.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
@@ -7,6 +7,11 @@
   "paper/main_access.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
   "paper/main_access.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
   "paper/main_access.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
+  "paper/main_access_v2.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
+  "paper/main_access_v2.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
+  "paper/main_access_v2.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
+  "paper/main_access_v2.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
+  "paper/main_access_v2.tex: Biography of about 100 words and a photograph, to be supplied by the author.",
   "paper/sections/backmatter.tex: DOI to be added on deposit",
   "paper/sections/backmatter.tex: Add your institution's ruling if it requires a formal exemption for secondary analysis of public data, and the ethics approval of the original data collection if the journal asks for it.",
   "paper/sections/backmatter.tex: To be completed by the authors with CRediT roles",
@@ -16,7 +21,18 @@
   "paper/sections/backmatter.tex: roles",
   "paper/sections/backmatter.tex: roles",
   "paper/sections/backmatter.tex: version and period of use",
-  "paper/sections/backmatter.tex: Confirm that this describes your use, and adapt it to the target journal's policy."
+  "paper/sections/backmatter.tex: Confirm that this describes your use, and adapt it to the target journal's policy.",
+  "paper/sections_v2/backmatter.tex: DOI to be added on deposit",
+  "paper/sections_v2/backmatter.tex: Add your institution's ruling if it requires a formal exemption for secondary analysis of public data, and the ethics approval of the original data collection if the journal asks for it.",
+  "paper/sections_v2/backmatter.tex: To be completed by the authors with CRediT roles",
+  "paper/sections_v2/backmatter.tex: roles",
+  "paper/sections_v2/backmatter.tex: roles",
+  "paper/sections_v2/backmatter.tex: roles",
+  "paper/sections_v2/backmatter.tex: roles",
+  "paper/sections_v2/backmatter.tex: roles",
+  "paper/sections_v2/backmatter.tex: version and period of use",
+  "paper/sections_v2/backmatter.tex: Confirm that this describes your use, and adapt it to the target journal's policy.",
+  "paper/sections_v2/s3_method.tex: CPU model and memory to be added"
  ],
  "macros_defined": 1821,
  "macros_used_in_text": 119,

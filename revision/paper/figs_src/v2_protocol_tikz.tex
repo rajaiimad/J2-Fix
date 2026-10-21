@@ -1,0 +1,46 @@
+% Fig. 3 of main_access_v2: nested, session-linkage-grouped evaluation protocol
+% (src/eddqn/data.py, src/eddqn/experiment.py, scripts/03_run_protocol.py, scripts/04_aggregate.py).
+\begin{tikzpicture}[x=1mm, y=1mm,
+  b/.style={draw, rounded corners=2pt, align=center, font=\scriptsize, inner sep=2pt, fill=#1, anchor=north west},
+  b/.default=white,
+  cell/.style={draw, minimum width=7mm, minimum height=5mm, font=\scriptsize, inner sep=0pt, anchor=west},
+  arr/.style={-{Stealth[length=1.7mm]}, thick},
+  held/.style={-{Stealth[length=1.7mm]}, thick, dashed, red!60!black},
+  lab/.style={font=\scriptsize, inner sep=1pt},
+  hdr/.style={font=\scriptsize\bfseries, anchor=west, inner sep=0pt}]
+% ---------- outer split
+\node[hdr] at (0,9) {(a) Outer split of the \nGroupsEval{} linkage groups (stratified group $k$-fold on game $\times$ label)};
+\foreach \i in {1,...,5} {
+  \ifnum\i=3 \node[cell, fill=green!25] (o\i) at ({(\i-1)*7},-3) {test};
+  \else \node[cell, fill=orange!12] (o\i) at ({(\i-1)*7},-3) {dev}; \fi }
+\node[lab, anchor=west, text width=33mm, align=left] at (37,-3) {fold $k$ = test (here $k{=}3$); 4 folds = development set};
+% ---------- inner split
+\node[hdr] at (0,-12) {(b) Inner split of the development groups};
+\foreach \j/\v in {1/1,2/2,3/3} {
+  \node[lab, anchor=east] at (-0.5,{-12-\j*6.5}) {$j{=}\j$};
+  \foreach \c in {1,2,3} {
+    \ifnum\c=\v \node[cell, fill=yellow!35, minimum width=11mm] at ({(\c-1)*11},{-12-\j*6.5}) {val};
+    \else \node[cell, fill=orange!12, minimum width=11mm] at ({(\c-1)*11},{-12-\j*6.5}) {train}; \fi } }
+\node[lab, anchor=north west, text width=34mm, align=left] at (35,-14.5) {each development second is validated exactly once $\Rightarrow$ pooled out-of-fold (OOF) scores};
+% ---------- per inner split
+\node[b=orange!10, text width=44mm] (fit) at (0,-41) {\textbf{Per inner split $j$ (fitted on its train groups only)}\\causal featurizer (spike threshold, frame-rate imputation) and robust scaler; model training; checkpoint on its val groups};
+% ---------- model selection, final training
+\node[b=orange!10, text width=40mm] (hpo) at (78,0) {\textbf{1 Hyper-parameter search}\\each of 16 configurations (12 for LogReg) $\times$ 3 inner splits, 1 seed; select min.\ OOF 5:1 cost (ties: PR-AUC)};
+\node[b=orange!10, text width=40mm] (fin) at (78,-21) {\textbf{2 Final training}\\selected configuration $\times$ 5 seeds $\times$ 3 cross-fitted inner models (same inner splits)};
+\node[b=orange!10, text width=40mm] (thr) at (78,-39) {\textbf{3 Thresholds} from the pooled OOF scores: D1 = min.\ 5:1 cost (primary); D0, recall rules (secondary)};
+\node[b=green!12, text width=40mm] (tst) at (127,0) {\textbf{4 Single test evaluation}\\test fold $k$: each inner model's frozen featurizer, scaler and network; score = mean over the 3 models, then over 5 seeds (ensemble)};
+\node[b=green!12, text width=40mm] (pool) at (127,-24) {\textbf{Repeat for $k=1..5$}\\pool the test predictions: every one of the \nSamplesEval{} seconds is scored once by models that never saw its group};
+\node[b=green!12, text width=40mm] (st) at (127,-44) {\textbf{Comparison}\\all models: same splits, budget, rules; group-bootstrap CIs and paired tests (Holm), sign-flip sensitivity};
+\draw[arr] (fit.east) -- ++(4,0) |- (hpo.west);
+\draw[arr] (hpo) -- (fin);
+\draw[arr] (fin) -- (thr);
+\draw[arr] (thr.east) -- ++(3,0) |- ($(tst.west)+(0,-4)$);
+\draw[arr] (tst) -- (pool);
+\draw[arr] (pool) -- (st);
+\draw[arr] (16.5,-34.5) -- node[lab, right] {for each $j=1,2,3$} (16.5,-41);
+\draw[held] (o3.north) -- (o3.north |- 0,4) -- node[lab, above, pos=0.55] {outer-test groups: untouched until step 4} (124,4) |- ($(tst.west)+(0,4)$);
+\begin{scope}[on background layer]
+\node[fit=(hpo)(thr), inner sep=1.5mm, draw=orange!40, fill=orange!3, rounded corners=3pt] {};
+\node[fit=(tst)(st), inner sep=1.5mm, draw=green!40, fill=green!3, rounded corners=3pt] {};
+\end{scope}
+\end{tikzpicture}

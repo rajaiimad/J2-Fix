@@ -1,0 +1,17 @@
+\section{Data, provenance and preprocessing}
+\label{sec:s-data}
+
+\subsection{Provenance}
+The evaluation data are the \nSessionsEval{} sessions of the UFFCSData curated release (\texttt{DATABASE\_SELECTED\_DATA}, December 2019, seated posture; \nSamplesEval{} samples at $\approx$1\,Hz). Each curated file was matched sample by sample to one raw export (\texttt{RAW\_DATABASE}); \texttt{dataset.csv}, the derived file used in the earlier version of this study, is exactly these sessions concatenated in lexicographic folder order (1, 10, 11, \ldots), with integer-coded categories and no session identifier. The \nSessionsDev{} October-2019 standing-posture raw sessions were used only for code development and budget calibration; their camera-orientation channels are constant within every session (a logging defect). Two December-2019 raw sessions that the dataset authors excluded were not used. Full per-session table: \texttt{results/\allowbreak preprocessing/\allowbreak session\_table.csv}.
+
+\subsection{Label}
+$y_t=1$ iff the self-reported discomfort level (0--3) at second $t$ is $\ge 1$. Prevalence \prevEval{} (Flight \prevFlight{}, Race \prevRace{}); \nNeverPos{} of \nSessionsEval{} sessions never report discomfort; the median onset is \onsetMedian\,s after the start. Labels are close to step functions within a session (on average \PHLabelBinaryChanges{} binary switches per session), so consecutive samples are strongly dependent.
+
+\subsection{Linkage groups}
+No participant identifier exists. Sessions are linked when their nine-field questionnaire profile is identical or when one restarts within 180\,s after an aborted session ($<200$ samples) with at most two differing fields; this gives \nGroupsEval{} groups (log: \texttt{results/\allowbreak preprocessing/\allowbreak linkage\_log.csv}). Groups are the unit of every split.
+
+\subsection{Causal features}
+Definitions of all 39 telemetry features and 11 questionnaire indicators: \texttt{results/\allowbreak preprocessing/\allowbreak feature\_dictionary.csv}. The models use preprocessing (imputation value, spike threshold, scaler centre and scale) fitted on the training rows of each inner split. For documentation, \texttt{learned\_parameters\_by\_outer\_fold.csv} lists the imputation value and the spike threshold fitted on each outer fold's development groups, together with the fixed 80-fps frame-drop threshold (the scaler parameters are not listed); no test rows enter either fit. Executable checks: truncation invariance of all features (max.\ difference 0.0 over 40 random cut points); bit-identical preprocessing parameters when test rows are tampered with; zero session, group, identical-profile and duplicated-feature-row overlap between every development set and its test fold (\texttt{partition\_overlap\_checks.csv}).
+
+\subsection{Removed variables}
+Field of view, static-frame and auto-camera flags (constant within each game: duplicates of the game indicator); haptic feedback, degree of control, DOF simulation, locomotion, posture and symptoms (constant overall); absolute player position (encodes course distance and therefore elapsed time; absent in the October wave); VRSQ scores (post-session).

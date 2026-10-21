@@ -51,3 +51,27 @@ cp "$R"/results/tables/score_scale/tab_ss_*.tex supplement/generated/
 cp "$R"/results/figures/confusion_D1_min_cost.pdf "$R"/results/figures/roc_pr_main.pdf supplement/figs/
 (cd supplement && latexmk -pdf -interaction=nonstopmode -quiet supplement.tex >/dev/null 2>&1 || true)
 grep -E "^!|Overfull|undefined" supplement/supplement.log || echo "supplement.pdf: no errors, no overfull boxes, no undefined references"
+
+# ---------------------------------------------------------------------------
+# Shortened IEEE Access version (v2): main_access_v2.tex + supplement_v2.tex.
+# Figures from figs_src/v2_*_tikz.tex; the supplement reuses the same section
+# files with main-text cross-references adapted to the v2 section letters.
+for f in v2_workflow v2_eddqn v2_protocol; do
+  pdflatex -interaction=nonstopmode -output-directory=figs "\def\figfile{$f}\input{figs_src/v2_standalone.tex}" >/dev/null 2>&1 || true
+  mv -f figs/v2_standalone.pdf "figs/$f.pdf"
+  test -s "figs/$f.pdf"
+done
+rm -f figs/v2_standalone.aux figs/v2_standalone.log
+TEXINPUTS=./access_template//: latexmk -pdf -interaction=nonstopmode -quiet main_access_v2.tex >/dev/null 2>&1 || true
+MT=$(grep -n '^\\maketitle' main_access_v2.tex | cut -d: -f1); MT1=$((MT + 1))
+grep -E "^!|Overfull|undefined" main_access_v2.log | grep -v -e "Font shape" -e 'while \\output is active' -e "at lines ${MT}--${MT}\$" -e "at lines ${MT1}--${MT1}\$" \
+  || echo "main_access_v2.pdf: no errors, no content overfull boxes, no undefined references"
+mkdir -p supplement/sections_v2gen
+for f in supplement/sections/*.tex; do
+  sed -e 's/Sections~III-E, III-G and III-I/Sections~III-E, III-G and III-H/' \
+      -e 's/main text, Section~V-C)/main text, Section~IV-B)/' \
+      -e 's/Section~V-G (iii)/Section~IV-E/g' -e 's/Section~V-G/Section~IV-E/g' "$f" > "supplement/sections_v2gen/$(basename "$f")"
+done
+cp "$R"/results/figures/shap_margin.pdf supplement/figs/
+(cd supplement && latexmk -pdf -interaction=nonstopmode -quiet supplement_v2.tex >/dev/null 2>&1 || true)
+grep -E "^!|Overfull|undefined" supplement/supplement_v2.log || echo "supplement_v2.pdf: no errors, no overfull boxes, no undefined references"

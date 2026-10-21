@@ -349,7 +349,7 @@ if PH_JSON.exists():
     zone = [k for k, v in pv.items() if re.search(r"(Pboot|P|Holm)$", k) and "Sf" not in k
             and re.fullmatch(r"0\.\d+", str(v)) and 0.01 <= float(v) <= 0.05]
     n_zone = 0
-    for tex in sorted((REVISION_ROOT / "paper" / "sections").glob("*.tex")):
+    for tex in sorted((REVISION_ROOT / "paper" / "sections").glob("*.tex")) + sorted((REVISION_ROOT / "paper" / "sections_v2").glob("*.tex")):
         for para in re.split(r"\n\s*\n", tex.read_text()):
             for k in zone:
                 if re.search(r"\\" + k + r"(?![A-Za-z])", para):
@@ -379,7 +379,8 @@ if PH_JSON.exists():
             if re.match(r"^(PH|SD|SS|EDDQN|ECB|DQN|CSMLP|LR|HGB|RF|Leak|Orig|Pair|Ratio|Always|Shap|HPO|Att|DOne|Abl)", name):
                 check(name in pdef, f"paper/{tex.name}: macro \\{name} not defined")
     # stale numbers of the earlier version may appear only where that version is named
-    for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "main_access.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf"):
+    for pdf in (REVISION_ROOT / "paper" / "main.pdf", REVISION_ROOT / "paper" / "main_access.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement.pdf",
+                REVISION_ROOT / "paper" / "main_access_v2.pdf", REVISION_ROOT / "paper" / "supplement" / "supplement_v2.pdf"):
         if not pdf.exists():
             continue
         txt = re.sub(r"\s+", " ", subprocess.run(["pdftotext", str(pdf), "-"], capture_output=True, text=True).stdout)
@@ -575,6 +576,67 @@ check("sensitivity analysis of these $p$-values" in t_m if pv_json.exists() else
       "methods name the primary inferential procedure and the sensitivity analysis")
 _words = len(re.sub(r"\\[A-Za-z]+(\{\})?", "X", _abs.split("\\begin{abstract}")[1].split("\\end{abstract}")[0]).split())
 check(_words <= 252, f"abstract length ({_words} tokens, IEEE Access limit 250 words)")
+
+# ---- shortened IEEE Access version (main_access_v2.tex, sections_v2/, supplement_v2.tex)
+V2 = REVISION_ROOT / "paper" / "sections_v2"
+if V2.exists():
+    v2 = {f.name: f.read_text() for f in V2.glob("*.tex")}
+    v2all = "".join(v2.values())
+    _flat = lambda t: re.sub(r"\s+", " ", t)
+    check(v2["abstract.tex"] == (REVISION_ROOT / "paper" / "sections" / "abstract.tex").read_text(),
+          "v2 abstract is identical to the full-length abstract")
+    for phrase in ("largely a consequence", "the answer is no", "reflects its search draw", "reflects that draw",
+                   "participant-independent evaluation", "robust to attack", "outperforms the baselines"):
+        check(phrase not in v2all, f"v2: no overstatement '{phrase}'")
+    check("sensitivity analysis" in _flat(v2["s3_method.tex"]) and "firmly established only if it is significant under both procedures" in _flat(v2["s3_method.tex"]),
+          "v2 methods state the primary procedure, the sensitivity analysis and the decision rule")
+    for f in ("s1_introduction.tex", "s5_results.tex", "s6_discussion.tex", "s7_conclusion.tex"):
+        check("not firmly established" in _flat(v2[f]), f"v2 {f}: E-DDQN vs random forest reported as not firmly established")
+    for f in ("s1_introduction.tex", "s5_results.tex", "s6_discussion.tex", "s7_conclusion.tex"):
+        check(re.search(r"stress test", _flat(v2[f])) is not None, f"v2 {f}: perturbations labelled a stress test")
+    check("not participant independence" in _flat(v2["s3_method.tex"]) and "not participant independence" in _flat(v2["s6_discussion.tex"]),
+          "v2 states that participant independence is not established")
+    check("suggest" in _flat(v2["s5_results.tex"]).split("Why E-DDQN Under-Performs")[1] and "do not isolate a single cause" in _flat(v2["s5_results.tex"]),
+          "v2 search-draw diagnosis worded as suggestive, without a single isolated cause")
+    check("lowered rather than raised" in _flat(v2["s6_discussion.tex"]), "v2 discussion: no benefit of the asymmetric reward claimed")
+    # every equation, figure, table and algorithm of the full-length method is still present
+    for lab in ("eq:reward", "eq:decomp", "eq:margin", "eq:regret", "eq:phat", "eq:ddqn", "eq:unweight", "alg:eddqn",
+                "fig:workflow", "fig:arch", "fig:protocol", "tab:settings", "tab:main", "tab:paired", "tab:leak", "tab:ablation"):
+        check("\\label{" + lab + "}" in v2all, f"v2 keeps \\label{{{lab}}}")
+    # settings table agrees with the frozen protocol
+    proto = json.loads((REVISION_ROOT / "configs" / "protocol.json").read_text())
+    ss = proto["search_spaces"]
+    tab = _flat(v2["s3_method.tex"].split("label{tab:settings}")[1].split("end{tabular}")[0])
+    for item in ("0.005, 0.01, 0.05", "0.4, 0.5, 0.6", "0, 0.5, 0.9, 0.99", "10, 100, 500", "0.90, 0.95, 0.97", "0, 4,000",
+                 "1, 2, 4", "64--64, 128--128, 256--256, 256--512--256", "50, 100, 200, 400", "4, 8, 16, 31", "20, 100, 300",
+                 "3, 5, 8, none", "5, 25, 100, 300", "sqrt, 0.5, 1.0", "300 trees", "buffer 50,000", "40 epochs", "20261012", "seed 777", "1000--1004"):
+        check(item in tab, f"v2 settings table contains '{item}'")
+    check(ss["E-DDQN"]["tau"] == [0.005, 0.01, 0.05] and ss["E-DDQN"]["rho"] == [0.4, 0.5, 0.6] and ss["DQN"]["hard_every"] == [10, 100, 500]
+          and ss["_agent_common"]["eps_decay"] == [0.9, 0.95, 0.97] and ss["RF"]["n_estimators"] == [300]
+          and ss["HGB"]["max_iter"] == [50, 100, 200, 400] and proto["fixed_training"]["agents"]["buffer"] == 50000
+          and proto["fixed_training"]["agents"]["epochs"] == 40 and proto["fixed_training"]["agents"]["learn_every"] == 2
+          and proto["hpo_seed"] == 777 and proto["split_seed"] == 20261012, "v2 settings table values match configs/protocol.json")
+    # figures: the workflow names Fig. 2 for E-DDQN; that must be the architecture figure
+    aux = (REVISION_ROOT / "paper" / "main_access_v2.aux")
+    if aux.exists():
+        at = aux.read_text()
+        check(re.search(r"newlabel\{fig:arch\}\{\{2\}", at) is not None and "Fig.~2" in (REVISION_ROOT / "paper" / "figs_src" / "v2_workflow_tikz.tex").read_text(),
+              "v2: Fig. 1 refers to the architecture figure as Fig. 2, and it is Fig. 2")
+        lg = (REVISION_ROOT / "paper" / "main_access_v2.log").read_text()
+        check("undefined references" not in lg and "Citation" not in lg.split("undefined")[0][-200:] if "undefined" in lg else True,
+              "v2: no undefined references or citations")
+    # supplementary sections cited by the v2 text exist in supplement_v2
+    sm = (REVISION_ROOT / "paper" / "supplement" / "sections_v2" / "s_moved.tex").read_text()
+    n_sub = sm.count("\\subsection{")
+    for ref in set(re.findall(r"S9\.(\d+)", v2all)):
+        check(1 <= int(ref) <= n_sub, f"v2 cites Supplementary Sec. S9.{ref}, which exists")
+    for ref in set(re.findall(r"Sec\.~(S[1-8](?:\.\d+)?)", v2all)):
+        check(ref in ("S1.4", "S3.1", "S4.1", "S4.3", "S5", "S5.6", "S5.9", "S5.11", "S5.12", "S8"), f"v2 cites Supplementary Sec. {ref} (known section)")
+    pv2 = REVISION_ROOT / "paper" / "main_access_v2.pdf"
+    if pv2.exists():
+        npg = int(re.search(r"Pages:\s+(\d+)", subprocess.run(["pdfinfo", str(pv2)], capture_output=True, text=True).stdout).group(1))
+        check(npg <= 16, f"v2 length: {npg} pages (target 15-16 or fewer)")
+        check(pv2.stat().st_mtime >= max(t.stat().st_mtime for t in V2.glob("*.tex")), "main_access_v2.pdf is newer than every v2 section file")
 
 report = {"checks": checks, "failures": fails,
           "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),

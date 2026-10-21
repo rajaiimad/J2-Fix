@@ -1,0 +1,15 @@
+% Standalone rendering of the v2 figures (compiled by build.sh from the paper directory):
+%   pdflatex "\def\figfile{v2_workflow}\input{figs_src/v2_standalone.tex}"
+% writes figs/<figfile>.pdf, included by main_access_v2.tex.
+\documentclass[border=3pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{mathptmx}
+\hyphenpenalty=10000 \tolerance=9999 \emergencystretch=2em
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,backgrounds}
+\input{generated/numbers.tex}
+\input{generated/posthoc_macros.tex}
+\begin{document}
+\input{figs_src/\figfile_tikz}
+\end{document}
