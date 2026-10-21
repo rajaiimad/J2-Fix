@@ -27,10 +27,10 @@
 % ---------- model selection, final training
 \node[b=orange!10, text width=40mm] (hpo) at (78,0) {\textbf{1 Hyper-parameter search}\\each of 16 configurations (12 for LogReg) $\times$ 3 inner splits, 1 seed; select min.\ OOF 5:1 cost (ties: PR-AUC)};
 \node[b=orange!10, text width=40mm] (fin) at (78,-21) {\textbf{2 Final training}\\selected configuration $\times$ 5 seeds $\times$ 3 cross-fitted inner models (same inner splits)};
-\node[b=orange!10, text width=40mm] (thr) at (78,-39) {\textbf{3 Thresholds} from the pooled OOF scores: D1 = min.\ 5:1 cost (primary); D0, recall rules (secondary)};
-\node[b=green!12, text width=40mm] (tst) at (127,0) {\textbf{4 Single test evaluation}\\test fold $k$: each inner model's frozen featurizer, scaler and network; score = mean over the 3 models, then over 5 seeds (ensemble)};
+\node[b=orange!10, text width=40mm] (thr) at (78,-39) {\textbf{3 Thresholds} D1 = min.\ 5:1 cost on the pooled OOF scores (primary); secondary: D0 = fixed $1/6$, OOF recall $\ge0.95$};
+\node[b=green!12, text width=40mm] (tst) at (127,0) {\textbf{4 Single test evaluation}\\test fold $k$, each inner model's frozen featurizer, scaler, network; per seed: mean of 3 models, own threshold (seed mean $\pm$ SD); ensemble: mean over seeds, threshold on mean OOF score};
 \node[b=green!12, text width=40mm] (pool) at (127,-24) {\textbf{Repeat for $k=1..5$}\\pool the test predictions: every one of the \nSamplesEval{} seconds is scored once by models that never saw its group};
-\node[b=green!12, text width=40mm] (st) at (127,-44) {\textbf{Comparison}\\all models: same splits, budget, rules; group-bootstrap CIs and paired tests (Holm), sign-flip sensitivity};
+\node[b=green!12, text width=40mm] (st) at (127,-44) {\textbf{Comparison}\\all models: same splits, budget, rules; group-bootstrap CIs, paired tests; Holm$^\dagger$, sign-flip sensitivity$^\dagger$ ($^\dagger$post hoc)};
 \draw[arr] (fit.east) -- ++(4,0) |- (hpo.west);
 \draw[arr] (hpo) -- (fin);
 \draw[arr] (fin) -- (thr);

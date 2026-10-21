@@ -262,6 +262,11 @@ R.~S. Kennedy, K.~M. Stanney, and W.~P. Dunlap, ``Duration and exposure to
   \emph{Presence: Teleoperators and Virtual Environments}, vol.~9, no.~5, pp.
   463--472, 2000.
 
+\bibitem{paszke2019pytorch}
+A.~Paszke \emph{et~al.}, ``{PyTorch}: An imperative style, high-performance
+  deep learning library,'' in \emph{Advances in Neural Information Processing
+  Systems ({NeurIPS})}, vol.~32, 2019.
+
 \bibitem{chicco2020mcc}
 D.~Chicco and G.~Jurman, ``The advantages of the {M}atthews correlation
   coefficient ({MCC}) over {F1} score and accuracy in binary classification
@@ -295,6 +300,11 @@ T.~G. Dietterich, ``Approximate statistical tests for comparing supervised
 S.~M. Lundberg and S.-I. Lee, ``A unified approach to interpreting model
   predictions,'' in \emph{Advances in Neural Information Processing Systems
   ({NeurIPS})}, 2017, pp. 4765--4774.
+
+\bibitem{shrikumar2017deeplift}
+A.~Shrikumar, P.~Greenside, and A.~Kundaje, ``Learning important features
+  through propagating activation differences,'' in \emph{Proc. Int. Conf.
+  Machine Learning ({ICML})}, 2017, pp. 3145--3153.
 
 \bibitem{varma2006bias}
 S.~Varma and R.~Simon, ``Bias in error estimation when using cross-validation

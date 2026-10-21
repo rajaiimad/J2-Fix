@@ -631,7 +631,7 @@ if V2.exists():
     for ref in set(re.findall(r"S9\.(\d+)", v2all)):
         check(1 <= int(ref) <= n_sub, f"v2 cites Supplementary Sec. S9.{ref}, which exists")
     for ref in set(re.findall(r"Sec\.~(S[1-8](?:\.\d+)?)", v2all)):
-        check(ref in ("S1.4", "S3.1", "S4.1", "S4.3", "S5", "S5.6", "S5.9", "S5.11", "S5.12", "S8"), f"v2 cites Supplementary Sec. {ref} (known section)")
+        check(ref in ("S1.4", "S2.1", "S3.1", "S4.1", "S4.3", "S5", "S5.6", "S5.9", "S5.10", "S5.11", "S5.12", "S8"), f"v2 cites Supplementary Sec. {ref} (known section)")
     pv2 = REVISION_ROOT / "paper" / "main_access_v2.pdf"
     if pv2.exists():
         npg = int(re.search(r"Pages:\s+(\d+)", subprocess.run(["pdfinfo", str(pv2)], capture_output=True, text=True).stdout).group(1))

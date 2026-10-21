@@ -11,7 +11,7 @@
 \node[b=orange!10, text width=27mm] (pol) at (37,0) {\textbf{$\varepsilon$-greedy action}\\$a_t=\arg\max_a Q_\theta(s_t,a)$ with prob.\ $1-\varepsilon$, else random; $\varepsilon$: $1\rightarrow0.01$ (decay per epoch)};
 \node[b=orange!10, text width=27mm] (rew) at (71,0) {\textbf{Asymmetric reward}\\$r_t=R(a_t,y_t)$\\[1pt]
   $\begin{array}{@{}c|cc@{}} & y{=}1 & y{=}0\\\hline a{=}1 & +0.5 & -0.1\\ a{=}0 & -0.5 & +0.1\end{array}$\\[1pt]regrets $1.0:0.2=5:1$};
-\node[b=orange!10, text width=33mm] (buf) at (105,0) {\textbf{Replay buffer} $\mathcal{D}$ (50,000, circular)\\$(s_t,a_t,r_t,s_{t+1},d_t,y_t)$; optional warm-up: 4,000 random actions; full-information replay (tuned): also $(s_t,1{-}a_t,R(1{-}a_t,y_t),\dots)$};
+\node[b=orange!10, text width=33mm] (buf) at (105,0) {\textbf{Replay buffer} $\mathcal{D}$ (50,000, circular; 100,000 with full information)\\$(s_t,a_t,r_t,s_{t+1},d_t,y_t)$; optional warm-up: 4,000 random actions; full-information replay (tuned): also $(s_t,1{-}a_t,R(1{-}a_t,y_t),\dots)$};
 \node[b=orange!10, text width=23mm] (mb) at (145,0) {\textbf{Class-balanced minibatch}\\share $\rho$ non-event, $1-\rho$ event transitions};
 \draw[arr] (stream.east |- pol.west) -- node[lab, above] {$s_t$} (pol.west);
 \draw[arr] (pol) -- node[lab, above] {$a_t$} (rew.west |- pol.east);
@@ -23,7 +23,7 @@
   $s\in\mathbb{R}^{d}\rightarrow$ [Linear $\rightarrow$ BatchNorm or LayerNorm $\rightarrow$ ReLU $\rightarrow$ Dropout]$\times L$\\
   widths 64--64, 128--128, 256--256 or 256--512--256 (no dropout after the last layer)\\[1pt]
   $\rightarrow V(s)$ and $A(s,a)$, $a\in\{0,1\}$:\ \ $Q(s,a)=V(s)+A(s,a)-\tfrac12\sum_{a'}A(s,a')$};
-\node[b=white, text width=27mm] (soft) at (57,-31) {\textbf{Soft target update}\\$\theta^-\leftarrow(1-\tau)\theta^-+\tau\theta$, BatchNorm statistics copied};
+\node[b=white, text width=27mm] (soft) at (57,-31) {\textbf{Soft target update}\\$\theta^-\leftarrow(1-\tau)\theta^-+\tau\theta$ (BatchNorm statistics copied when batch norm is used)};
 \node[b=white, text width=22mm] (tgt) at (91,-31) {\textbf{Target network} $Q_{\theta^-}$\\same architecture, eval.\ mode};
 \node[b=white, text width=47mm] (dt) at (121,-31) {\textbf{Double-DQN target}\\$a^*=\arg\max_{a'}Q_\theta(s_{t+1},a')$ (online net, eval.\ mode)\\$y_t=r_t+\gamma(1-d_t)\,Q_{\theta^-}(s_{t+1},a^*)$\\($\gamma=0$: $y_t=r_t$, no bootstrapping)};
 \draw[arr] (net.east |- soft.west) -- node[lab, above] {$\theta$} (soft.west);
@@ -33,7 +33,7 @@
 \draw[arr, dashed] (46,-31) -- node[lab, left] {$Q_\theta(s_t,\cdot)$} (46,0 |- pol.south);
 % ================= row 3: loss, update, checkpoint
 \node[b=white, text width=47mm] (loss) at (121,-50) {\textbf{Huber loss} on $Q_\theta(s_t,a_t)-y_t$\\Adam with weight decay, gradient-norm clip 1.0, cosine learning-rate decay};
-\node[b=white, text width=50mm] (ck) at (60,-64) {\textbf{Validation checkpoint}\\every 2 epochs: score the inner-validation groups; keep $\theta$ with the lowest achievable 5:1 cost (ties: higher PR-AUC)};
+\node[b=white, text width=50mm] (ck) at (60,-64) {\textbf{Validation checkpoint} (inner-validation groups and labels)\\every 2 epochs: score the inner-validation groups; keep $\theta$ with the lowest achievable 5:1 cost (ties: higher PR-AUC)};
 \draw[arr] (dt) -- node[lab, right] {$y_t$} (loss);
 \draw[arr] (net.east |- loss.west) -- node[lab, above, pos=0.55] {$Q_\theta(s_t,a_t)$ of the minibatch} (loss.west);
 \draw[arr] (loss.south) -- (loss.south |- 0,-83) -| node[lab, above, pos=0.3] {update $\theta$: 1, 2 or 4 gradient steps every 2 chunks of 256 transitions; 5 more per epoch} ($(net.south)+(-15,0)$);
@@ -42,11 +42,11 @@
 \node[b=blue!7, text width=28mm] (in1) at (0,-97) {\textbf{State} $s_t$: causal features of seconds $0..t$ (frozen featurizer and scaler)};
 \node[b=blue!7, text width=25mm] (in2) at (36,-97) {\textbf{Checkpointed} $Q_\theta$ of each of the \nInner{} inner models};
 \node[b=blue!7, text width=35mm] (in3) at (69,-97) {\textbf{Score} $\hat p=\dfrac{\Delta Q+0.2}{1.2}$, $\Delta Q=Q(s,1)-Q(s,0)$; mean over the \nInner{} models};
-\node[b=blue!7, text width=29mm] (in4) at (112,-97) {\textbf{Threshold} $t_{\mathrm{D1}}$ chosen on pooled inner-OOF scores};
+\node[b=blue!7, text width=29mm] (in4) at (112,-97) {\textbf{Threshold} $t_{\mathrm{D1}}$ chosen on the pooled OOF scores of the final models};
 \node[b=blue!7, text width=17mm] (in5) at (149,-97) {\textbf{Alarm} if $\hat p\ge t_{\mathrm{D1}}$};
 \draw[inf] (in1) -- (in2); \draw[inf] (in2) -- (in3); \draw[inf] (in3) -- (in4); \draw[inf] (in4) -- (in5);
 % lanes
-\node[lane] (la) at (0,8) {Training on the inner-training groups (labels used)};
+\node[lane] (la) at (0,8) {Training on the inner-training groups (labels used); checkpointing on the inner-validation groups};
 \node[lane] (lc) at (0,-95.5) {Inference on validation and test groups (no labels, no updates)};
 \begin{scope}[on background layer]
 \node[fit=(la)(stream)(mb)(net)(loss)(ck), inner sep=2mm, inner ysep=4.5mm, fill=orange!3, draw=orange!40, rounded corners=3pt] {};
