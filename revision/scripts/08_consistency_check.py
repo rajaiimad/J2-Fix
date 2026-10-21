@@ -638,6 +638,24 @@ if V2.exists():
         check(npg <= 16, f"v2 length: {npg} pages (target 15-16 or fewer)")
         check(pv2.stat().st_mtime >= max(t.stat().st_mtime for t in V2.glob("*.tex")), "main_access_v2.pdf is newer than every v2 section file")
 
+# ---- threshold-scale sensitivity (scripts/16_threshold_scale.py; posthoc.json key committed before the run)
+_ts = RESULTS / "tables" / "threshold_scale" / "threshold_scale.csv"
+check(_ts.exists() and "threshold_scale_sensitivity" in json.loads((REVISION_ROOT / "configs" / "posthoc.json").read_text()),
+      "threshold-scale check specified in posthoc.json and run")
+if _ts.exists():
+    tsd = pd.read_csv(_ts, index_col=0)
+    TS = json.loads((RESULTS / "tables" / "threshold_scale" / "ts_macros.json").read_text())
+    for fam, key in (("E-DDQN", "EDDQN"), ("E-CB", "ECB"), ("DQN", "DQN"), ("CS-MLP", "CSMLP"), ("LogReg", "LR"), ("HGB", "HGB"), ("RF", "RF")):
+        check(close(MAC[f"{key}CostCostMean"], tsd.loc[fam, "pipe_cost"], 0.0006), f"threshold-scale check reproduces the published {fam} cost")
+    _num = lambda v: float(str(v).replace("$-$", "-"))
+    check(close(_num(TS["TSEDDQNDeltaCost"]), tsd.loc["E-DDQN", "delta_cost"], 0.0006)
+          and close(_num(TS["TSNeuralDeltaCostMax"]), tsd.loc[["E-DDQN", "E-CB", "DQN", "CS-MLP"], "delta_cost"].max(), 0.0006)
+          and close(_num(TS["TSTreeLRDeltaCostMin"]), tsd.loc[["LogReg", "HGB", "RF"], "delta_cost"].min(), 0.0006), "threshold-scale macros match the table")
+    same = list(tsd.pipe_cost.sort_values().index) == list(tsd.single_cost.sort_values().index)
+    check(TS["TSRankUnchanged"] == ("unchanged" if same else "changed"), "threshold-scale ranking statement matches the data")
+    if V2.exists():
+        check("\\TSEDDQNDeltaCost" in v2["s6_discussion.tex"] and "S9.10" in v2["s3_method.tex"], "v2 reports the threshold-scale check")
+
 report = {"checks": checks, "failures": fails,
           "pending_author_inputs": pending if PH_JSON.exists() else [], "macros_defined": len(defined), "macros_used_in_text": len(used),
           "stale_number_occurrences": {k: len(v) for k, v in pdf_hits.items()},

@@ -16,6 +16,7 @@ cp "$R"/results/tables/posthoc/tab_main_D1_with_posthoc.tex generated/
 cp "$R"/results/tables/search_draw/sd_macros.tex generated/
 cp "$R"/results/tables/score_scale/ss_macros.tex generated/
 cp "$R"/results/tables/pipeline_verification/pv_macros.tex generated/
+cp "$R"/results/tables/threshold_scale/ts_macros.tex "$R"/results/tables/threshold_scale/tab_ts.tex generated/
 sed -i -e 's/(submitted protocol)/(earlier protocol)/' -e 's/E-DDQN (submitted code)/E-DDQN (earlier code)/' \
        -e 's/Submitted script, submitted protocol (proxy)/Earlier script, earlier protocol (proxy)/' \
        -e 's/Submitted script, grouped split (proxy)/Earlier script, grouped split (proxy)/' generated/tab_leakage.tex

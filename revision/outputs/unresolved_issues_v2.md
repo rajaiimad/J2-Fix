@@ -2,13 +2,15 @@
 
 ## Methodological and reporting issues
 
-1. **Thresholds are chosen and applied on different score scales.**
-   - The issue: each D1 threshold is chosen on pooled out-of-fold (OOF) scores, and each OOF score comes from a *single* inner model. The test score is the *mean of three* inner models (and, for the ensemble, of five seeds). Averaging shrinks scores, so the threshold does not transfer exactly.
-   - Who is affected: all models equally by design. The shift may matter more for models whose inner models disagree, such as the noisy E-DDQN runs.
-   - Possible consequences: it may contribute to two reported findings, "E-DDQN's thresholds transfer worst" and "E-DDQN's ensemble is worse than its average seed". Its size was not measured.
-   - What I did: v2 states it in Section III-G and limitation (ix). The original (`main_access.tex`) does not mention it.
-   - What remains: quantifying it would need a new post-hoc analysis, for example thresholds chosen on cross-fitted averages. I did not run one, because that would be a new analysis added after all results are known.
-   - **Your decision:** report it as a limitation only, or ask for that analysis.
+1. **Thresholds are chosen and applied on different score scales: RESOLVED (checked).**
+   - The issue: each D1 threshold is chosen on single-model out-of-fold (OOF) scores but applied to test scores averaged over three inner models.
+   - The check: a post-hoc analysis, committed before it was run (`configs/posthoc.json`, key `threshold_scale_sensitivity`; `scripts/16_threshold_scale.py`), applied the unchanged thresholds to single-model test scores.
+   - The result:
+     - The seed-mean cost changes by +0.045 to +0.067 for the neural models (E-DDQN +0.054), and by −0.009 to +0.014 for logistic regression, HGB and RF.
+     - Averaging narrows score spread by a similar factor for all models (median SD ratio 0.85 for E-DDQN, 0.85–0.93 for the others).
+     - The cost ranking of the seven models is unchanged.
+   - Conclusion: the scale difference does not explain E-DDQN's weak result. Reported in limitation (ix) and Supplementary Sec. S9.10.
+   - Still open: the full-length version (`main_access.tex`) does not mention this point.
 
 2. **The abstract calls the extra search draws "pre-specified".**
    - The draws were specified and committed before they were run, but after the primary results were known.

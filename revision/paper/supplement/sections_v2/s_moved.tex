@@ -111,3 +111,12 @@ We explain $\Delta Q(s)=Q(s,1)-Q(s,0)$ rather than a single Q-value, because $Q(
 
 \subsection{Implementation pitfalls of the earlier code}
 Three errors are easy to make when a classifier is trained as a Q-learner, and all three were present in an earlier implementation of this study: (i)~transitions built from consecutive rows of shuffled data without terminal flags, so that the next state is an unrelated second, usually of another session; (ii)~the true label stored as the action while the reward of a different, exploratory action is computed (a form of teacher forcing that trains the correct action toward the penalty of the wrong one); (iii)~only the parameters averaged into the target network, so that its batch-normalization statistics never leave their initial values. Unit tests guard against each, and Section~S8 verifies the replay buffer on the real folds.
+
+\subsection{Threshold-scale sensitivity of rule D1 (post hoc)}
+Specified and committed before it was run (\texttt{configs/\allowbreak posthoc.json}, key \texttt{threshold\_scale\_sensitivity}), when all other results were known; produced by \texttt{scripts/\allowbreak 16\_threshold\_scale.py} from the saved per-inner-model scores, without training or re-chosen thresholds. Each D1 threshold is chosen on pooled OOF scores produced by single inner models, but the reported test score averages the three inner models. Here the unchanged threshold of every (model, outer fold, seed) is also applied to each inner model's own test score; 5:1 cost, recall and false-positive rate are pooled over the outer folds and averaged over the three inner models and five seeds. The ``reported'' column recomputes the published seed-mean D1 cost from the same files. The spread ratio is the standard deviation of the averaged test score divided by the mean standard deviation of the single-model test scores, per (outer fold, seed). Single-model scoring raises the cost of every neural model by a similar amount and leaves the cost ranking of the seven models \TSRankUnchanged; for the neural models averaging lowered the cost at the chosen thresholds, for the others it changed it little, and it does not explain E-DDQN's weak result. Descriptive; no test.
+\begin{table}[h]
+\centering
+\caption{Seed-mean D1 results with the reported averaged test score and with single-model test scores (same thresholds). $\Delta$: single model minus reported; pp: percentage points.}
+\footnotesize
+\input{generated/tab_ts.tex}
+\end{table}

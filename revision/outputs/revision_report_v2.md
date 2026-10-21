@@ -122,3 +122,27 @@ Kept in the main text:
 - within-fold ROC-AUC, selection optimism, R1–R3 and draw 1 defined before use.
 
 Most optional findings were also applied. Two optional details were left out on purpose: the D1 tie rule in the figure, and the ROC false-positive rate at 95 % recall, which is now in Supp. S9.4.
+
+## 5. Addendum: threshold-scale check (run after the review)
+
+The independent review noted that each D1 threshold is chosen on single-model OOF scores but applied to averaged test scores.
+
+**How the check was run**
+- Specified and committed before running (`configs/posthoc.json`, key `threshold_scale_sensitivity`; commit e633129).
+- Computed by `scripts/16_threshold_scale.py` from the saved per-inner-model scores.
+- No training and no re-chosen thresholds. The script first reproduces every published seed-mean D1 cost.
+
+**Results**
+
+| Applying the same thresholds to single-model test scores | Change in seed-mean 5:1 cost |
+|---|---|
+| Neural models | +0.045 to +0.067 (E-DDQN +0.054) |
+| Logistic regression, HGB, random forest | −0.009 to +0.014 |
+
+- Score spread shrinks by a similar factor for all models: median SD ratio 0.85–0.93.
+- The cost ranking of the seven models is unchanged.
+
+**Where it is reported:** limitation (ix) and Supplementary Sec. S9.10.
+
+**Consistency check:** 1,466 checks pass.
+
